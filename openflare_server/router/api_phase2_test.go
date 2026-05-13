@@ -201,6 +201,74 @@ func TestPhase2BatchOptionUpdateValidatesMergedState(t *testing.T) {
 	}
 }
 
+func TestAuthSourceUpdateAcceptsClientSecret(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	common.RedisEnabled = false
+	setupTestDB(t)
+
+	engine := gin.New()
+	engine.Use(sessions.Sessions("session", cookie.NewStore([]byte("test-secret"))))
+	router.SetApiRouter(engine)
+
+	loginCookie := loginAsRoot(t, engine)
+
+	createResp := performSessionJSONRequest(t, engine, loginCookie, http.MethodPost, "/api/auth-sources/", map[string]any{
+		"name":          "GitHub",
+		"type":          "github",
+		"display_name":  "GitHub",
+		"is_active":     false,
+		"client_id":     "github-client-id",
+		"client_secret": "initial-secret",
+		"scopes":        "user:email",
+	})
+
+	var created model.AuthSource
+	decodeResponseData(t, createResp, &created)
+	if created.ClientSecret != "" {
+		t.Fatal("expected create response to avoid exposing client_secret")
+	}
+	if !created.ClientSecretConfigured {
+		t.Fatal("expected create response to mark client_secret as configured")
+	}
+
+	updateResp := performSessionJSONRequest(t, engine, loginCookie, http.MethodPost, "/api/auth-sources/1/update", map[string]any{
+		"name":          "GitHub",
+		"type":          "github",
+		"display_name":  "GitHub",
+		"is_active":     true,
+		"client_id":     "github-client-id",
+		"client_secret": "updated-secret",
+		"scopes":        "user:email",
+	})
+
+	var updated model.AuthSource
+	decodeResponseData(t, updateResp, &updated)
+	if updated.ClientSecret != "" {
+		t.Fatal("expected update response to avoid exposing client_secret")
+	}
+	if !updated.ClientSecretConfigured {
+		t.Fatal("expected update response to mark client_secret as configured")
+	}
+	if !updated.IsActive {
+		t.Fatal("expected auth source to be active after update")
+	}
+
+	stored, err := model.GetAuthSourceByID(1)
+	if err != nil {
+		t.Fatalf("expected auth source to exist: %v", err)
+	}
+	if stored.ClientSecret != "updated-secret" {
+		t.Fatalf("expected stored client secret to be updated, got %q", stored.ClientSecret)
+	}
+
+	performSessionJSONRequest(t, engine, loginCookie, http.MethodPost, "/api/auth-sources/1/toggle", map[string]any{
+		"is_active": false,
+	})
+	performSessionJSONRequest(t, engine, loginCookie, http.MethodPost, "/api/auth-sources/1/toggle", map[string]any{
+		"is_active": true,
+	})
+}
+
 func loginAsRoot(t *testing.T, engine http.Handler) *http.Cookie {
 	t.Helper()
 	payload, err := json.Marshal(map[string]any{

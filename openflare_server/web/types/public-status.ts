@@ -1,3 +1,12 @@
+export interface PublicAuthSource {
+  id: number;
+  name: string;
+  type: 'github' | 'oidc';
+  display_name: string;
+  authorize_url: string;
+  icon_url?: string;
+}
+
 export interface PublicStatus {
   version: string;
   start_time: number;
@@ -14,4 +23,5 @@ export interface PublicStatus {
   turnstile_site_key: string;
   register_enabled: boolean;
   password_register_enabled: boolean;
+  auth_sources: PublicAuthSource[];
 }

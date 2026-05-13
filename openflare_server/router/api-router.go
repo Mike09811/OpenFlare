@@ -21,6 +21,9 @@ func SetApiRouter(router *gin.Engine) {
 		apiRouter.GET("/oauth/wechat", middleware.CriticalRateLimit(), controller.WeChatAuth)
 		apiRouter.GET("/oauth/wechat/bind", middleware.CriticalRateLimit(), middleware.UserAuth(), controller.WeChatBind)
 		apiRouter.GET("/oauth/email/bind", middleware.CriticalRateLimit(), middleware.UserAuth(), controller.EmailBind)
+		apiRouter.GET("/oauth/:source/authorize", middleware.CriticalRateLimit(), controller.OAuthAuthorize)
+		apiRouter.GET("/oauth/:source/callback", middleware.CriticalRateLimit(), controller.OAuthCallback)
+		apiRouter.POST("/oauth/link-existing", middleware.CriticalRateLimit(), controller.LinkExistingOAuthAccount)
 
 		userRoute := apiRouter.Group("/user")
 		{
@@ -57,6 +60,15 @@ func SetApiRouter(router *gin.Engine) {
 			optionRoute.POST("/update-batch", controller.UpdateOptionsBatch)
 			optionRoute.POST("/geoip/lookup", controller.LookupGeoIP)
 			optionRoute.POST("/database/cleanup", controller.CleanupDatabaseObservability)
+		}
+		authSourceRoute := apiRouter.Group("/auth-sources")
+		authSourceRoute.Use(middleware.RootAuth(), middleware.NoTokenAuth())
+		{
+			authSourceRoute.GET("/", controller.ListAuthSources)
+			authSourceRoute.POST("/", controller.CreateAuthSource)
+			authSourceRoute.POST("/:id/update", controller.UpdateAuthSource)
+			authSourceRoute.POST("/:id/delete", controller.DeleteAuthSource)
+			authSourceRoute.POST("/:id/toggle", controller.ToggleAuthSource)
 		}
 		updateRoute := apiRouter.Group("/update")
 		updateRoute.Use(middleware.RootAuth(), middleware.NoTokenAuth())

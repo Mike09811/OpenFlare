@@ -26,6 +26,8 @@ func registeredModels() []any {
 	return []any{
 		&File{},
 		&User{},
+		&AuthSource{},
+		&ExternalAccount{},
 		&Option{},
 		&Origin{},
 		&ProxyRoute{},

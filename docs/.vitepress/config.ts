@@ -11,8 +11,7 @@ export default defineConfig({
   srcExclude: [
     'zh/**',
     'components/**',
-    'snippets/**',
-    'website-configuration-redesign.md'
+    'snippets/**'
   ],
 
   markdown: {

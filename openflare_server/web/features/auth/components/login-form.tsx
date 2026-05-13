@@ -11,7 +11,7 @@ import { z } from 'zod';
 import { InlineMessage } from '@/components/feedback/inline-message';
 import { useAuth } from '@/components/providers/auth-provider';
 import { AppCard } from '@/components/ui/app-card';
-import { login } from '@/features/auth/api/auth';
+import { getOAuthAuthorizeUrl, login } from '@/features/auth/api/auth';
 import { getPublicStatus } from '@/features/auth/api/public';
 import {
   AuthButton,
@@ -24,14 +24,14 @@ import { PublicAuthGuard } from '@/features/auth/components/public-auth-guard';
 const TEXT = {
   usernameRequired: '\u8bf7\u8f93\u5165\u7528\u6237\u540d',
   passwordRequired: '\u8bf7\u8f93\u5165\u5bc6\u7801',
-  loginFailed: '\u767b\u5f55\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u3002',
-  githubUnavailable: 'GitHub \u767b\u5f55\u5f53\u524d\u4e0d\u53ef\u7528\u3002',
+  loginFailed:
+    '\u767b\u5f55\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u3002',
+  oauthUnavailable: '第三方登录当前不可用。',
   title: '\u7528\u6237\u767b\u5f55',
   username: '\u7528\u6237\u540d',
   password: '\u5bc6\u7801',
   loginPending: '\u767b\u5f55\u4e2d...',
   login: '\u767b\u5f55',
-  githubLogin: 'GitHub \u767b\u5f55',
   forgotPassword: '\u5fd8\u8bb0\u5bc6\u7801\uff1f',
   register: '\u6ce8\u518c',
 };
@@ -78,35 +78,37 @@ export function LoginForm() {
     },
   });
 
+  const oauthMutation = useMutation({
+    mutationFn: getOAuthAuthorizeUrl,
+    onSuccess: (result) => {
+      window.location.href = result.authorize_url;
+    },
+    onError: (error: Error) => {
+      setErrorMessage(error.message || TEXT.oauthUnavailable);
+    },
+  });
+
   const handleSubmit = form.handleSubmit((values) => {
     setErrorMessage('');
     loginMutation.mutate(values);
   });
 
-  const handleGitHubLogin = () => {
-    const clientId = statusQuery.data?.github_client_id;
-    if (!clientId) {
-      setErrorMessage(TEXT.githubUnavailable);
-      return;
-    }
-
-    const authorizeUrl = new URL('https://github.com/login/oauth/authorize');
-    authorizeUrl.searchParams.set('client_id', clientId);
-    authorizeUrl.searchParams.set('scope', 'user:email');
-    window.location.href = authorizeUrl.toString();
+  const handleOAuthLogin = (sourceName: string) => {
+    setErrorMessage('');
+    oauthMutation.mutate(sourceName);
   };
 
   return (
     <PublicAuthGuard>
       <AppCard title={TEXT.title}>
-        <form className='space-y-4' onSubmit={handleSubmit}>
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <AuthFormField label={TEXT.username}>
             <AuthInput
               placeholder={TEXT.username}
               {...form.register('username')}
             />
             {form.formState.errors.username ? (
-              <span className='text-xs text-[var(--status-danger-foreground)]'>
+              <span className="text-xs text-[var(--status-danger-foreground)]">
                 {form.formState.errors.username.message}
               </span>
             ) : null}
@@ -114,41 +116,53 @@ export function LoginForm() {
 
           <AuthFormField label={TEXT.password}>
             <AuthInput
-              type='password'
+              type="password"
               placeholder={TEXT.password}
               {...form.register('password')}
             />
             {form.formState.errors.password ? (
-              <span className='text-xs text-[var(--status-danger-foreground)]'>
+              <span className="text-xs text-[var(--status-danger-foreground)]">
                 {form.formState.errors.password.message}
               </span>
             ) : null}
           </AuthFormField>
 
           {errorMessage ? (
-            <InlineMessage tone='danger' message={errorMessage} />
+            <InlineMessage tone="danger" message={errorMessage} />
           ) : null}
 
-          <div className='flex flex-col gap-3 sm:flex-row'>
-            <AuthButton type='submit' disabled={loginMutation.isPending}>
+          <div>
+            <AuthButton type="submit" disabled={loginMutation.isPending}>
               {loginMutation.isPending ? TEXT.loginPending : TEXT.login}
             </AuthButton>
-            {statusQuery.data?.github_oauth ? (
-              <SecondaryButton
-                type='button'
-                onClick={handleGitHubLogin}
-                className='w-full sm:w-auto'
-              >
-                {TEXT.githubLogin}
-              </SecondaryButton>
-            ) : null}
           </div>
+
+          {(statusQuery.data?.auth_sources ?? []).length > 0 ? (
+            <div className="flex flex-col items-center gap-3 pt-1">
+              <div className="text-xs text-[var(--foreground-secondary)]">
+                第三方账号登录
+              </div>
+              <div className="flex flex-wrap justify-center gap-3">
+                {(statusQuery.data?.auth_sources ?? []).map((source) => (
+                  <SecondaryButton
+                    key={source.id}
+                    type="button"
+                    onClick={() => handleOAuthLogin(source.name)}
+                    className="min-w-36"
+                    disabled={oauthMutation.isPending}
+                  >
+                    {source.display_name || source.name} 登录
+                  </SecondaryButton>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </form>
 
-        <div className='mt-6 flex flex-wrap gap-3 text-sm text-[var(--foreground-secondary)]'>
+        <div className="mt-6 flex flex-wrap gap-3 text-sm text-[var(--foreground-secondary)]">
           <Link
-            href='/reset'
-            className='text-[var(--brand-primary)] transition hover:opacity-80'
+            href="/reset"
+            className="text-[var(--brand-primary)] transition hover:opacity-80"
           >
             {TEXT.forgotPassword}
           </Link>
@@ -156,8 +170,8 @@ export function LoginForm() {
             <>
               <span>|</span>
               <Link
-                href='/register'
-                className='text-[var(--brand-primary)] transition hover:opacity-80'
+                href="/register"
+                className="text-[var(--brand-primary)] transition hover:opacity-80"
               >
                 {TEXT.register}
               </Link>

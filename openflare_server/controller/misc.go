@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"openflare/common"
 	"openflare/model"
+	"openflare/service"
 	"openflare/utils/mail"
 	"openflare/utils/security"
 	"openflare/utils/validation"
@@ -19,6 +20,10 @@ import (
 // @Success 200 {object} map[string]interface{}
 // @Router /api/status [get]
 func GetStatus(c *gin.Context) {
+	authSources, err := service.PublicAuthSources("/api")
+	if err != nil {
+		authSources = []service.PublicAuthSource{}
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
@@ -38,6 +43,7 @@ func GetStatus(c *gin.Context) {
 			"turnstile_site_key":        common.TurnstileSiteKey,
 			"register_enabled":          common.RegisterEnabled,
 			"password_register_enabled": common.PasswordRegisterEnabled,
+			"auth_sources":              authSources,
 		},
 	})
 	return

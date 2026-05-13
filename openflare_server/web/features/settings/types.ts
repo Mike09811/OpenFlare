@@ -9,6 +9,30 @@ export interface OptionBatchPayload {
   options: OptionItem[];
 }
 
+export type AuthSourceType = 'github' | 'oidc';
+
+export interface AuthSource {
+  id: number;
+  name: string;
+  type: AuthSourceType;
+  display_name: string;
+  is_active: boolean;
+  client_id: string;
+  client_secret?: string;
+  client_secret_configured?: boolean;
+  openid_discovery_url: string;
+  scopes: string;
+  icon_url: string;
+}
+
+export type AuthSourcePayload = Omit<
+  AuthSource,
+  'id' | 'client_secret_configured'
+> & {
+  id?: number;
+  client_secret: string;
+};
+
 export interface BootstrapTokenPayload {
   discovery_token: string;
 }

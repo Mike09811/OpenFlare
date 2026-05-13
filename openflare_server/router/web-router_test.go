@@ -93,3 +93,20 @@ func TestCacheHeadersKeepImmutableStaticAssets(t *testing.T) {
 		t.Fatalf("unexpected cache-control for static asset: %q", got)
 	}
 }
+
+func TestOAuthCallbackPathMatchesSourceNames(t *testing.T) {
+	cases := map[string]bool{
+		"oauth/github":    true,
+		"oauth/oidc-main": true,
+		"oauth/1":         true,
+		"oauth/callback":  false,
+		"oauth/link":      false,
+		"oauth":           false,
+	}
+
+	for requestPath, expected := range cases {
+		if got := isOAuthCallbackPath(requestPath); got != expected {
+			t.Fatalf("expected %s match=%v, got %v", requestPath, expected, got)
+		}
+	}
+}

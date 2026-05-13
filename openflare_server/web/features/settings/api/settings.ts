@@ -2,6 +2,8 @@ import { apiRequest } from '@/lib/api/client';
 
 import type {
   BootstrapTokenPayload,
+  AuthSource,
+  AuthSourcePayload,
   DatabaseCleanupPayload,
   DatabaseCleanupResult,
   GeoIPLookupResult,
@@ -40,6 +42,37 @@ export function cleanupDatabaseObservability(payload: DatabaseCleanupPayload) {
   return apiRequest<DatabaseCleanupResult>('/option/database/cleanup', {
     method: 'POST',
     body: JSON.stringify(payload),
+  });
+}
+
+export function getAuthSources() {
+  return apiRequest<AuthSource[]>('/auth-sources/');
+}
+
+export function createAuthSource(payload: AuthSourcePayload) {
+  return apiRequest<AuthSource>('/auth-sources/', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateAuthSource(id: number, payload: AuthSourcePayload) {
+  return apiRequest<AuthSource>(`/auth-sources/${id}/update`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function toggleAuthSource(id: number, isActive: boolean) {
+  return apiRequest<void>(`/auth-sources/${id}/toggle`, {
+    method: 'POST',
+    body: JSON.stringify({ is_active: isActive }),
+  });
+}
+
+export function deleteAuthSource(id: number) {
+  return apiRequest<void>(`/auth-sources/${id}/delete`, {
+    method: 'POST',
   });
 }
 

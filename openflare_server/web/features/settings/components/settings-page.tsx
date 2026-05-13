@@ -13,13 +13,16 @@ import { useAuth } from '@/components/providers/auth-provider';
 import { PageHeader } from '@/components/layout/page-header';
 import { AppCard } from '@/components/ui/app-card';
 import { StatusBadge } from '@/components/ui/status-badge';
-import { sendEmailVerification } from '@/features/auth/api/auth';
+import {
+  getOAuthAuthorizeUrl,
+  sendEmailVerification,
+} from '@/features/auth/api/auth';
 import { getPublicStatus } from '@/features/auth/api/public';
 import {
   bindEmail,
-  bindWeChat,
   cleanupDatabaseObservability,
   generateAccessToken,
+  getAuthSources,
   getBootstrapToken,
   getOptions,
   getSettingsProfile,
@@ -28,6 +31,7 @@ import {
   updateOptions,
   updateSelf,
 } from '@/features/settings/api/settings';
+import { AuthSourceModal } from '@/features/settings/components/auth-source-modal';
 import type {
   BootstrapTokenPayload,
   DatabaseCleanupResult,
@@ -50,6 +54,7 @@ import {
 import { formatDateTime } from '@/lib/utils/date';
 
 const settingsQueryKey = ['settings', 'options'] as const;
+const authSourcesQueryKey = ['settings', 'auth-sources'] as const;
 const installerScriptUrl =
   'https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/install-agent.sh';
 
@@ -152,12 +157,7 @@ type CleanupModalState = {
   label: string;
 };
 
-type SettingsTab =
-  | 'personal'
-  | 'operation'
-  | 'database'
-  | 'system'
-  | 'other';
+type SettingsTab = 'personal' | 'operation' | 'database' | 'system' | 'other';
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : '请求失败，请稍后重试。';
@@ -249,10 +249,10 @@ export function SettingsPage() {
   const [otherFields, setOtherFields] = useState(defaultOtherFields);
   const [databaseFields, setDatabaseFields] = useState(defaultDatabaseFields);
   const [accessToken, setAccessToken] = useState('');
-  const [wechatCode, setWeChatCode] = useState('');
   const [emailAddress, setEmailAddress] = useState('');
   const [emailCode, setEmailCode] = useState('');
   const [emailTurnstileToken, setEmailTurnstileToken] = useState('');
+  const [authSourceModalOpen, setAuthSourceModalOpen] = useState(false);
   const [geoIPTestIP, setGeoIPTestIP] = useState('8.8.8.8');
   const [cleanupModalState, setCleanupModalState] =
     useState<CleanupModalState | null>(null);
@@ -273,6 +273,12 @@ export function SettingsPage() {
   const optionsQuery = useQuery({
     queryKey: settingsQueryKey,
     queryFn: getOptions,
+    enabled: isRoot,
+  });
+
+  const authSourcesQuery = useQuery({
+    queryKey: authSourcesQueryKey,
+    queryFn: getAuthSources,
     enabled: isRoot,
   });
 
@@ -523,7 +529,7 @@ export function SettingsPage() {
             {
               key: 'system' as const,
               label: '系统设置',
-              description: '登录注册、SMTP、OAuth、限流与风控开关。',
+              description: '登录注册、SMTP、认证源、限流与风控开关。',
             },
             {
               key: 'database' as const,
@@ -629,20 +635,10 @@ export function SettingsPage() {
     });
   };
 
-  const handleBindWeChat = () => {
-    if (!wechatCode.trim()) {
-      setFeedback({ tone: 'danger', message: '请输入微信验证码。' });
-      return;
-    }
-
-    void runBusyAction('wechat-bind', async () => {
-      await bindWeChat(wechatCode.trim());
-      setWeChatCode('');
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['settings', 'profile'] }),
-        refreshUser(),
-      ]);
-      setFeedback({ tone: 'success', message: '微信账号已绑定。' });
+  const handleBindAuthSource = (sourceName: string) => {
+    void runBusyAction(`auth-source-bind-${sourceName}`, async () => {
+      const result = await getOAuthAuthorizeUrl(sourceName);
+      window.location.href = result.authorize_url;
     });
   };
 
@@ -824,79 +820,36 @@ export function SettingsPage() {
 
           <AppCard
             title="账号绑定"
-            description="支持绑定 GitHub、微信和邮箱地址，用于统一个人身份入口。"
+            description="支持绑定已启用的认证源和邮箱地址，用于统一个人身份入口。"
           >
-            <div className="grid gap-6 xl:grid-cols-3">
+            <div className="grid gap-6 xl:grid-cols-2">
               <div className="space-y-4 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-elevated)] px-4 py-4">
                 <div className="space-y-1">
                   <p className="text-base font-semibold text-[var(--foreground-primary)]">
-                    GitHub 账号
+                    第三方认证源
                   </p>
                   <p className="text-sm leading-6 text-[var(--foreground-secondary)]">
-                    当前状态：
-                    {profile.github_id
-                      ? `已绑定 ${profile.github_id}`
-                      : '未绑定'}
+                    登录状态下发起授权会直接绑定到当前账号。
                   </p>
                 </div>
-                <PrimaryButton
-                  type="button"
-                  onClick={() =>
-                    window.open(
-                      `https://github.com/login/oauth/authorize?client_id=${publicStatus.github_client_id}&scope=user:email`,
-                      '_blank',
-                      'noopener,noreferrer',
-                    )
-                  }
-                  disabled={
-                    !publicStatus.github_oauth || !publicStatus.github_client_id
-                  }
-                >
-                  {publicStatus.github_oauth
-                    ? '绑定 GitHub'
-                    : '未启用 GitHub OAuth'}
-                </PrimaryButton>
-              </div>
-
-              <div className="space-y-4 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-elevated)] px-4 py-4">
-                <div className="space-y-1">
-                  <p className="text-base font-semibold text-[var(--foreground-primary)]">
-                    微信账号
-                  </p>
-                  <p className="text-sm leading-6 text-[var(--foreground-secondary)]">
-                    当前状态：
-                    {profile.wechat_id
-                      ? `已绑定 ${profile.wechat_id}`
-                      : '未绑定'}
-                  </p>
+                <div className="flex flex-wrap gap-3">
+                  {(publicStatus.auth_sources ?? []).length > 0 ? (
+                    publicStatus.auth_sources.map((source) => (
+                      <PrimaryButton
+                        key={source.id}
+                        type="button"
+                        onClick={() => handleBindAuthSource(source.name)}
+                        disabled={busyKey === `auth-source-bind-${source.name}`}
+                      >
+                        绑定 {source.display_name || source.name}
+                      </PrimaryButton>
+                    ))
+                  ) : (
+                    <span className="text-sm text-[var(--foreground-secondary)]">
+                      当前未启用认证源。
+                    </span>
+                  )}
                 </div>
-                {publicStatus.wechat_login && publicStatus.wechat_qrcode ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={publicStatus.wechat_qrcode}
-                    alt="微信绑定二维码"
-                    className="h-40 w-40 rounded-2xl border border-[var(--border-default)] object-cover"
-                  />
-                ) : null}
-                <ResourceField
-                  label="验证码"
-                  hint="扫码关注后输入“验证码”获取绑定码。"
-                >
-                  <ResourceInput
-                    value={wechatCode}
-                    onChange={(event) => setWeChatCode(event.target.value)}
-                    placeholder="请输入微信验证码"
-                  />
-                </ResourceField>
-                <PrimaryButton
-                  type="button"
-                  onClick={handleBindWeChat}
-                  disabled={
-                    !publicStatus.wechat_login || busyKey === 'wechat-bind'
-                  }
-                >
-                  {busyKey === 'wechat-bind' ? '绑定中...' : '绑定微信'}
-                </PrimaryButton>
               </div>
 
               <div className="space-y-4 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-elevated)] px-4 py-4">
@@ -1279,8 +1232,7 @@ export function SettingsPage() {
                 </div>
               )}
             </AppCard>
-            <AppCard
-              title="版本与构建信息">
+            <AppCard title="版本与构建信息">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="rounded-2xl border border-[var(--border-default)] bg-[var(--surface-elevated)] px-4 py-4">
                   <p className="text-xs tracking-[0.2em] text-[var(--foreground-muted)] uppercase">
@@ -1396,7 +1348,7 @@ export function SettingsPage() {
                   </ResourceField>
                   <div className="mt-4 grid gap-4 md:grid-cols-3">
                     <div className="rounded-2xl border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-4">
-                      <p className="text-xs tracking-[0.2em] uppercase text-[var(--foreground-muted)]">
+                      <p className="text-xs tracking-[0.2em] text-[var(--foreground-muted)] uppercase">
                         触发频率
                       </p>
                       <p className="mt-2 text-sm font-semibold text-[var(--foreground-primary)]">
@@ -1404,7 +1356,7 @@ export function SettingsPage() {
                       </p>
                     </div>
                     <div className="rounded-2xl border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-4">
-                      <p className="text-xs tracking-[0.2em] uppercase text-[var(--foreground-muted)]">
+                      <p className="text-xs tracking-[0.2em] text-[var(--foreground-muted)] uppercase">
                         默认执行时间
                       </p>
                       <p className="mt-2 text-sm font-semibold text-[var(--foreground-primary)]">
@@ -1412,7 +1364,7 @@ export function SettingsPage() {
                       </p>
                     </div>
                     <div className="rounded-2xl border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-4">
-                      <p className="text-xs tracking-[0.2em] uppercase text-[var(--foreground-muted)]">
+                      <p className="text-xs tracking-[0.2em] text-[var(--foreground-muted)] uppercase">
                         生效范围
                       </p>
                       <p className="mt-2 text-sm font-semibold text-[var(--foreground-primary)]">
@@ -1490,8 +1442,16 @@ export function SettingsPage() {
           <AppCard
             title="登录与注册开关"
             description="切换后立即生效，无需重启服务。"
+            action={
+              <SecondaryButton
+                type="button"
+                onClick={() => setAuthSourceModalOpen(true)}
+              >
+                配置认证源
+              </SecondaryButton>
+            }
           >
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               <ToggleField
                 label="允许密码登录"
                 description="关闭后将无法使用用户名密码登录。"
@@ -1520,33 +1480,6 @@ export function SettingsPage() {
                 disabled={busyKey === 'toggle-EmailVerificationEnabled'}
               />
               <ToggleField
-                label="启用 GitHub OAuth"
-                description="允许用户通过 GitHub 登录与注册。"
-                checked={systemFields.GitHubOAuthEnabled}
-                onChange={(checked) =>
-                  handleToggleOption('GitHubOAuthEnabled', checked)
-                }
-                disabled={busyKey === 'toggle-GitHubOAuthEnabled'}
-              />
-              <ToggleField
-                label="启用微信登录"
-                description="允许用户通过微信入口登录与注册。"
-                checked={systemFields.WeChatAuthEnabled}
-                onChange={(checked) =>
-                  handleToggleOption('WeChatAuthEnabled', checked)
-                }
-                disabled={busyKey === 'toggle-WeChatAuthEnabled'}
-              />
-              <ToggleField
-                label="启用 Turnstile"
-                description="开启后注册、邮箱验证码等流程需要先通过人机验证。"
-                checked={systemFields.TurnstileCheckEnabled}
-                onChange={(checked) =>
-                  handleToggleOption('TurnstileCheckEnabled', checked)
-                }
-                disabled={busyKey === 'toggle-TurnstileCheckEnabled'}
-              />
-              <ToggleField
                 label="允许新用户注册"
                 description="关闭后将禁止所有新用户注册入口。"
                 checked={systemFields.RegisterEnabled}
@@ -1555,6 +1488,9 @@ export function SettingsPage() {
                 }
                 disabled={busyKey === 'toggle-RegisterEnabled'}
               />
+            </div>
+            <div className="mt-5 text-sm text-[var(--foreground-secondary)]">
+              当前已配置 {authSourcesQuery.data?.length ?? 0} 个认证源。
             </div>
           </AppCard>
 
@@ -1692,145 +1628,6 @@ export function SettingsPage() {
                     placeholder="请输入新的 SMTP 凭证"
                   />
                 </ResourceField>
-              </div>
-            </AppCard>
-
-            <AppCard
-              title="OAuth / WeChat / Turnstile"
-              description="敏感密钥不会从后端回显，留空即保持原值。"
-              action={
-                <PrimaryButton
-                  type="button"
-                  onClick={() =>
-                    void runBusyAction('system-integrations', async () => {
-                      await saveOptionEntries(
-                        [
-                          [
-                            'GitHubClientId',
-                            systemFields.GitHubClientId.trim(),
-                          ],
-                          [
-                            'GitHubClientSecret',
-                            systemFields.GitHubClientSecret.trim(),
-                          ],
-                          [
-                            'WeChatServerAddress',
-                            normalizeServerUrl(
-                              systemFields.WeChatServerAddress,
-                            ),
-                          ],
-                          [
-                            'WeChatServerToken',
-                            systemFields.WeChatServerToken.trim(),
-                          ],
-                          [
-                            'WeChatAccountQRCodeImageURL',
-                            systemFields.WeChatAccountQRCodeImageURL.trim(),
-                          ],
-                          [
-                            'TurnstileSiteKey',
-                            systemFields.TurnstileSiteKey.trim(),
-                          ],
-                          [
-                            'TurnstileSecretKey',
-                            systemFields.TurnstileSecretKey.trim(),
-                          ],
-                        ],
-                        '第三方集成设置已保存。',
-                      );
-                    })
-                  }
-                  disabled={busyKey === 'system-integrations'}
-                >
-                  {busyKey === 'system-integrations'
-                    ? '保存中...'
-                    : '保存集成设置'}
-                </PrimaryButton>
-              }
-            >
-              <div className="space-y-5">
-                <div className="grid gap-5 md:grid-cols-2">
-                  <ResourceField label="GitHub Client ID">
-                    <ResourceInput
-                      value={systemFields.GitHubClientId}
-                      onChange={(event) =>
-                        setSystemFields((previous) => ({
-                          ...previous,
-                          GitHubClientId: event.target.value,
-                        }))
-                      }
-                    />
-                  </ResourceField>
-                  <ResourceField label="GitHub Client Secret">
-                    <ResourceInput
-                      type="password"
-                      value={systemFields.GitHubClientSecret}
-                      onChange={(event) =>
-                        setSystemFields((previous) => ({
-                          ...previous,
-                          GitHubClientSecret: event.target.value,
-                        }))
-                      }
-                    />
-                  </ResourceField>
-                  <ResourceField label="WeChat Server 地址">
-                    <ResourceInput
-                      value={systemFields.WeChatServerAddress}
-                      onChange={(event) =>
-                        setSystemFields((previous) => ({
-                          ...previous,
-                          WeChatServerAddress: event.target.value,
-                        }))
-                      }
-                    />
-                  </ResourceField>
-                  <ResourceField label="WeChat Server Token">
-                    <ResourceInput
-                      type="password"
-                      value={systemFields.WeChatServerToken}
-                      onChange={(event) =>
-                        setSystemFields((previous) => ({
-                          ...previous,
-                          WeChatServerToken: event.target.value,
-                        }))
-                      }
-                    />
-                  </ResourceField>
-                  <ResourceField label="公众号二维码链接">
-                    <ResourceInput
-                      value={systemFields.WeChatAccountQRCodeImageURL}
-                      onChange={(event) =>
-                        setSystemFields((previous) => ({
-                          ...previous,
-                          WeChatAccountQRCodeImageURL: event.target.value,
-                        }))
-                      }
-                    />
-                  </ResourceField>
-                  <ResourceField label="Turnstile Site Key">
-                    <ResourceInput
-                      value={systemFields.TurnstileSiteKey}
-                      onChange={(event) =>
-                        setSystemFields((previous) => ({
-                          ...previous,
-                          TurnstileSiteKey: event.target.value,
-                        }))
-                      }
-                    />
-                  </ResourceField>
-                  <ResourceField label="Turnstile Secret Key">
-                    <ResourceInput
-                      type="password"
-                      value={systemFields.TurnstileSecretKey}
-                      onChange={(event) =>
-                        setSystemFields((previous) => ({
-                          ...previous,
-                          TurnstileSecretKey: event.target.value,
-                        }))
-                      }
-                    />
-                  </ResourceField>
-                </div>
               </div>
             </AppCard>
           </div>
@@ -2246,6 +2043,20 @@ export function SettingsPage() {
       </div>
 
       {renderTabContent()}
+
+      <AuthSourceModal
+        isOpen={authSourceModalOpen}
+        sources={authSourcesQuery.data ?? []}
+        isLoading={authSourcesQuery.isLoading}
+        error={authSourcesQuery.error}
+        onClose={() => setAuthSourceModalOpen(false)}
+        onChanged={async () => {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: authSourcesQueryKey }),
+            queryClient.invalidateQueries({ queryKey: ['public-status'] }),
+          ]);
+        }}
+      />
 
       <AppModal
         isOpen={cleanupModalState !== null}

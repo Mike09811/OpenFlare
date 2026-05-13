@@ -135,6 +135,8 @@ tests/
 * `origins`
 * `config_versions`
 * `nodes`
+* `auth_sources`
+* `external_accounts`
 * `node_system_profiles`
 * `apply_logs`
 * `tls_certificates`
@@ -164,6 +166,8 @@ tests/
 * `nodes` 只保留控制面状态与低频摘要。
 * 观测数据必须按节点与时间窗口关联，快照与聚合结果采用追加式模型。
 * 原始访问明细必须有受控保留策略。
+* `auth_sources` 仅保存管理端第三方登录源配置，当前支持 `github` 与 `oidc`。
+* `external_accounts` 是第三方账号与本地用户的唯一绑定来源；旧 `users.github_id` 仅用于兼容迁移，不得作为新登录流程的业务输入。
 
 ## 数据库迁移
 
@@ -197,6 +201,9 @@ tests/
 * 总览与节点详情优先使用专用聚合接口。
 * 管理端变更类接口统一使用 `POST`；只读接口使用 `GET`。
 * 管理端继续复用现有登录、角色与 Session。
+* 第三方登录统一通过认证源 API 进入，认证源管理接口必须要求 Root Session。
+* `/api/status` 只能返回已启用认证源的公开字段，不得返回 Client Secret。
+* 第三方账号未绑定且注册关闭时，应提供绑定已有账号流程，不得自动创建用户。
 * Agent 正式请求统一使用节点专属 `agent_token`。
 * 首次接入可使用全局 `discovery_token`。
 * Agent 请求头统一使用 `X-Agent-Token`。
