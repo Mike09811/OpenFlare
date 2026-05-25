@@ -382,8 +382,8 @@ func TestPhase1HTTPSAndCertificateImportLifecycle(t *testing.T) {
 		t.Fatalf("expected active config to expose main_config, got %#v", activeConfig["main_config"])
 	}
 	supportFiles, ok := activeConfig["support_files"].([]any)
-	if !ok || len(supportFiles) != 2 {
-		t.Fatalf("expected active config to expose 2 support files, got %#v", activeConfig["support_files"])
+	if !ok || len(supportFiles) != 3 {
+		t.Fatalf("expected active config to expose 3 support files, got %#v", activeConfig["support_files"])
 	}
 }
 

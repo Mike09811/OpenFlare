@@ -63,8 +63,6 @@ go run . --port 3000 --log-dir ./logs
 | `NodeOfflineThreshold` | 节点离线阈值（毫秒） | `120000` |
 | `AgentUpdateRepo` | Agent 自更新仓库 | `Rain-kl/OpenFlare` |
 | `GeoIPProvider` | 节点/IP 归属解析方式 | `ipinfo` |
-| `RegisterEnabled` | 是否允许新用户注册 | `false` |
-| `PasswordRegisterEnabled` | 是否允许通过密码方式注册 | `true` |
 | `DatabaseAutoCleanupEnabled` | 是否启用每日自动清理观测数据 | `false` |
 | `DatabaseAutoCleanupRetentionDays` | 自动清理保留天数，至少 1 天 | `30` |
 | `GlobalApiRateLimitNum` / `GlobalApiRateLimitDuration` | 全局 API 限流次数 / 时间窗口 | `300` / `180` |

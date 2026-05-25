@@ -63,10 +63,6 @@ export function LoginForm() {
     queryFn: getPublicStatus,
   });
 
-  const canUsePasswordRegister =
-    (statusQuery.data?.register_enabled ?? false) &&
-    (statusQuery.data?.password_register_enabled ?? false);
-
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: (user) => {
@@ -166,17 +162,6 @@ export function LoginForm() {
           >
             {TEXT.forgotPassword}
           </Link>
-          {canUsePasswordRegister ? (
-            <>
-              <span>|</span>
-              <Link
-                href="/register"
-                className="text-[var(--brand-primary)] transition hover:opacity-80"
-              >
-                {TEXT.register}
-              </Link>
-            </>
-          ) : null}
         </div>
       </AppCard>
     </PublicAuthGuard>

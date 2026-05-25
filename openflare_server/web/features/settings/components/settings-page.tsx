@@ -72,7 +72,6 @@ const defaultSystemFields = {
   GitHubOAuthEnabled: false,
   WeChatAuthEnabled: false,
   TurnstileCheckEnabled: false,
-  RegisterEnabled: false,
   SMTPServer: '',
   SMTPPort: '587',
   SMTPAccount: '',
@@ -365,7 +364,6 @@ export function SettingsPage() {
       GitHubOAuthEnabled: toBoolean(optionMap.GitHubOAuthEnabled, false),
       WeChatAuthEnabled: toBoolean(optionMap.WeChatAuthEnabled, false),
       TurnstileCheckEnabled: toBoolean(optionMap.TurnstileCheckEnabled, false),
-      RegisterEnabled: toBoolean(optionMap.RegisterEnabled, false),
       SMTPServer: optionMap.SMTPServer ?? '',
       SMTPPort: optionMap.SMTPPort ?? '587',
       SMTPAccount: optionMap.SMTPAccount ?? '',
@@ -1571,15 +1569,7 @@ export function SettingsPage() {
                 }
                 disabled={busyKey === 'toggle-EmailVerificationEnabled'}
               />
-              <ToggleField
-                label="允许新用户注册"
-                description="关闭后将禁止所有新用户注册入口。"
-                checked={systemFields.RegisterEnabled}
-                onChange={(checked) =>
-                  handleToggleOption('RegisterEnabled', checked)
-                }
-                disabled={busyKey === 'toggle-RegisterEnabled'}
-              />
+
             </div>
             <div className="mt-5 text-sm text-[var(--foreground-secondary)]">
               当前已配置 {authSourcesQuery.data?.length ?? 0} 个认证源。

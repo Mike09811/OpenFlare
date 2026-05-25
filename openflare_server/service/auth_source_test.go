@@ -3,17 +3,11 @@ package service
 import (
 	"testing"
 
-	"openflare/common"
 	"openflare/model"
 )
 
 func TestCompleteOAuthLoginRequiresLinkWhenRegistrationDisabled(t *testing.T) {
 	setupServiceTestDB(t)
-	previousRegisterEnabled := common.RegisterEnabled
-	common.RegisterEnabled = false
-	t.Cleanup(func() {
-		common.RegisterEnabled = previousRegisterEnabled
-	})
 
 	source := createTestAuthSource(t)
 	result, pending, err := CompleteOAuthLogin(source, &OAuthProfile{
@@ -48,43 +42,10 @@ func TestCompleteOAuthLoginRequiresLinkWhenRegistrationDisabled(t *testing.T) {
 	}
 }
 
-func TestCompleteOAuthLoginAutoRegistersWhenEnabled(t *testing.T) {
-	setupServiceTestDB(t)
-	previousRegisterEnabled := common.RegisterEnabled
-	common.RegisterEnabled = true
-	t.Cleanup(func() {
-		common.RegisterEnabled = previousRegisterEnabled
-	})
-
-	source := createTestAuthSource(t)
-	result, pending, err := CompleteOAuthLogin(source, &OAuthProfile{
-		ExternalID:       "external-2",
-		ExternalUsername: "oidc-user",
-		DisplayName:      "OIDC User",
-		Email:            "oidc@example.com",
-	}, nil)
-	if err != nil {
-		t.Fatalf("CompleteOAuthLogin failed: %v", err)
-	}
-	if pending != nil {
-		t.Fatalf("expected no pending account when registration is enabled")
-	}
-	if result.Status != "registered" || result.User == nil {
-		t.Fatalf("expected registered user result, got %#v", result)
-	}
-	account, err := model.FindExternalAccount(source.ID, "external-2")
-	if err != nil {
-		t.Fatalf("expected external account to be linked: %v", err)
-	}
-	if account.UserID != result.User.Id {
-		t.Fatalf("expected external account user %d, got %d", result.User.Id, account.UserID)
-	}
-}
-
 func createTestAuthSource(t *testing.T) *model.AuthSource {
 	t.Helper()
 	source := &model.AuthSource{
-		Name:               "Test OIDC",
+		Name:               "test-oidc",
 		Type:               model.AuthSourceTypeOIDC,
 		DisplayName:        "Test OIDC",
 		ClientID:           "client-id",

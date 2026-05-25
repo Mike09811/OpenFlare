@@ -44,8 +44,6 @@ The settings page maintains these hot-updatable options:
 | `NodeOfflineThreshold` | Node offline threshold in milliseconds | `120000` |
 | `AgentUpdateRepo` | Agent update repository | `Rain-kl/OpenFlare` |
 | `GeoIPProvider` | Node/IP region provider | `ipinfo` |
-| `RegisterEnabled` | Allow new user registration | `false` |
-| `PasswordRegisterEnabled` | Allow password registration | `true` |
 | `DatabaseAutoCleanupEnabled` | Enable daily observability cleanup | `false` |
 | `DatabaseAutoCleanupRetentionDays` | Retention days | `30` |
 
