@@ -718,14 +718,6 @@ type PowListValues = {
   user_agents: string;
 };
 
-const defaultPowList: PowListValues = {
-  ips: '',
-  ip_cidrs: '',
-  paths: '',
-  path_regexes: '',
-  user_agents: '',
-};
-
 const powSchema = z
   .object({
     pow_enabled: z.boolean(),

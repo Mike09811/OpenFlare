@@ -68,10 +68,10 @@ export function DnsAccountsPage() {
           action={
             <div className="flex flex-wrap gap-3">
               <Link
-                href="/website"
+                href="/website/certificate"
                 className="inline-flex min-h-[46px] items-center justify-center rounded-2xl border border-[var(--border-default)] bg-[var(--control-background)] px-4 py-3 text-sm font-medium text-[var(--foreground-primary)] transition hover:bg-[var(--control-background-hover)]"
               >
-                返回网站
+                返回
               </Link>
               <PrimaryButton type="button" onClick={() => setIsCreateOpen(true)}>
                 添加账号

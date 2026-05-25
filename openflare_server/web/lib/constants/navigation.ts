@@ -43,12 +43,6 @@ export const dashboardNavigation: NavigationItem[] = [
     icon: 'performance',
   },
   {
-    href: '/user',
-    label: '用户',
-    icon: 'user',
-  },
-
-  {
     href: '/setting',
     label: '设置',
     icon: 'setting',
