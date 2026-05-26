@@ -1072,6 +1072,54 @@ func TestPublishConfigVersionRendersBasicAuthWithPoW(t *testing.T) {
 	if !strings.Contains(result.Version.RenderedConfig, "proxy_pass http://backend_xbot_example_com_1;") {
 		t.Fatal("expected proxy_pass to stay in the root location after basic auth")
 	}
+	if !strings.Contains(result.Version.SnapshotJSON, `"basic_auth_enabled":true`) {
+		t.Fatal("expected snapshot to include basic auth enabled state")
+	}
+	if !strings.Contains(result.Version.SnapshotJSON, `"basic_auth_username":"admin"`) {
+		t.Fatal("expected snapshot to include basic auth username")
+	}
+	if !strings.Contains(result.Version.SnapshotJSON, `"basic_auth_password":"123"`) {
+		t.Fatal("expected snapshot to include basic auth password")
+	}
+}
+
+func TestDiffConfigVersionDetectsBasicAuthChanges(t *testing.T) {
+	setupServiceTestDB(t)
+
+	route, err := CreateProxyRoute(ProxyRouteInput{
+		Domain:    "auth.example.com",
+		OriginURL: "http://c1:8080",
+		Enabled:   true,
+	})
+	if err != nil {
+		t.Fatalf("CreateProxyRoute failed: %v", err)
+	}
+	if _, err = PublishConfigVersion("root", false); err != nil {
+		t.Fatalf("initial PublishConfigVersion failed: %v", err)
+	}
+
+	_, err = UpdateProxyRoute(route.ID, ProxyRouteInput{
+		Domain:            route.Domain,
+		OriginURL:         route.OriginURL,
+		Enabled:           true,
+		BasicAuthEnabled:  true,
+		BasicAuthUsername: "admin",
+		BasicAuthPassword: "123",
+	})
+	if err != nil {
+		t.Fatalf("UpdateProxyRoute failed: %v", err)
+	}
+
+	diff, err := DiffConfigVersion()
+	if err != nil {
+		t.Fatalf("DiffConfigVersion failed: %v", err)
+	}
+	if len(diff.ModifiedDomains) != 1 || diff.ModifiedDomains[0] != "auth.example.com" {
+		t.Fatalf("expected basic auth change to mark domain as modified, got %#v", diff.ModifiedDomains)
+	}
+	if len(diff.ModifiedSites) != 1 || diff.ModifiedSites[0] != "auth.example.com" {
+		t.Fatalf("expected basic auth change to mark site as modified, got %#v", diff.ModifiedSites)
+	}
 }
 
 func TestRenderConfigUsesDefaultServerFallback(t *testing.T) {

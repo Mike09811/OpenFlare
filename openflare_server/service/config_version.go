@@ -86,6 +86,9 @@ type snapshotRoute struct {
 	CustomHeaders      []ProxyRouteCustomHeaderInput `json:"custom_headers,omitempty"`
 	PoWEnabled         bool                          `json:"pow_enabled,omitempty"`
 	PoWConfig          *ProxyRoutePoWConfig          `json:"pow_config,omitempty"`
+	BasicAuthEnabled   bool                          `json:"basic_auth_enabled,omitempty"`
+	BasicAuthUsername  string                        `json:"basic_auth_username,omitempty"`
+	BasicAuthPassword  string                        `json:"basic_auth_password,omitempty"`
 	Remark             string                        `json:"remark,omitempty"`
 }
 
@@ -529,6 +532,9 @@ func buildSnapshotRoutes(routes []*model.ProxyRoute) ([]snapshotRoute, error) {
 			CustomHeaders:      customHeaders,
 			PoWEnabled:         route.PoWEnabled,
 			PoWConfig:          powConfig,
+			BasicAuthEnabled:   route.BasicAuthEnabled,
+			BasicAuthUsername:  route.BasicAuthUsername,
+			BasicAuthPassword:  route.BasicAuthPassword,
 			Remark:             route.Remark,
 		})
 	}
@@ -644,6 +650,10 @@ func normalizeSnapshotRoutes(routes []snapshotRoute) []snapshotRoute {
 		} else {
 			routes[index].PoWConfig = nil
 		}
+		if !routes[index].BasicAuthEnabled {
+			routes[index].BasicAuthUsername = ""
+			routes[index].BasicAuthPassword = ""
+		}
 	}
 	return routes
 }
@@ -669,7 +679,7 @@ func flattenSnapshotRoutesByDomain(routes []snapshotRoute) map[string]snapshotRo
 }
 
 func snapshotRouteConfigEqual(left snapshotRoute, right snapshotRoute) bool {
-	if left.SiteName != right.SiteName || left.Domain != right.Domain || left.OriginURL != right.OriginURL || left.OriginHost != right.OriginHost || left.EnableHTTPS != right.EnableHTTPS || left.RedirectHTTP != right.RedirectHTTP || left.LimitConnPerServer != right.LimitConnPerServer || left.LimitConnPerIP != right.LimitConnPerIP || left.LimitRate != right.LimitRate || left.CacheEnabled != right.CacheEnabled || left.CachePolicy != right.CachePolicy || left.PoWEnabled != right.PoWEnabled || !uintSliceEqual(left.CertIDs, right.CertIDs) || !uintSliceEqual(left.DomainCertIDs, right.DomainCertIDs) {
+	if left.SiteName != right.SiteName || left.Domain != right.Domain || left.OriginURL != right.OriginURL || left.OriginHost != right.OriginHost || left.EnableHTTPS != right.EnableHTTPS || left.RedirectHTTP != right.RedirectHTTP || left.LimitConnPerServer != right.LimitConnPerServer || left.LimitConnPerIP != right.LimitConnPerIP || left.LimitRate != right.LimitRate || left.CacheEnabled != right.CacheEnabled || left.CachePolicy != right.CachePolicy || left.PoWEnabled != right.PoWEnabled || left.BasicAuthEnabled != right.BasicAuthEnabled || left.BasicAuthUsername != right.BasicAuthUsername || left.BasicAuthPassword != right.BasicAuthPassword || !uintSliceEqual(left.CertIDs, right.CertIDs) || !uintSliceEqual(left.DomainCertIDs, right.DomainCertIDs) {
 		return false
 	}
 	if len(left.Domains) != len(right.Domains) {
