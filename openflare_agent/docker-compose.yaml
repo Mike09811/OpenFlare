@@ -1,0 +1,22 @@
+services:
+  openflare-agent:
+    build:
+        context: .
+        dockerfile: Dockerfile
+    container_name: openflare-agent
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+      - "443:443"
+      - "127.0.0.1:18081:18081"
+
+    volumes:
+      - ./data/:/data
+
+    environment:
+      OPENFLARE_SERVER_URL: "http://host.docker.internal:3000"
+      OPENFLARE_AGENT_TOKEN: "373956188ddead1df6dd7c86cd330b73"
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

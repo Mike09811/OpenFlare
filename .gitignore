@@ -48,3 +48,4 @@ go.work.sum
 *.mmdb
 
 *-source
+*-source.*
