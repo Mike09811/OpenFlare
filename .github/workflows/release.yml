@@ -198,12 +198,15 @@ jobs:
           go mod download
           mkdir -p ../dist
           go build -trimpath -ldflags "-s -w -X 'openflare-agent/internal/config.AgentVersion=$VERSION'" -o "../dist/$ASSET_NAME" ./cmd/agent
+          (cd ../dist && sha256sum "$ASSET_NAME" > "$ASSET_NAME.sha256")
 
       - name: Upload Agent Artifact
         uses: actions/upload-artifact@v4
         with:
           name: agent-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: dist/${{ matrix.asset_name }}
+          path: |
+            dist/${{ matrix.asset_name }}
+            dist/${{ matrix.asset_name }}.sha256
           retention-days: 1
 
   release:

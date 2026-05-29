@@ -49,6 +49,8 @@ The settings page maintains these hot-updatable options:
 
 OpenResty performance and cache options are also stored in the Option table, including `OpenRestyWorkerProcesses`, `OpenRestyWorkerConnections`, `OpenRestyProxyConnectTimeout`, `OpenRestyProxyReadTimeout`, `OpenRestyCacheEnabled`, `OpenRestyCachePath`, and `OpenRestyCacheMaxSize`.
 
+`AgentUpdateRepo` releases must publish a matching `.sha256` file for each Agent binary, such as `openflare-agent-linux-amd64.sha256`. Agent self-update verifies the SHA-256 digest before replacing the executable.
+
 ## Agent Configuration
 
 Agent supports the `-config` CLI flag, an `agent.json` file, and the `LOG_LEVEL` environment variable.

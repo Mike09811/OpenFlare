@@ -44,6 +44,8 @@ curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/inst
 
 Without `openresty_path`, Agent runs `openresty` by default.
 
+Agent self-update requires the GitHub Release to include both the target binary and a matching `.sha256` file. The downloaded binary is verified before it replaces the local executable.
+
 ## Docker
 
 ```bash

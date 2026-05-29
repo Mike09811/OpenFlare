@@ -2,6 +2,8 @@ package updater
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,6 +18,10 @@ import (
 	"openflare-agent/internal/agent"
 	"openflare-agent/internal/config"
 )
+
+const maxChecksumAssetSize = 64 * 1024
+
+var replaceAndRestartFunc = replaceAndRestart
 
 type Service struct {
 	httpClient   *http.Client
@@ -66,24 +72,36 @@ func (s *Service) CheckAndUpdate(ctx context.Context, repo string, options agent
 
 	slog.Info("agent update available", "from", localVersion, "to", remoteVersion)
 	assetName := assetNameForGOOSGOARCH(runtime.GOOS, runtime.GOARCH)
+	checksumAssetName := assetName + ".sha256"
 
 	var downloadURL string
+	var checksumURL string
 	for _, asset := range release.Assets {
-		if asset.Name == assetName {
+		switch asset.Name {
+		case assetName:
 			downloadURL = asset.BrowserDownloadURL
-			break
+		case checksumAssetName:
+			checksumURL = asset.BrowserDownloadURL
 		}
 	}
 	if downloadURL == "" {
 		s.lastCheckKey = checkKey
 		return fmt.Errorf("no matching asset %q in release %s", assetName, release.TagName)
 	}
+	if checksumURL == "" {
+		return fmt.Errorf("no matching checksum asset %q in release %s", checksumAssetName, release.TagName)
+	}
+
+	expectedChecksum, err := s.downloadChecksum(ctx, checksumURL, assetName)
+	if err != nil {
+		return fmt.Errorf("download checksum: %w", err)
+	}
 
 	execPath, err := os.Executable()
 	if err != nil {
 		return fmt.Errorf("get executable path: %w", err)
 	}
-	if err = s.downloadAndRestart(ctx, downloadURL, execPath); err != nil {
+	if err = s.downloadAndRestart(ctx, downloadURL, expectedChecksum, execPath); err != nil {
 		return fmt.Errorf("download and restart: %w", err)
 	}
 	s.lastCheckKey = checkKey
@@ -189,7 +207,94 @@ func decodeRelease(reader io.Reader) (*githubRelease, error) {
 	return &release, nil
 }
 
-func (s *Service) downloadAndRestart(ctx context.Context, url string, targetPath string) error {
+func (s *Service) downloadChecksum(ctx context.Context, url string, assetName string) (string, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return "", err
+	}
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("checksum download returned %s", resp.Status)
+	}
+
+	content, err := io.ReadAll(io.LimitReader(resp.Body, maxChecksumAssetSize+1))
+	if err != nil {
+		return "", err
+	}
+	if len(content) > maxChecksumAssetSize {
+		return "", fmt.Errorf("checksum asset exceeds %d bytes", maxChecksumAssetSize)
+	}
+	checksum, err := parseSHA256Checksum(string(content), assetName)
+	if err != nil {
+		return "", err
+	}
+	return checksum, nil
+}
+
+func parseSHA256Checksum(content string, assetName string) (string, error) {
+	assetName = strings.TrimSpace(assetName)
+	for _, line := range strings.Split(content, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		if checksum, ok := parseSHA256Line(line, assetName); ok {
+			return checksum, nil
+		}
+	}
+	if assetName == "" {
+		return "", fmt.Errorf("checksum asset does not contain a valid sha256 digest")
+	}
+	return "", fmt.Errorf("checksum asset does not contain a sha256 digest for %q", assetName)
+}
+
+func parseSHA256Line(line string, assetName string) (string, bool) {
+	fields := strings.Fields(line)
+	if len(fields) == 1 && isSHA256Hex(fields[0]) {
+		return strings.ToLower(fields[0]), true
+	}
+	if len(fields) >= 2 && isSHA256Hex(fields[0]) {
+		fileName := strings.TrimPrefix(strings.TrimSpace(fields[1]), "*")
+		if assetName == "" || fileName == assetName {
+			return strings.ToLower(fields[0]), true
+		}
+	}
+
+	prefix := "SHA256("
+	if strings.HasPrefix(line, prefix) {
+		closing := strings.Index(line, ")")
+		if closing > len(prefix) && closing+1 < len(line) {
+			fileName := strings.TrimSpace(line[len(prefix):closing])
+			rest := strings.TrimSpace(line[closing+1:])
+			rest = strings.TrimPrefix(rest, "=")
+			rest = strings.TrimSpace(rest)
+			if isSHA256Hex(rest) && (assetName == "" || fileName == assetName) {
+				return strings.ToLower(rest), true
+			}
+		}
+	}
+	return "", false
+}
+
+func isSHA256Hex(value string) bool {
+	value = strings.TrimSpace(value)
+	if len(value) != sha256.Size*2 {
+		return false
+	}
+	_, err := hex.DecodeString(value)
+	return err == nil
+}
+
+func (s *Service) downloadAndRestart(ctx context.Context, url string, expectedChecksum string, targetPath string) error {
+	expectedChecksum = strings.ToLower(strings.TrimSpace(expectedChecksum))
+	if !isSHA256Hex(expectedChecksum) {
+		return fmt.Errorf("invalid expected sha256 checksum")
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return err
@@ -208,19 +313,32 @@ func (s *Service) downloadAndRestart(ctx context.Context, url string, targetPath
 	if runtime.GOOS == "windows" && !strings.HasSuffix(strings.ToLower(tmpPath), ".exe") {
 		tmpPath += ".exe"
 	}
-	tmpFile, err := os.OpenFile(tmpPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o755)
+	tmpFile, err := os.OpenFile(tmpPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
 	if err != nil {
 		return err
 	}
-	if _, err = io.Copy(tmpFile, resp.Body); err != nil {
+	hasher := sha256.New()
+	if _, err = io.Copy(io.MultiWriter(tmpFile, hasher), resp.Body); err != nil {
 		tmpFile.Close()
 		os.Remove(tmpPath)
 		return err
 	}
-	tmpFile.Close()
+	if err = tmpFile.Close(); err != nil {
+		os.Remove(tmpPath)
+		return err
+	}
+	actualChecksum := hex.EncodeToString(hasher.Sum(nil))
+	if actualChecksum != expectedChecksum {
+		os.Remove(tmpPath)
+		return fmt.Errorf("sha256 checksum mismatch: expected %s, got %s", expectedChecksum, actualChecksum)
+	}
+	if err = os.Chmod(tmpPath, 0o755); err != nil && runtime.GOOS != "windows" {
+		os.Remove(tmpPath)
+		return fmt.Errorf("set executable permission: %w", err)
+	}
 
 	slog.Info("agent binary updated, restarting")
-	return replaceAndRestart(targetPath, tmpPath)
+	return replaceAndRestartFunc(targetPath, tmpPath)
 }
 
 func assetNameForGOOSGOARCH(goos string, goarch string) string {
