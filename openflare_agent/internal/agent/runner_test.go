@@ -119,6 +119,22 @@ func (f *fakeSyncService) SyncOnce(ctx context.Context, target *protocol.ActiveC
 	return f.syncOnceErr
 }
 
+func (f *fakeSyncService) ForceSyncOnce(ctx context.Context, target *protocol.ActiveConfigMeta) error {
+	f.mu.Lock()
+	f.syncOnceCalls++
+	if target != nil {
+		copied := *target
+		f.lastTarget = &copied
+	}
+	callIndex := f.syncOnceCalls
+	callback := f.onSyncOnceCall
+	f.mu.Unlock()
+	if callback != nil {
+		callback(callIndex)
+	}
+	return f.syncOnceErr
+}
+
 type fakeWebSocketConnection struct {
 	pongCalls int
 }
