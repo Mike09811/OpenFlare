@@ -1052,28 +1052,6 @@ export function WAFPage() {
 
               {activeTab === 'basic' ? (
                 <div className="space-y-5">
-                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    <StatCard
-                      icon={ShieldCheck}
-                      label="规则组总数"
-                      value={`${groups.length}`}
-                    />
-                    <StatCard
-                      icon={Check}
-                      label="启用中"
-                      value={`${enabledGroups.length}`}
-                    />
-                    <StatCard
-                      icon={Globe2}
-                      label="受保护网站"
-                      value={`${protectedSites.size}`}
-                    />
-                    <StatCard
-                      icon={ListFilter}
-                      label="规则总量"
-                      value={`${totalRules}`}
-                    />
-                  </div>
                   <div className="grid gap-5 xl:grid-cols-2">
                     <ResourceField label="规则组名称">
                       <ResourceInput
