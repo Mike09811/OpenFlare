@@ -2,7 +2,6 @@ package common
 
 import (
 	"flag"
-	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -20,10 +19,10 @@ var (
 var UploadPath = "upload"
 
 func printHelp() {
-	fmt.Println("OpenFlare " + Version + " - Internal OpenResty Control Plane.")
-	fmt.Println("Copyright (C) 2023 JustSong. All rights reserved.")
-	fmt.Println("GitHub: https://github.com/Rain-kl/OpenFlare")
-	fmt.Println("Usage: openflare [--port <port>] [--log-dir <log directory>] [--version] [--help]")
+	slog.Info("OpenFlare " + Version + " - Internal OpenResty Control Plane.")
+	slog.Info("Copyright (C) 2023 JustSong. All rights reserved.")
+	slog.Info("GitHub: https://github.com/Rain-kl/OpenFlare")
+	slog.Info("Usage: openflare [--port <port>] [--log-dir <log directory>] [--version] [--help]")
 }
 
 func init() {
@@ -33,7 +32,7 @@ func init() {
 	}
 
 	if *PrintVersion {
-		fmt.Println(Version)
+		slog.Info(Version)
 		os.Exit(0)
 	}
 
