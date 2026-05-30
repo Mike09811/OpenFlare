@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { useAuth } from '@/components/providers/auth-provider';
@@ -53,6 +53,9 @@ export function DashboardTopbar() {
   const [upgradeStream, setUpgradeStream] =
     useState<UpgradeStreamSnapshot | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const upgradeRefreshPendingRef = useRef(false);
+  const upgradeReloadStartedRef = useRef(false);
+  const upgradeReloadTimerRef = useRef<number | null>(null);
   const isRoot = (user?.role ?? 0) >= 100;
   const upgradeStatusPollInterval = 3000;
 
@@ -90,6 +93,7 @@ export function DashboardTopbar() {
   const upgradeMutation = useMutation({
     mutationFn: (channel: ReleaseChannel) => upgradeServer(channel),
     onSuccess: (release) => {
+      upgradeRefreshPendingRef.current = true;
       setUploadedBinary(null);
       setManualUpgradeStatus(null);
       setManualUpgradeError(null);
@@ -133,6 +137,7 @@ export function DashboardTopbar() {
   const confirmManualUpgradeMutation = useMutation({
     mutationFn: confirmManualServerUpgrade,
     onSuccess: (candidate) => {
+      upgradeRefreshPendingRef.current = true;
       setVersionFeedback(null);
       setManualUpgradeError(null);
       setUploadedBinary(candidate);
@@ -151,6 +156,40 @@ export function DashboardTopbar() {
       );
     },
   });
+
+  const scheduleUpgradePageReload = useCallback(() => {
+    if (upgradeReloadStartedRef.current) {
+      return;
+    }
+
+    upgradeReloadStartedRef.current = true;
+    setVersionFeedback('服务升级已进入重启阶段，页面将在服务恢复后自动刷新。');
+
+    const reloadWhenServerReady = async () => {
+      try {
+        await getPublicStatus();
+        window.location.reload();
+      } catch {
+        upgradeReloadTimerRef.current = window.setTimeout(
+          reloadWhenServerReady,
+          1500,
+        );
+      }
+    };
+
+    upgradeReloadTimerRef.current = window.setTimeout(
+      reloadWhenServerReady,
+      1200,
+    );
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (upgradeReloadTimerRef.current !== null) {
+        window.clearTimeout(upgradeReloadTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!isVersionModalOpen || !isRoot) {
@@ -175,14 +214,28 @@ export function DashboardTopbar() {
       socket.onmessage = (event) => {
         const snapshot = parseUpgradeStreamSnapshot(String(event.data));
         if (snapshot) {
+          if (
+            snapshot.in_progress ||
+            snapshot.upgrade_status === 'succeeded'
+          ) {
+            upgradeRefreshPendingRef.current = true;
+          }
+          if (snapshot.upgrade_status === 'failed') {
+            upgradeRefreshPendingRef.current = false;
+          }
           setUpgradeStream(snapshot);
         }
       };
 
       socket.onclose = () => {
-        if (!closed) {
-          reconnectTimer = window.setTimeout(connect, 1500);
+        if (closed) {
+          return;
         }
+        if (upgradeRefreshPendingRef.current) {
+          scheduleUpgradePageReload();
+          return;
+        }
+        reconnectTimer = window.setTimeout(connect, 1500);
       };
     };
 
@@ -195,7 +248,7 @@ export function DashboardTopbar() {
       }
       socket?.close();
     };
-  }, [isRoot, isVersionModalOpen]);
+  }, [isRoot, isVersionModalOpen, scheduleUpgradePageReload]);
 
   useEffect(() => {
     if (!isUserMenuOpen) {
