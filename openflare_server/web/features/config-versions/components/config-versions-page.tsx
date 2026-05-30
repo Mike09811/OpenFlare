@@ -442,7 +442,6 @@ export function ConfigVersionsPage() {
         message: `发布成功，版本 ${version.version}`,
       });
       setPublishPreview(null);
-      setSelectedVersionId(version.id);
       await queryClient.invalidateQueries({ queryKey: versionsQueryKey });
     },
     onError: (error) => {
