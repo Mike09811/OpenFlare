@@ -5,31 +5,40 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/smtp"
-	"openflare/common"
 	"strings"
 )
 
-func SendEmail(subject string, receiver string, content string) error {
+// SMTPConfig holds all the configuration parameters required to send an email.
+type SMTPConfig struct {
+	Server     string
+	Port       int
+	Account    string
+	Token      string
+	SystemName string
+}
+
+// SendEmail sends an HTML email to the receiver using the provided SMTP configuration.
+func SendEmail(config SMTPConfig, subject string, receiver string, content string) error {
 	encodedSubject := fmt.Sprintf("=?UTF-8?B?%s?=", base64.StdEncoding.EncodeToString([]byte(subject)))
 	mail := []byte(fmt.Sprintf("To: %s\r\n"+
 		"From: %s<%s>\r\n"+
 		"Subject: %s\r\n"+
 		"Content-Type: text/html; charset=UTF-8\r\n\r\n%s\r\n",
-		receiver, common.SystemName, common.SMTPAccount, encodedSubject, content))
-	auth := smtp.PlainAuth("", common.SMTPAccount, common.SMTPToken, common.SMTPServer)
-	addr := fmt.Sprintf("%s:%d", common.SMTPServer, common.SMTPPort)
+		receiver, config.SystemName, config.Account, encodedSubject, content))
+	auth := smtp.PlainAuth("", config.Account, config.Token, config.Server)
+	addr := fmt.Sprintf("%s:%d", config.Server, config.Port)
 	to := strings.Split(receiver, ";")
 	var err error
-	if common.SMTPPort == 465 {
+	if config.Port == 465 {
 		tlsConfig := &tls.Config{
 			InsecureSkipVerify: true,
-			ServerName:         common.SMTPServer,
+			ServerName:         config.Server,
 		}
-		conn, err := tls.Dial("tcp", fmt.Sprintf("%s:%d", common.SMTPServer, common.SMTPPort), tlsConfig)
+		conn, err := tls.Dial("tcp", fmt.Sprintf("%s:%d", config.Server, config.Port), tlsConfig)
 		if err != nil {
 			return err
 		}
-		client, err := smtp.NewClient(conn, common.SMTPServer)
+		client, err := smtp.NewClient(conn, config.Server)
 		if err != nil {
 			return err
 		}
@@ -37,12 +46,12 @@ func SendEmail(subject string, receiver string, content string) error {
 		if err = client.Auth(auth); err != nil {
 			return err
 		}
-		if err = client.Mail(common.SMTPAccount); err != nil {
+		if err = client.Mail(config.Account); err != nil {
 			return err
 		}
 		receiverEmails := strings.Split(receiver, ";")
-		for _, receiver := range receiverEmails {
-			if err = client.Rcpt(receiver); err != nil {
+		for _, r := range receiverEmails {
+			if err = client.Rcpt(r); err != nil {
 				return err
 			}
 		}
@@ -59,7 +68,7 @@ func SendEmail(subject string, receiver string, content string) error {
 			return err
 		}
 	} else {
-		err = smtp.SendMail(addr, auth, common.SMTPAccount, to, mail)
+		err = smtp.SendMail(addr, auth, config.Account, to, mail)
 	}
 	return err
 }
