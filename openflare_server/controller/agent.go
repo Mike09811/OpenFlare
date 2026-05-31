@@ -26,8 +26,7 @@ import (
 // @Router /api/agent/nodes/register [post]
 func AgentRegister(c *gin.Context) {
 	var payload service.AgentNodePayload
-	if err := decodeJSONBody(c.Request.Body, &payload); err != nil {
-		respondBadRequest(c, "")
+	if !bindJSON(c, &payload) {
 		return
 	}
 	payload.IP = service.ResolveReportedNodeIP(payload.IP, c.Request.RemoteAddr)
@@ -60,8 +59,7 @@ func AgentRegister(c *gin.Context) {
 // @Router /api/agent/nodes/heartbeat [post]
 func AgentHeartbeat(c *gin.Context) {
 	var payload service.AgentNodePayload
-	if err := decodeJSONBody(c.Request.Body, &payload); err != nil {
-		respondBadRequest(c, "")
+	if !bindJSON(c, &payload) {
 		return
 	}
 	payload.IP = service.ResolveReportedNodeIP(payload.IP, c.Request.RemoteAddr)
@@ -111,8 +109,7 @@ func AgentGetActiveConfig(c *gin.Context) {
 // @Router /api/agent/apply-logs [post]
 func AgentReportApplyLog(c *gin.Context) {
 	var payload service.ApplyLogPayload
-	if err := decodeJSONBody(c.Request.Body, &payload); err != nil {
-		respondBadRequest(c, "")
+	if !bindJSON(c, &payload) {
 		return
 	}
 
@@ -301,8 +298,7 @@ func GetApplyLogs(c *gin.Context) {
 // @Router /api/apply-logs/cleanup [post]
 func CleanupApplyLogs(c *gin.Context) {
 	var input service.ApplyLogCleanupInput
-	if err := c.ShouldBindJSON(&input); err != nil {
-		respondBadRequest(c, "")
+	if !bindJSON(c, &input) {
 		return
 	}
 	result, err := service.CleanupApplyLogs(input)

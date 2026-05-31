@@ -1,9 +1,6 @@
 package controller
 
 import (
-	"errors"
-	"io"
-	"net/http"
 	"openflare/service"
 	"strings"
 	"time"
@@ -24,23 +21,16 @@ type serverUpgradeRequest struct {
 // @Summary Get latest GitHub release
 // @Tags Update
 // @Produce json
+// @Security BearerAuth
 // @Success 200 {object} map[string]interface{}
 // @Router /api/update/latest-release [get]
 func GetLatestRelease(c *gin.Context) {
 	release, err := service.GetLatestServerRelease(c.Request.Context(), c.Query("channel"))
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
+		respondFailure(c, err.Error())
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "",
-		"data":    release,
-	})
+	respondSuccess(c, release)
 }
 
 // UpgradeServer godoc
@@ -52,27 +42,19 @@ func GetLatestRelease(c *gin.Context) {
 func UpgradeServer(c *gin.Context) {
 	var request serverUpgradeRequest
 	if c.Request.ContentLength > 0 {
-		if err := c.ShouldBindJSON(&request); err != nil && !errors.Is(err, io.EOF) {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"success": false,
-				"message": "无效的参数",
-			})
+		if err := decodeOptionalJSONBody(c.Request.Body, &request); err != nil {
+			respondBadRequest(c, "无效的参数")
 			return
 		}
 	}
 	release, err := service.ScheduleServerUpgrade(request.Channel)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
+		respondFailure(c, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
+	respondSuccessWithExtras(c, release, gin.H{
 		"message": "服务升级任务已启动，下载完成后将自动重启。",
-		"data":    release,
 	})
 }
 
@@ -122,19 +104,13 @@ func StreamServerUpgradeLogs(c *gin.Context) {
 func UploadManualServerBinary(c *gin.Context) {
 	fileHeader, err := c.FormFile("binary")
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": "请先选择要上传的服务端二进制文件。",
-		})
+		respondFailure(c, "请先选择要上传的服务端二进制文件。")
 		return
 	}
 
 	file, err := fileHeader.Open()
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": "读取上传文件失败。",
-		})
+		respondFailure(c, "读取上传文件失败。")
 		return
 	}
 	defer func() {
@@ -143,10 +119,7 @@ func UploadManualServerBinary(c *gin.Context) {
 
 	info, err := service.UploadManualServerBinary(c.Request.Context(), fileHeader.Filename, file)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
+		respondFailure(c, err.Error())
 		return
 	}
 
@@ -155,10 +128,8 @@ func UploadManualServerBinary(c *gin.Context) {
 		message = "已完成上传并检查升级包版本。"
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
+	respondSuccessWithExtras(c, info, gin.H{
 		"message": message,
-		"data":    info,
 	})
 }
 
@@ -171,26 +142,17 @@ func UploadManualServerBinary(c *gin.Context) {
 // @Router /api/update/manual-upgrade [post]
 func ConfirmManualServerUpgrade(c *gin.Context) {
 	var request confirmManualUpgradeRequest
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": "升级确认参数无效。",
-		})
+	if !bindJSON(c, &request) {
 		return
 	}
 
 	info, err := service.ConfirmManualServerUpgrade(request.UploadToken)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
+		respondFailure(c, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
+	respondSuccessWithExtras(c, info, gin.H{
 		"message": "服务升级任务已启动，确认无误后将自动重启。",
-		"data":    info,
 	})
 }

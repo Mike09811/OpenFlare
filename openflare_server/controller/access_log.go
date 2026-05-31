@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"net/http"
 	"openflare/service"
 	"strconv"
 
@@ -164,12 +163,7 @@ func GetAccessLogIPTrend(c *gin.Context) {
 // @Router /api/access-logs/cleanup [post]
 func CleanupAccessLogs(c *gin.Context) {
 	var input service.AccessLogCleanupInput
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "参数错误",
-			"error":   err.Error(),
-		})
+	if !bindJSON(c, &input) {
 		return
 	}
 	result, err := service.CleanupAccessLogs(input)
