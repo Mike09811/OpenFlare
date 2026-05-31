@@ -393,6 +393,8 @@ func (m *Manager) CurrentChecksum() (string, error) {
 	}
 	if accessLogPath := m.accessLogRuntimePath(); accessLogPath != "" {
 		normalizedMain = strings.ReplaceAll(normalizedMain, accessLogPath, openrestyrender.AccessLogPlaceholder)
+		errorLogPath := filepath.Join(filepath.Dir(accessLogPath), "error.log")
+		normalizedMain = strings.ReplaceAll(normalizedMain, filepath.ToSlash(errorLogPath), openrestyrender.ErrorLogPlaceholder)
 	}
 	if luaDir := m.luaRuntimePath(); luaDir != "" {
 		normalizedMain = strings.ReplaceAll(normalizedMain, luaDir, openrestyrender.LuaDirPlaceholder)
@@ -1061,6 +1063,8 @@ func (m *Manager) renderMainConfig(content string) string {
 	}
 	if accessLogPath := m.accessLogRuntimePath(); accessLogPath != "" {
 		rendered = strings.ReplaceAll(rendered, openrestyrender.AccessLogPlaceholder, accessLogPath)
+		errorLogPath := filepath.Join(filepath.Dir(accessLogPath), "error.log")
+		rendered = strings.ReplaceAll(rendered, openrestyrender.ErrorLogPlaceholder, filepath.ToSlash(errorLogPath))
 	}
 	if luaDir := m.luaRuntimePath(); luaDir != "" {
 		rendered = strings.ReplaceAll(rendered, openrestyrender.LuaDirPlaceholder, luaDir)

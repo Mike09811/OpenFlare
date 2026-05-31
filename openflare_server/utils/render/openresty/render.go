@@ -278,6 +278,7 @@ func renderMainConfigTemplate(templateText string, cfg ConfigSnapshot) string {
 		"{{OpenRestyConnectionUpgradeMap}}", renderConnectionUpgradeMap(),
 		"{{OpenRestyDefaultServerBlock}}", renderDefaultServerBlock(),
 		"{{OpenRestyAccessLogPath}}", AccessLogPlaceholder,
+		"{{OpenRestyErrorLogPath}}", ErrorLogPlaceholder,
 		"{{OpenRestyEventsUseDirective}}", renderTemplateDirective(cfg.EventsUse != "", fmt.Sprintf("use %s;", cfg.EventsUse)),
 		"{{OpenRestyEventsMultiAcceptDirective}}", renderTemplateDirective(cfg.EventsMultiAcceptEnabled, "multi_accept on;"),
 		"{{OpenRestyKeepaliveTimeout}}", fmt.Sprintf("%d", cfg.KeepaliveTimeout),

@@ -58,6 +58,9 @@ func TestCreateTLSCertificateAndRenderHTTPSConfig(t *testing.T) {
 	if !strings.Contains(result.Version.MainConfig, "access_log __OPENFLARE_ACCESS_LOG__ openflare_json;") {
 		t.Fatal("expected main config to include managed access log placeholder")
 	}
+	if !strings.Contains(result.Version.MainConfig, "error_log __OPENFLARE_ERROR_LOG__ warn;") {
+		t.Fatal("expected main config to include managed error log placeholder")
+	}
 	if !strings.Contains(result.Version.MainConfig, "log_by_lua_file __OPENFLARE_LUA_DIR__/log.lua;") {
 		t.Fatal("expected main config to include managed openresty lua log hook")
 	}
@@ -1242,6 +1245,9 @@ func TestOpenRestyMainConfigTemplateRenderAndValidate(t *testing.T) {
 	if !strings.Contains(preview.MainConfig, "access_log __OPENFLARE_ACCESS_LOG__ openflare_json;") {
 		t.Fatal("expected preview main config to preserve managed access log placeholder")
 	}
+	if !strings.Contains(preview.MainConfig, "error_log __OPENFLARE_ERROR_LOG__ warn;") {
+		t.Fatal("expected preview main config to preserve managed error log placeholder")
+	}
 	if !strings.Contains(preview.MainConfig, "map $http_upgrade $connection_upgrade {") {
 		t.Fatal("expected preview main config to preserve managed websocket upgrade map")
 	}
@@ -1280,6 +1286,15 @@ func TestOpenRestyMainConfigTemplateRenderAndValidate(t *testing.T) {
 	)
 	if err := ValidateOpenRestyMainConfigTemplate(invalidTemplate); err == nil {
 		t.Fatal("expected template without managed websocket upgrade map placeholder to fail validation")
+	}
+
+	invalidTemplate = strings.ReplaceAll(
+		common.OpenRestyMainConfigTemplate,
+		"{{OpenRestyErrorLogPath}}",
+		"",
+	)
+	if err := ValidateOpenRestyMainConfigTemplate(invalidTemplate); err == nil {
+		t.Fatal("expected template without managed error log placeholder to fail validation")
 	}
 }
 
