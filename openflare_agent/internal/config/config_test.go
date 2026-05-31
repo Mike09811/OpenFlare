@@ -161,41 +161,6 @@ func TestLoadNormalizesExplicitResolvers(t *testing.T) {
 	}
 }
 
-func TestLoadKeepsDeprecatedDockerFieldsForCompatibility(t *testing.T) {
-	dir := t.TempDir()
-	configPath := filepath.Join(dir, "agent.json")
-	payload := map[string]any{
-		"server_url":               "http://127.0.0.1:3000",
-		"agent_token":              "token",
-		"node_name":                "edge-01",
-		"node_ip":                  "10.0.0.8",
-		"openresty_container_name": "openflare-openresty",
-		"openresty_docker_image":   "openresty/openresty:alpine",
-		"docker_binary":            "docker",
-	}
-	data, err := json.Marshal(payload)
-	if err != nil {
-		t.Fatalf("failed to marshal config: %v", err)
-	}
-	if err = os.WriteFile(configPath, data, 0o644); err != nil {
-		t.Fatalf("failed to write config: %v", err)
-	}
-
-	cfg, err := Load(configPath)
-	if err != nil {
-		t.Fatalf("Load failed: %v", err)
-	}
-	if cfg.OpenrestyContainerName != "openflare-openresty" {
-		t.Fatalf("unexpected container name: %s", cfg.OpenrestyContainerName)
-	}
-	if cfg.OpenrestyDockerImage != "openresty/openresty:alpine" {
-		t.Fatalf("unexpected image: %s", cfg.OpenrestyDockerImage)
-	}
-	if cfg.DockerBinary != "docker" {
-		t.Fatalf("unexpected docker binary: %s", cfg.DockerBinary)
-	}
-}
-
 func TestLoadUsesCustomDataDirForGeneratedFiles(t *testing.T) {
 	dir := t.TempDir()
 	configPath := filepath.Join(dir, "agent.json")
@@ -461,15 +426,6 @@ func TestSavePersistsMillisecondsAndOmitsRuntimeVersions(t *testing.T) {
 	}
 	if _, ok := decoded["nginx_path"]; ok {
 		t.Fatal("legacy nginx_path should not be persisted")
-	}
-	if _, ok := decoded["openresty_container_name"]; ok {
-		t.Fatal("deprecated openresty_container_name should not be persisted by default")
-	}
-	if _, ok := decoded["openresty_docker_image"]; ok {
-		t.Fatal("deprecated openresty_docker_image should not be persisted by default")
-	}
-	if _, ok := decoded["docker_binary"]; ok {
-		t.Fatal("deprecated docker_binary should not be persisted by default")
 	}
 }
 

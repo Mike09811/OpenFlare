@@ -47,9 +47,6 @@ type Config struct {
 	NginxVersion               string              `json:"-"`
 	OpenrestyPath              string              `json:"openresty_path"`
 	OpenrestyResolvers         []string            `json:"openresty_resolvers,omitempty"`
-	OpenrestyContainerName     string              `json:"openresty_container_name,omitempty"`
-	OpenrestyDockerImage       string              `json:"openresty_docker_image,omitempty"`
-	DockerBinary               string              `json:"docker_binary,omitempty"`
 	DataDir                    string              `json:"data_dir"`
 	MainConfigPath             string              `json:"main_config_path"`
 	RouteConfigPath            string              `json:"route_config_path"`
@@ -79,9 +76,6 @@ type configFile struct {
 	NodeIP                     string              `json:"node_ip"`
 	OpenrestyPath              string              `json:"openresty_path"`
 	OpenrestyResolvers         []string            `json:"openresty_resolvers"`
-	OpenrestyContainerName     string              `json:"openresty_container_name"`
-	OpenrestyDockerImage       string              `json:"openresty_docker_image"`
-	DockerBinary               string              `json:"docker_binary"`
 	DataDir                    string              `json:"data_dir"`
 	MainConfigPath             string              `json:"main_config_path"`
 	RouteConfigPath            string              `json:"route_config_path"`
@@ -124,9 +118,6 @@ func Load(path string) (*Config, error) {
 		NodeIP:                     file.NodeIP,
 		OpenrestyPath:              file.OpenrestyPath,
 		OpenrestyResolvers:         append([]string{}, file.OpenrestyResolvers...),
-		OpenrestyContainerName:     file.OpenrestyContainerName,
-		OpenrestyDockerImage:       file.OpenrestyDockerImage,
-		DockerBinary:               file.DockerBinary,
 		DataDir:                    file.DataDir,
 		MainConfigPath:             file.MainConfigPath,
 		RouteConfigPath:            file.RouteConfigPath,
