@@ -1,6 +1,10 @@
 package utils
 
-import "strings"
+import (
+	"sort"
+	"strings"
+	"time"
+)
 
 // Unique returns a new slice containing only the unique elements of the input slice,
 // preserving their original order.
@@ -43,4 +47,30 @@ func UniqueAndCleanStringSlice(slice []string) []string {
 		return nil
 	}
 	return result
+}
+
+// IdentifiableTimeRecord represents a database record that has a unique ID and a primary timestamp field.
+type IdentifiableTimeRecord interface {
+	GetID() uint
+	GetTime() time.Time
+}
+
+// SortAndLimitRecords sorts a slice of IdentifiableTimeRecord descendingly by their timestamp (and ID as a tie-breaker),
+// and limits the slice to the specified size if limit > 0.
+func SortAndLimitRecords[T IdentifiableTimeRecord](rows []T, limit int) []T {
+	if len(rows) == 0 {
+		return rows
+	}
+	sort.Slice(rows, func(i, j int) bool {
+		ti := rows[i].GetTime()
+		tj := rows[j].GetTime()
+		if ti.Equal(tj) {
+			return rows[i].GetID() > rows[j].GetID()
+		}
+		return ti.After(tj)
+	})
+	if limit > 0 && len(rows) > limit {
+		rows = rows[:limit]
+	}
+	return rows
 }

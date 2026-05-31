@@ -16,7 +16,7 @@ import (
 )
 
 var proxyHeaderKeyPattern = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)
-var proxyRouteLimitRatePattern = regexp.MustCompile(`^\d+(?:[kKmM])?$`)
+var proxyRouteLimitRatePattern = regexp.MustCompile(`^\d+[kKmM]?$`)
 
 const (
 	proxyRouteCachePolicyURL        = "url"

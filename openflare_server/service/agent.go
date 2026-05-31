@@ -144,10 +144,6 @@ type NodeView struct {
 	UpdatedAt                 time.Time  `json:"updated_at"`
 }
 
-func RegisterNode(node *model.Node, payload AgentNodePayload) (*AgentRegistrationResponse, error) {
-	return RegisterNodeWithAgentToken(node, payload)
-}
-
 func HeartbeatNode(node *model.Node, payload AgentNodePayload) (*HeartbeatResponse, error) {
 	slog.Debug("agent heartbeat received", "node_id", node.NodeID, "current_version", strings.TrimSpace(payload.CurrentVersion))
 	payload.NodeID = node.NodeID

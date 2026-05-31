@@ -190,14 +190,6 @@ func CompleteOAuthLogin(source *model.AuthSource, profile *OAuthProfile, current
 		return &OAuthCallbackResult{Status: "linked", User: user}, nil, nil
 	}
 
-	if common.RegisterEnabled {
-		user, err := createUserFromOAuthProfile(source, profile)
-		if err != nil {
-			return nil, nil, err
-		}
-		return &OAuthCallbackResult{Status: "registered", User: user}, nil, nil
-	}
-
 	pending := &PendingExternalAccount{
 		AuthSourceID:     source.ID,
 		ExternalID:       profile.ExternalID,
@@ -244,6 +236,7 @@ func LinkPendingExternalAccount(pending *PendingExternalAccount, input LinkExist
 	return &user, nil
 }
 
+// CreateUserFromOAuthProfile 根据 OAuth 资料创建新用户
 func createUserFromOAuthProfile(source *model.AuthSource, profile *OAuthProfile) (*model.User, error) {
 	displayName := strings.TrimSpace(profile.DisplayName)
 	if displayName == "" {

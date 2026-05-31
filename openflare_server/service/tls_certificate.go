@@ -194,25 +194,29 @@ func DeleteTLSCertificate(id uint) error {
 	return certificate.Delete()
 }
 
+func fillAcmeCertificateFields(cert *model.TLSCertificate, input TLSApplyInput) {
+	cert.Name = strings.TrimSpace(input.Name)
+	cert.Remark = strings.TrimSpace(input.Remark)
+	cert.AcmeAccountID = input.AcmeAccountID
+	cert.DnsAccountID = input.DnsAccountID
+	cert.KeyAlgorithm = input.KeyAlgorithm
+	cert.AutoRenew = input.AutoRenew
+	cert.PrimaryDomain = strings.TrimSpace(input.PrimaryDomain)
+	cert.OtherDomains = strings.TrimSpace(input.OtherDomains)
+	cert.DisableCNAME = input.DisableCNAME
+	cert.SkipDNS = input.SkipDNS
+	cert.DNS1 = strings.TrimSpace(input.DNS1)
+	cert.DNS2 = strings.TrimSpace(input.DNS2)
+	cert.ApplyStatus = "applying"
+}
+
 func ApplyTLSCertificate(input TLSApplyInput) (*model.TLSCertificate, error) {
 	cert := &model.TLSCertificate{
-		Name:          strings.TrimSpace(input.Name),
-		Remark:        strings.TrimSpace(input.Remark),
-		Provider:      "acme",
-		AcmeAccountID: input.AcmeAccountID,
-		DnsAccountID:  input.DnsAccountID,
-		KeyAlgorithm:  input.KeyAlgorithm,
-		AutoRenew:     input.AutoRenew,
-		PrimaryDomain: strings.TrimSpace(input.PrimaryDomain),
-		OtherDomains:  strings.TrimSpace(input.OtherDomains),
-		DisableCNAME:  input.DisableCNAME,
-		SkipDNS:       input.SkipDNS,
-		DNS1:          strings.TrimSpace(input.DNS1),
-		DNS2:          strings.TrimSpace(input.DNS2),
-		ApplyStatus:   "applying",
-		CertPEM:       " ", // Temporary empty value, since gorm may prevent empty insert
-		KeyPEM:        " ", // Temporary empty value
+		Provider: "acme",
+		CertPEM:  " ", // Temporary empty value, since gorm may prevent empty insert
+		KeyPEM:   " ", // Temporary empty value
 	}
+	fillAcmeCertificateFields(cert, input)
 
 	if cert.Name == "" {
 		return nil, errors.New("certificate name cannot be empty")
@@ -242,23 +246,10 @@ func UpdateAcmeCertificate(id uint, input TLSApplyInput) (*model.TLSCertificate,
 		return nil, errors.New("only acme certificates can be updated via this endpoint")
 	}
 
-	cert.Name = strings.TrimSpace(input.Name)
+	fillAcmeCertificateFields(cert, input)
 	if cert.Name == "" {
 		return nil, errors.New("certificate name cannot be empty")
 	}
-
-	cert.Remark = strings.TrimSpace(input.Remark)
-	cert.AcmeAccountID = input.AcmeAccountID
-	cert.DnsAccountID = input.DnsAccountID
-	cert.KeyAlgorithm = input.KeyAlgorithm
-	cert.AutoRenew = input.AutoRenew
-	cert.PrimaryDomain = strings.TrimSpace(input.PrimaryDomain)
-	cert.OtherDomains = strings.TrimSpace(input.OtherDomains)
-	cert.DisableCNAME = input.DisableCNAME
-	cert.SkipDNS = input.SkipDNS
-	cert.DNS1 = strings.TrimSpace(input.DNS1)
-	cert.DNS2 = strings.TrimSpace(input.DNS2)
-	cert.ApplyStatus = "applying"
 
 	if err := cert.Update(); err != nil {
 		if model.IsUniqueConstraintError(err) {
@@ -287,24 +278,10 @@ func ConvertTLSCertificateToAcme(id uint, input TLSApplyInput) (*model.TLSCertif
 		return nil, errors.New("certificate is already applying")
 	}
 
-	name := strings.TrimSpace(input.Name)
-	if name == "" {
+	fillAcmeCertificateFields(cert, input)
+	if cert.Name == "" {
 		return nil, errors.New("certificate name cannot be empty")
 	}
-
-	cert.Name = name
-	cert.Remark = strings.TrimSpace(input.Remark)
-	cert.AcmeAccountID = input.AcmeAccountID
-	cert.DnsAccountID = input.DnsAccountID
-	cert.KeyAlgorithm = input.KeyAlgorithm
-	cert.AutoRenew = input.AutoRenew
-	cert.PrimaryDomain = strings.TrimSpace(input.PrimaryDomain)
-	cert.OtherDomains = strings.TrimSpace(input.OtherDomains)
-	cert.DisableCNAME = input.DisableCNAME
-	cert.SkipDNS = input.SkipDNS
-	cert.DNS1 = strings.TrimSpace(input.DNS1)
-	cert.DNS2 = strings.TrimSpace(input.DNS2)
-	cert.ApplyStatus = "applying"
 	cert.ApplyMessage = ""
 
 	if err := cert.Update(); err != nil {

@@ -157,12 +157,6 @@ func IsAgentWSConnected(nodeID string) bool {
 	}
 }
 
-func AgentWSClientCount() int {
-	defaultAgentWSHub.mu.RLock()
-	defer defaultAgentWSHub.mu.RUnlock()
-	return len(defaultAgentWSHub.clients)
-}
-
 func SendAgentWSSettings(nodeID string, settings *AgentSettings) bool {
 	if settings == nil {
 		return false

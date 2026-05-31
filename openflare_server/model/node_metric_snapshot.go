@@ -1,7 +1,7 @@
 package model
 
 import (
-	"sort"
+	"openflare/utils"
 	"time"
 
 	"gorm.io/gorm"
@@ -24,6 +24,14 @@ type NodeMetricSnapshot struct {
 	OpenrestyTxBytes     int64     `json:"openresty_tx_bytes"`
 	OpenrestyConnections int64     `json:"openresty_connections"`
 	CreatedAt            time.Time `json:"created_at"`
+}
+
+func (snapshot *NodeMetricSnapshot) GetID() uint {
+	return snapshot.ID
+}
+
+func (snapshot *NodeMetricSnapshot) GetTime() time.Time {
+	return snapshot.CapturedAt
 }
 
 func (snapshot *NodeMetricSnapshot) BeforeCreate(tx *gorm.DB) error {
@@ -52,16 +60,7 @@ func ListNodeMetricSnapshots(nodeID string, since time.Time, limit int) (snapsho
 	if err != nil {
 		return nil, err
 	}
-	sort.Slice(rows, func(i int, j int) bool {
-		if rows[i].CapturedAt.Equal(rows[j].CapturedAt) {
-			return rows[i].ID > rows[j].ID
-		}
-		return rows[i].CapturedAt.After(rows[j].CapturedAt)
-	})
-	if limit > 0 && len(rows) > limit {
-		rows = rows[:limit]
-	}
-	return rows, nil
+	return utils.SortAndLimitRecords(rows, limit), nil
 }
 
 func ListMetricSnapshotsSince(since time.Time) (snapshots []*NodeMetricSnapshot, err error) {
@@ -79,13 +78,7 @@ func ListMetricSnapshotsSince(since time.Time) (snapshots []*NodeMetricSnapshot,
 	if err != nil {
 		return nil, err
 	}
-	sort.Slice(rows, func(i int, j int) bool {
-		if rows[i].CapturedAt.Equal(rows[j].CapturedAt) {
-			return rows[i].ID > rows[j].ID
-		}
-		return rows[i].CapturedAt.After(rows[j].CapturedAt)
-	})
-	return rows, nil
+	return utils.SortAndLimitRecords(rows, 0), nil
 }
 
 func NodeMetricSnapshotExists(db *gorm.DB, nodeID string, capturedAt time.Time) (bool, error) {

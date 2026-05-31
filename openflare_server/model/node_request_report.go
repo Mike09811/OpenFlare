@@ -1,7 +1,7 @@
 package model
 
 import (
-	"sort"
+	"openflare/utils"
 	"time"
 
 	"gorm.io/gorm"
@@ -19,6 +19,14 @@ type NodeRequestReport struct {
 	TopDomainsJSON      string    `json:"top_domains_json" gorm:"type:text"`
 	SourceCountriesJSON string    `json:"source_countries_json" gorm:"type:text"`
 	CreatedAt           time.Time `json:"created_at"`
+}
+
+func (report *NodeRequestReport) GetID() uint {
+	return report.ID
+}
+
+func (report *NodeRequestReport) GetTime() time.Time {
+	return report.WindowEndedAt
 }
 
 func (report *NodeRequestReport) BeforeCreate(tx *gorm.DB) error {
@@ -47,16 +55,7 @@ func ListNodeRequestReports(nodeID string, since time.Time, limit int) (reports 
 	if err != nil {
 		return nil, err
 	}
-	sort.Slice(rows, func(i int, j int) bool {
-		if rows[i].WindowEndedAt.Equal(rows[j].WindowEndedAt) {
-			return rows[i].ID > rows[j].ID
-		}
-		return rows[i].WindowEndedAt.After(rows[j].WindowEndedAt)
-	})
-	if limit > 0 && len(rows) > limit {
-		rows = rows[:limit]
-	}
-	return rows, nil
+	return utils.SortAndLimitRecords(rows, limit), nil
 }
 
 func ListRequestReportsSince(since time.Time) (reports []*NodeRequestReport, err error) {
@@ -74,13 +73,7 @@ func ListRequestReportsSince(since time.Time) (reports []*NodeRequestReport, err
 	if err != nil {
 		return nil, err
 	}
-	sort.Slice(rows, func(i int, j int) bool {
-		if rows[i].WindowEndedAt.Equal(rows[j].WindowEndedAt) {
-			return rows[i].ID > rows[j].ID
-		}
-		return rows[i].WindowEndedAt.After(rows[j].WindowEndedAt)
-	})
-	return rows, nil
+	return utils.SortAndLimitRecords(rows, 0), nil
 }
 
 func NodeRequestReportExists(db *gorm.DB, nodeID string, windowStartedAt time.Time, windowEndedAt time.Time) (bool, error) {

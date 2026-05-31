@@ -1,7 +1,6 @@
 package model
 
 import (
-	"fmt"
 	"sort"
 	"strings"
 	"time"
@@ -115,7 +114,7 @@ type NodeAccessLogTrendPointRow struct {
 	RequestCount int64 `json:"request_count"`
 }
 
-func (log *NodeAccessLog) BeforeCreate(tx *gorm.DB) error {
+func (log *NodeAccessLog) BeforeCreate(*gorm.DB) error {
 	return assignObservabilityID(&log.ID)
 }
 
@@ -324,16 +323,6 @@ func DeleteNodeAccessLogsByNodeBefore(db *gorm.DB, nodeID string, before time.Ti
 	return deleteAcrossShards(db, "node_access_logs", &NodeAccessLog{}, func(tx *gorm.DB) *gorm.DB {
 		return tx.Where("node_id = ? AND logged_at < ?", nodeID, before)
 	})
-}
-
-func buildNodeAccessLogQuery(db *gorm.DB, query NodeAccessLogQuery) *gorm.DB {
-	if db == nil {
-		db = DB.Model(&NodeAccessLog{})
-	}
-	if db.Statement == nil || db.Statement.Model == nil {
-		db = db.Model(&NodeAccessLog{})
-	}
-	return applyNodeAccessLogFilters(db, query)
 }
 
 func applyNodeAccessLogFilters(db *gorm.DB, query NodeAccessLogQuery) *gorm.DB {
@@ -745,71 +734,6 @@ func compareUint(left uint, right uint) int {
 		return -1
 	default:
 		return 0
-	}
-}
-
-func buildNodeAccessLogSortClause(sortBy string, sortOrder string) string {
-	column := "logged_at"
-	switch strings.TrimSpace(sortBy) {
-	case "status_code":
-		column = "status_code"
-	case "remote_addr":
-		column = "remote_addr"
-	case "host":
-		column = "host"
-	case "path":
-		column = "path"
-	}
-	order := normalizeSortOrder(sortOrder)
-	if column == "logged_at" {
-		return fmt.Sprintf("%s %s, id %s", column, order, order)
-	}
-	return fmt.Sprintf("%s %s, logged_at desc, id desc", column, order)
-}
-
-func buildNodeAccessLogBucketSortClause(sortBy string, sortOrder string) string {
-	order := normalizeSortOrder(sortOrder)
-	switch strings.TrimSpace(sortBy) {
-	case "request_count":
-		return fmt.Sprintf("request_count %s, bucket_epoch desc", order)
-	default:
-		return fmt.Sprintf("bucket_epoch %s", order)
-	}
-}
-
-func buildNodeAccessLogIPSummarySortClause(sortBy string, sortOrder string) string {
-	order := normalizeSortOrder(sortOrder)
-	switch strings.TrimSpace(sortBy) {
-	case "recent_requests":
-		return fmt.Sprintf("recent_requests %s, last_seen_epoch desc, remote_addr asc", order)
-	case "last_seen_at":
-		return fmt.Sprintf("last_seen_epoch %s, total_requests desc, remote_addr asc", order)
-	case "remote_addr":
-		return fmt.Sprintf("remote_addr %s", order)
-	default:
-		return fmt.Sprintf("total_requests %s, last_seen_epoch desc, remote_addr asc", order)
-	}
-}
-
-func accessLogBucketEpochExpr(bucketMinutes int) string {
-	bucketSeconds := bucketMinutes * 60
-	if bucketSeconds <= 0 {
-		bucketSeconds = 180
-	}
-	switch DB.Dialector.Name() {
-	case "postgres":
-		return fmt.Sprintf("CAST(floor(extract(epoch from logged_at) / %d) * %d AS BIGINT)", bucketSeconds, bucketSeconds)
-	default:
-		return fmt.Sprintf("CAST((strftime('%%s', logged_at) / %d) * %d AS INTEGER)", bucketSeconds, bucketSeconds)
-	}
-}
-
-func accessLogEpochExpr(expression string) string {
-	switch DB.Dialector.Name() {
-	case "postgres":
-		return fmt.Sprintf("CAST(extract(epoch from %s) AS BIGINT)", expression)
-	default:
-		return fmt.Sprintf("CAST(strftime('%%s', %s) AS INTEGER)", expression)
 	}
 }
 

@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -129,10 +128,6 @@ func observabilityShardSuffixForValue(value any) (string, error) {
 	}
 }
 
-func observabilityShardTableForID(baseTable string, id uint) string {
-	return baseTable + observabilityShardSuffixForID(id)
-}
-
 func legacyObservabilityShardTableName(tableName string) string {
 	return tableName + "_legacy_v2_to_v3"
 }
@@ -142,24 +137,6 @@ func normalizeShardedDB(db *gorm.DB) *gorm.DB {
 		return db
 	}
 	return DB
-}
-
-func sessionIgnoringSharding(db *gorm.DB) *gorm.DB {
-	db = normalizeShardedDB(db)
-	if db == nil {
-		return nil
-	}
-	return db.Session(&gorm.Session{}).Set(sharding.ShardingIgnoreStoreKey, true)
-}
-
-func baseDialector(db *gorm.DB) gorm.Dialector {
-	if db == nil {
-		return nil
-	}
-	if dialector, ok := db.Dialector.(sharding.ShardingDialector); ok {
-		return dialector.Dialector
-	}
-	return db.Dialector
 }
 
 func nextObservabilityID() (uint, error) {
@@ -222,10 +199,4 @@ func deleteAcrossShards(db *gorm.DB, baseTable string, model any, apply func(tx 
 		deleted += result.RowsAffected
 	}
 	return deleted, nil
-}
-
-func sortShardRows[T any](items []T, less func(left T, right T) bool) {
-	sort.Slice(items, func(i int, j int) bool {
-		return less(items[i], items[j])
-	})
 }

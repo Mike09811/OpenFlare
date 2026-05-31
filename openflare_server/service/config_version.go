@@ -292,21 +292,6 @@ func DiffConfigVersion() (*ConfigDiffResult, error) {
 	return result, nil
 }
 
-func HasConfigChanges() (bool, error) {
-	bundle, err := buildCurrentConfigBundle(false)
-	if err != nil {
-		return false, err
-	}
-	activeVersion, err := model.GetActiveConfigVersion()
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return len(bundle.Routes) > 0, nil
-		}
-		return false, err
-	}
-	return activeVersion.Checksum != bundle.Checksum, nil
-}
-
 func PublishConfigVersion(createdBy string, force bool) (*ReleaseResult, error) {
 	bundle, err := buildCurrentConfigBundle(true)
 	if err != nil {
