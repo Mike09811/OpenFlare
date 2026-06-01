@@ -9,6 +9,7 @@ import (
 	"openflare-flared/internal/config"
 	"openflare-flared/internal/frpc"
 	"openflare-flared/internal/httpclient"
+	"openflare-flared/internal/updater"
 	"openflare/service"
 	"openflare/utils/geoip"
 	"openflare/utils/geoip/iputil"
@@ -23,6 +24,7 @@ type Service struct {
 	client      *httpclient.Client
 	frpcManager *frpc.Manager
 	config      *config.Config
+	updater     *updater.Service
 }
 
 func New(client *httpclient.Client, manager *frpc.Manager, cfg *config.Config) *Service {
@@ -30,6 +32,7 @@ func New(client *httpclient.Client, manager *frpc.Manager, cfg *config.Config) *
 		client:      client,
 		frpcManager: manager,
 		config:      cfg,
+		updater:     updater.New(),
 	}
 }
 
@@ -65,12 +68,40 @@ func (s *Service) doHeartbeat(ctx context.Context) {
 		CurrentChecksum: s.frpcManager.GetCurrentConfigChecksum(),
 	}
 
-	_, err := s.client.Heartbeat(ctx, payload)
+	resp, err := s.client.Heartbeat(ctx, payload)
 	if err != nil {
 		slog.Error("flared heartbeat failed", "error", err)
 		return
 	}
 	slog.Debug("flared heartbeat succeeded")
+
+	if resp != nil && resp.TunnelSettings != nil {
+		s.tryAutoUpdate(ctx, resp.TunnelSettings)
+	}
+}
+
+func (s *Service) tryAutoUpdate(ctx context.Context, settings *service.RelaySettings) {
+	if settings == nil || s.updater == nil {
+		return
+	}
+	force := settings.UpdateNow
+	shouldCheck := settings.AutoUpdate || force
+	if !shouldCheck || settings.UpdateRepo == "" {
+		return
+	}
+	channel := "stable"
+	if force && settings.UpdateChannel != "" {
+		channel = settings.UpdateChannel
+	}
+	slog.Info("checking for client updates", "repo", settings.UpdateRepo, "channel", channel, "force", force)
+	err := s.updater.CheckAndUpdate(ctx, settings.UpdateRepo, updater.UpdateOptions{
+		Channel: channel,
+		TagName: settings.UpdateTag,
+		Force:   force,
+	})
+	if err != nil {
+		slog.Error("client update check failed", "error", err)
+	}
 }
 
 func detectNodeIP() string {

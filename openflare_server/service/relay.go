@@ -40,8 +40,13 @@ type RelayConfig struct {
 
 // RelaySettings contains runtime settings for the Relay.
 type RelaySettings struct {
-	HeartbeatInterval       int  `json:"heartbeat_interval"`
-	WebsocketUpgradeEnabled bool `json:"websocket_upgrade_enabled"`
+	HeartbeatInterval       int    `json:"heartbeat_interval"`
+	WebsocketUpgradeEnabled bool   `json:"websocket_upgrade_enabled"`
+	AutoUpdate              bool   `json:"auto_update"`
+	UpdateRepo              string `json:"update_repo"`
+	UpdateNow               bool   `json:"update_now"`
+	UpdateChannel           string `json:"update_channel"`
+	UpdateTag               string `json:"update_tag"`
 }
 
 // RelayHeartbeatResponse is the response returned to the Relay from a heartbeat.
@@ -63,6 +68,15 @@ func HeartbeatRelay(node *model.Node, payload RelayHeartbeatPayload) (*RelayHear
 	payload.Name = strings.TrimSpace(payload.Name)
 	payload.IP = strings.TrimSpace(payload.IP)
 
+	previous := *node
+	updateNow := node.UpdateRequested
+	updateChannel := normalizeReleaseChannel(node.UpdateChannel)
+	updateTag := strings.TrimSpace(node.UpdateTag)
+
+	node.UpdateRequested = false
+	node.UpdateChannel = ReleaseChannelStable.String()
+	node.UpdateTag = ""
+
 	changes := make(map[string]any)
 	appendRelayChange := func(key string, before any, after any) {
 		if before != after {
@@ -73,6 +87,16 @@ func HeartbeatRelay(node *model.Node, payload RelayHeartbeatPayload) (*RelayHear
 	appendRelayChange("version", node.Version, payload.Version)
 	appendRelayChange("ext_version", node.ExtVersion, payload.ExtVersion)
 	appendRelayChange("relay_status", node.RelayStatus, payload.RelayStatus)
+
+	if previous.UpdateRequested {
+		appendRelayChange("update_requested", previous.UpdateRequested, false)
+	}
+	if previous.UpdateChannel != ReleaseChannelStable.String() {
+		appendRelayChange("update_channel", previous.UpdateChannel, ReleaseChannelStable.String())
+	}
+	if previous.UpdateTag != "" {
+		appendRelayChange("update_tag", previous.UpdateTag, "")
+	}
 
 	if payload.Name != "" && strings.TrimSpace(node.Name) == "" {
 		appendRelayChange("name", node.Name, payload.Name)
@@ -113,7 +137,7 @@ func HeartbeatRelay(node *model.Node, payload RelayHeartbeatPayload) (*RelayHear
 
 	return &RelayHeartbeatResponse{
 		RelayConfig:   buildRelayConfig(node),
-		RelaySettings: buildRelaySettings(),
+		RelaySettings: buildRelaySettings(node, updateNow, updateChannel.String(), updateTag),
 	}, nil
 }
 
@@ -145,10 +169,22 @@ func buildRelayConfig(node *model.Node) *RelayConfig {
 	}
 }
 
-func buildRelaySettings() *RelaySettings {
+func buildRelaySettings(node *model.Node, updateNow bool, updateChannel string, updateTag string) *RelaySettings {
+	autoUpdate := false
+	if node != nil {
+		autoUpdate = node.AutoUpdateEnabled
+	}
+	if strings.TrimSpace(updateChannel) == "" {
+		updateChannel = ReleaseChannelStable.String()
+	}
 	return &RelaySettings{
 		HeartbeatInterval:       common.AgentHeartbeatInterval,
 		WebsocketUpgradeEnabled: common.AgentWebsocketUpgradeEnabled,
+		AutoUpdate:              autoUpdate,
+		UpdateRepo:              common.AgentUpdateRepo,
+		UpdateNow:               updateNow,
+		UpdateChannel:           updateChannel,
+		UpdateTag:               strings.TrimSpace(updateTag),
 	}
 }
 
@@ -236,6 +272,13 @@ func HeartbeatFlared(node *model.Node, payload FlaredHeartbeatPayload) (*FlaredH
 
 	now := time.Now()
 	previous := *node
+	updateNow := node.UpdateRequested
+	updateChannel := normalizeReleaseChannel(node.UpdateChannel)
+	updateTag := strings.TrimSpace(node.UpdateTag)
+
+	node.UpdateRequested = false
+	node.UpdateChannel = ReleaseChannelStable.String()
+	node.UpdateTag = ""
 
 	changes := make(map[string]any)
 	if previous.Version != payload.ClientVersion {
@@ -257,6 +300,16 @@ func HeartbeatFlared(node *model.Node, payload FlaredHeartbeatPayload) (*FlaredH
 	node.CurrentVersion = payload.CurrentVersion
 	node.LastSeenAt = now
 	node.Status = NodeStatusOnline
+
+	if previous.UpdateRequested {
+		changes["update_requested"] = false
+	}
+	if previous.UpdateChannel != ReleaseChannelStable.String() {
+		changes["update_channel"] = ReleaseChannelStable.String()
+	}
+	if previous.UpdateTag != "" {
+		changes["update_tag"] = ""
+	}
 
 	if !node.IPManualOverride && payload.IP != "" && previous.IP != payload.IP {
 		changes["ip"] = payload.IP
@@ -290,7 +343,7 @@ func HeartbeatFlared(node *model.Node, payload FlaredHeartbeatPayload) (*FlaredH
 	}
 	return &FlaredHeartbeatResponse{
 		ActiveConfig:   activeConfig,
-		TunnelSettings: buildRelaySettings(),
+		TunnelSettings: buildRelaySettings(node, updateNow, updateChannel.String(), updateTag),
 	}, nil
 }
 

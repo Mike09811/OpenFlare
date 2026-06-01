@@ -10,6 +10,7 @@ import (
 	"openflare-relay/internal/httpclient"
 	"openflare-relay/internal/observability"
 	"openflare-relay/internal/state"
+	"openflare-relay/internal/updater"
 	"openflare/service"
 )
 
@@ -18,6 +19,7 @@ type Service struct {
 	frpsManager *frps.Manager
 	config      *config.Config
 	stateStore  *state.Store
+	updater     *updater.Service
 }
 
 func New(client *httpclient.Client, manager *frps.Manager, cfg *config.Config, stateStore *state.Store) *Service {
@@ -26,6 +28,7 @@ func New(client *httpclient.Client, manager *frps.Manager, cfg *config.Config, s
 		frpsManager: manager,
 		config:      cfg,
 		stateStore:  stateStore,
+		updater:     updater.New(),
 	}
 }
 
@@ -72,4 +75,32 @@ func (s *Service) doHeartbeat(ctx context.Context) {
 
 	// Update configs if changed
 	s.frpsManager.UpdateConfig(resp.RelayConfig)
+
+	if resp != nil && resp.RelaySettings != nil {
+		s.tryAutoUpdate(ctx, resp.RelaySettings)
+	}
+}
+
+func (s *Service) tryAutoUpdate(ctx context.Context, settings *service.RelaySettings) {
+	if settings == nil || s.updater == nil {
+		return
+	}
+	force := settings.UpdateNow
+	shouldCheck := settings.AutoUpdate || force
+	if !shouldCheck || settings.UpdateRepo == "" {
+		return
+	}
+	channel := "stable"
+	if force && settings.UpdateChannel != "" {
+		channel = settings.UpdateChannel
+	}
+	slog.Info("checking for relay updates", "repo", settings.UpdateRepo, "channel", channel, "force", force)
+	err := s.updater.CheckAndUpdate(ctx, settings.UpdateRepo, updater.UpdateOptions{
+		Channel: channel,
+		TagName: settings.UpdateTag,
+		Force:   force,
+	})
+	if err != nil {
+		slog.Error("relay update check failed", "error", err)
+	}
 }

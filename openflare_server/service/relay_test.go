@@ -401,3 +401,127 @@ func TestTunnelRoutePublishAndFlaredConfigUseRelayPorts(t *testing.T) {
 		t.Fatalf("unexpected proxy domains: %+v", proxy.CustomDomains)
 	}
 }
+
+func TestHeartbeatRelaySelfUpdatePropagationAndReset(t *testing.T) {
+	setupServiceTestDB(t)
+
+	node := &model.Node{
+		NodeID:            "relay-update-node",
+		Name:              "relay-u",
+		IP:                "1.1.1.1",
+		AccessToken:       "relay-update-token",
+		Status:            NodeStatusPending,
+		NodeType:          "tunnel_relay",
+		AutoUpdateEnabled: true,
+		UpdateRequested:   true,
+		UpdateChannel:     "preview",
+		UpdateTag:         "v1.2.3",
+	}
+	if err := node.Insert(); err != nil {
+		t.Fatalf("failed to seed relay node: %v", err)
+	}
+
+	resp, err := HeartbeatRelay(node, RelayHeartbeatPayload{
+		Version:     "v1.0.0",
+		ExtVersion:  "0.61.0",
+		RelayStatus: "healthy",
+	})
+	if err != nil {
+		t.Fatalf("HeartbeatRelay failed: %v", err)
+	}
+
+	if resp == nil || resp.RelaySettings == nil {
+		t.Fatal("expected non-nil response with RelaySettings")
+	}
+
+	settings := resp.RelaySettings
+	if !settings.AutoUpdate {
+		t.Error("expected AutoUpdate to be true")
+	}
+	if !settings.UpdateNow {
+		t.Error("expected UpdateNow to be true")
+	}
+	if settings.UpdateChannel != "preview" {
+		t.Errorf("expected UpdateChannel to be preview, got %q", settings.UpdateChannel)
+	}
+	if settings.UpdateTag != "v1.2.3" {
+		t.Errorf("expected UpdateTag to be v1.2.3, got %q", settings.UpdateTag)
+	}
+
+	// Verify that the requested update was cleared in the DB
+	updated, err := model.GetNodeByNodeID(node.NodeID)
+	if err != nil {
+		t.Fatalf("failed to reload node: %v", err)
+	}
+	if updated.UpdateRequested {
+		t.Error("expected UpdateRequested to be reset to false in the database")
+	}
+	if updated.UpdateChannel != "stable" {
+		t.Errorf("expected UpdateChannel to be reset to stable, got %q", updated.UpdateChannel)
+	}
+	if updated.UpdateTag != "" {
+		t.Errorf("expected UpdateTag to be reset to empty, got %q", updated.UpdateTag)
+	}
+}
+
+func TestHeartbeatFlaredSelfUpdatePropagationAndReset(t *testing.T) {
+	setupServiceTestDB(t)
+
+	node := &model.Node{
+		NodeID:            "flared-update-node",
+		Name:              "flared-u",
+		IP:                "1.1.1.2",
+		AccessToken:       "flared-update-token",
+		Status:            NodeStatusPending,
+		NodeType:          "tunnel_client",
+		AutoUpdateEnabled: true,
+		UpdateRequested:   true,
+		UpdateChannel:     "stable",
+		UpdateTag:         "v2.3.4",
+	}
+	if err := node.Insert(); err != nil {
+		t.Fatalf("failed to seed flared node: %v", err)
+	}
+
+	resp, err := HeartbeatFlared(node, FlaredHeartbeatPayload{
+		ClientVersion: "v1.0.0",
+		FrpVersion:    "0.61.0",
+		TunnelStatus:  "running",
+	})
+	if err != nil {
+		t.Fatalf("HeartbeatFlared failed: %v", err)
+	}
+
+	if resp == nil || resp.TunnelSettings == nil {
+		t.Fatal("expected non-nil response with TunnelSettings")
+	}
+
+	settings := resp.TunnelSettings
+	if !settings.AutoUpdate {
+		t.Error("expected AutoUpdate to be true")
+	}
+	if !settings.UpdateNow {
+		t.Error("expected UpdateNow to be true")
+	}
+	if settings.UpdateChannel != "stable" {
+		t.Errorf("expected UpdateChannel to be stable, got %q", settings.UpdateChannel)
+	}
+	if settings.UpdateTag != "v2.3.4" {
+		t.Errorf("expected UpdateTag to be v2.3.4, got %q", settings.UpdateTag)
+	}
+
+	// Verify that the requested update was cleared in the DB
+	updated, err := model.GetNodeByNodeID(node.NodeID)
+	if err != nil {
+		t.Fatalf("failed to reload node: %v", err)
+	}
+	if updated.UpdateRequested {
+		t.Error("expected UpdateRequested to be reset to false in the database")
+	}
+	if updated.UpdateChannel != "stable" {
+		t.Errorf("expected UpdateChannel to be reset to stable, got %q", updated.UpdateChannel)
+	}
+	if updated.UpdateTag != "" {
+		t.Errorf("expected UpdateTag to be reset to empty, got %q", updated.UpdateTag)
+	}
+}

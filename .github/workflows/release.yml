@@ -209,11 +209,123 @@ jobs:
             dist/${{ matrix.asset_name }}.sha256
           retention-days: 1
 
+  build-relay-binaries:
+    needs: prepare
+    if: needs.prepare.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            asset_name: openflare-relay-linux-amd64
+          - goos: linux
+            goarch: arm64
+            asset_name: openflare-relay-linux-arm64
+          - goos: darwin
+            goarch: amd64
+            asset_name: openflare-relay-darwin-amd64
+          - goos: darwin
+            goarch: arm64
+            asset_name: openflare-relay-darwin-arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: openflare_relay/go.mod
+
+      - name: Build Relay
+        working-directory: openflare_relay
+        env:
+          CGO_ENABLED: 0
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          ASSET_NAME: ${{ matrix.asset_name }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          go mod download
+          mkdir -p ../dist
+          go build -trimpath -ldflags "-s -w -X 'openflare-relay/internal/config.Version=$VERSION'" -o "../dist/$ASSET_NAME" ./cmd/relay
+          (cd ../dist && sha256sum "$ASSET_NAME" > "$ASSET_NAME.sha256")
+
+      - name: Upload Relay Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: relay-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: |
+            dist/${{ matrix.asset_name }}
+            dist/${{ matrix.asset_name }}.sha256
+          retention-days: 1
+
+  build-flared-binaries:
+    needs: prepare
+    if: needs.prepare.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            asset_name: openflared-linux-amd64
+          - goos: linux
+            goarch: arm64
+            asset_name: openflared-linux-arm64
+          - goos: darwin
+            goarch: amd64
+            asset_name: openflared-darwin-amd64
+          - goos: darwin
+            goarch: arm64
+            asset_name: openflared-darwin-arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: openflared/go.mod
+
+      - name: Build Flared
+        working-directory: openflared
+        env:
+          CGO_ENABLED: 0
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          ASSET_NAME: ${{ matrix.asset_name }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          go mod download
+          mkdir -p ../dist
+          go build -trimpath -ldflags "-s -w -X 'openflare-flared/internal/config.Version=$VERSION'" -o "../dist/$ASSET_NAME" ./cmd/flared
+          (cd ../dist && sha256sum "$ASSET_NAME" > "$ASSET_NAME.sha256")
+
+      - name: Upload Flared Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flared-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: |
+            dist/${{ matrix.asset_name }}
+            dist/${{ matrix.asset_name }}.sha256
+          retention-days: 1
+
   release:
     needs:
       - prepare
       - build-binaries
       - build-agent-binaries
+      - build-relay-binaries
+      - build-flared-binaries
     if: needs.prepare.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     steps:
@@ -228,6 +340,20 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: "agent-*"
+          path: dist
+          merge-multiple: true
+
+      - name: Download Relay Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "relay-*"
+          path: dist
+          merge-multiple: true
+
+      - name: Download Flared Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "flared-*"
           path: dist
           merge-multiple: true
 
