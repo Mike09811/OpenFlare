@@ -165,7 +165,7 @@ Client -> OpenResty server block -> WAF Lua -> named upstream -> Origin
 
 WAF 在 OpenResty `access_by_lua_file` 阶段执行。规则来自当前激活版本携带的 `waf_config.json`，全局规则组默认生效，网站可叠加自定义规则组。
 
-WAF IP 组由 Server 管理并在发布时展开到 `waf_config.json`。手动 IP 组直接保存 IP/IP 段列表；自动 IP 组当前只保存配置；订阅 IP 组由 Server 定时任务同步远程文本或 JSON 源。OpenResty Lua 只读取 Agent 落地的运行时 JSON，不直接访问 Server 数据库或远程订阅源。
+WAF IP 组由 Server 管理并在发布时展开到 `waf_config.json`。手动 IP 组直接保存 IP/IP 段列表；自动 IP 组由 Server 定时任务读取请求日志、按单个 IP 聚合指标并执行 Expr 规则；订阅 IP 组由 Server 定时任务同步远程文本或 JSON 源。OpenResty Lua 只读取 Agent 落地的运行时 JSON，不直接访问 Server 数据库、请求日志或远程订阅源。
 
 ## 核心对象
 

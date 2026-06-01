@@ -69,6 +69,17 @@ const typeLabels: Record<WAFIPGroupType, string> = {
   subscription: '订阅',
 };
 
+const automaticPresetRules = [
+  {
+    name: '单 IP 404 高频扫描',
+    expr: 'request_count > 100 && status_404_ratio >= 0.8',
+  },
+  {
+    name: '单 IP 直连访问异常',
+    expr: 'ip_host_count > 50 && ip_host_ratio > 0.5',
+  },
+];
+
 function buildDraft(group: WAFIPGroup | null): IPGroupDraft {
   if (!group) {
     return { ...emptyIPGroupDraft };
@@ -110,6 +121,38 @@ function buildPayload(draft: IPGroupDraft): WAFIPGroupPayload {
     sync_interval_minutes: draft.sync_interval_minutes,
     remark: draft.remark,
   };
+}
+
+function appendAutomaticPresetRule(
+  autoConfigText: string,
+  rule: (typeof automaticPresetRules)[number],
+) {
+  const parsed = JSON.parse(autoConfigText || '{}') as unknown;
+  if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') {
+    throw new Error('自动配置必须是 JSON 对象。');
+  }
+  const config = parsed as Record<string, unknown>;
+  const rules = Array.isArray(config.rules) ? config.rules : [];
+  const exists = rules.some(
+    (item) =>
+      item &&
+      typeof item === 'object' &&
+      'expr' in item &&
+      (item as { expr?: unknown }).expr === rule.expr,
+  );
+  const nextRules = exists ? rules : [...rules, rule];
+  return JSON.stringify(
+    {
+      lookback_minutes:
+        typeof config.lookback_minutes === 'number'
+          ? config.lookback_minutes
+          : 60,
+      ...config,
+      rules: nextRules,
+    },
+    null,
+    2,
+  );
 }
 
 export function WAFIPGroupsPage() {
@@ -280,19 +323,24 @@ export function WAFIPGroupsPage() {
           title={selectedGroup ? selectedGroup.name : '新建 IP 组'}
           description={
             draft.type === 'automatic'
-              ? '自动 IP 组第一版仅保存配置，暂不执行日志挖掘。'
+              ? '自动 IP 组会按 Expr 规则定时从请求日志中聚合命中 IP。'
               : '保存后可在 WAF 规则组黑白名单中引用。'
           }
           action={
             <div className="flex flex-wrap gap-3">
-              {selectedGroup?.type === 'subscription' ? (
+              {selectedGroup?.type === 'subscription' ||
+              selectedGroup?.type === 'automatic' ? (
                 <SecondaryButton
                   type="button"
                   disabled={syncMutation.isPending}
                   onClick={() => syncMutation.mutate(selectedGroup.id)}
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  {syncMutation.isPending ? '同步中...' : '立即同步'}
+                  {syncMutation.isPending
+                    ? '执行中...'
+                    : selectedGroup.type === 'automatic'
+                      ? '立即执行'
+                      : '立即同步'}
                 </SecondaryButton>
               ) : null}
               <PrimaryButton
@@ -419,21 +467,56 @@ export function WAFIPGroupsPage() {
             ) : null}
 
             {draft.type === 'automatic' ? (
-              <ResourceField
-                label="自动配置 JSON"
-                hint="当前版本只保存配置，不会执行请求日志挖掘。"
-              >
-                <ResourceTextarea
-                  value={draft.auto_config_text}
-                  className="min-h-64 font-mono"
-                  onChange={(event) =>
-                    setDraft((current) => ({
-                      ...current,
-                      auto_config_text: event.target.value,
-                    }))
-                  }
-                />
-              </ResourceField>
+              <div className="space-y-4">
+                <ResourceField
+                  label="预设规则"
+                  hint="表达式按单个 IP 的请求日志聚合指标计算。"
+                  container="div"
+                >
+                  <div className="flex flex-wrap gap-2">
+                    {automaticPresetRules.map((rule) => (
+                      <SecondaryButton
+                        key={rule.expr}
+                        type="button"
+                        onClick={() => {
+                          try {
+                            setDraft((current) => ({
+                              ...current,
+                              auto_config_text: appendAutomaticPresetRule(
+                                current.auto_config_text,
+                                rule,
+                              ),
+                            }));
+                          } catch (error) {
+                            setFeedback({
+                              tone: 'danger',
+                              message: getErrorMessage(error),
+                            });
+                          }
+                        }}
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        {rule.name}
+                      </SecondaryButton>
+                    ))}
+                  </div>
+                </ResourceField>
+                <ResourceField
+                  label="自动配置 JSON"
+                  hint="可用字段：request_count、status_404_count、status_404_ratio、ip_host_count、ip_host_ratio。"
+                >
+                  <ResourceTextarea
+                    value={draft.auto_config_text}
+                    className="min-h-64 font-mono"
+                    onChange={(event) =>
+                      setDraft((current) => ({
+                        ...current,
+                        auto_config_text: event.target.value,
+                      }))
+                    }
+                  />
+                </ResourceField>
+              </div>
             ) : (
               <ResourceField
                 label="IP / IP 段"

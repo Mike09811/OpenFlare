@@ -36,9 +36,27 @@ OpenFlare 的管理端 API 与 Agent API 都使用 JSON。
 | `POST` | `/api/waf/ip-groups` | 创建 IP 组 |
 | `POST` | `/api/waf/ip-groups/:id/update` | 更新 IP 组 |
 | `POST` | `/api/waf/ip-groups/:id/delete` | 删除 IP 组；已被规则组引用时会拒绝 |
-| `POST` | `/api/waf/ip-groups/:id/sync` | 立即同步订阅型 IP 组 |
+| `POST` | `/api/waf/ip-groups/:id/sync` | 立即同步订阅型 IP 组或立即执行自动型 IP 组 |
 
-IP 组 `type` 支持 `manual`、`automatic`、`subscription`。订阅格式支持 `text` 与 `json`：文本格式按行解析 IP/IP 段并忽略空行和 `#` 开头的注释；JSON 格式可通过映射规则选择数组，默认读取根数组。
+IP 组 `type` 支持 `manual`、`automatic`、`subscription`。自动型 IP 组的 `auto_config` 是 JSON 对象，当前支持：
+
+```json
+{
+  "lookback_minutes": 60,
+  "rules": [
+    {
+      "name": "单 IP 404 高频扫描",
+      "expr": "request_count > 100 && status_404_ratio >= 0.8"
+    },
+    {
+      "name": "单 IP 直连访问异常",
+      "expr": "ip_host_count > 50 && ip_host_ratio > 0.5"
+    }
+  ]
+}
+```
+
+自动规则使用 Expr 语法，表达式必须返回布尔值。规则按单个 IP 的请求日志聚合指标计算，可用字段包括 `ip`、`request_count`、`status_404_count`、`status_404_ratio`、`ip_host_count`、`ip_host_ratio`、`client_error_count`、`server_error_count`、`last_seen_unix`。完整语法和字段含义见 [WAF 自动 IP 组规则语法](../guide/waf-ip-group-expr.md)。订阅格式支持 `text` 与 `json`：文本格式按行解析 IP/IP 段并忽略空行和 `#` 开头的注释；JSON 格式可通过映射规则选择数组，默认读取根数组。
 
 ## 鉴权
 

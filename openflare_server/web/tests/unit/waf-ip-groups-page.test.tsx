@@ -172,6 +172,38 @@ describe('WAF IP groups', () => {
     await waitFor(() => expect(groups).toHaveLength(1));
   });
 
+  it('adds automatic Expr preset rules', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((input: RequestInfo | URL) => {
+        const url = String(input);
+
+        if (url.includes('/waf/ip-groups')) {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({ success: true, message: '', data: [] }),
+            ),
+          );
+        }
+
+        return Promise.reject(new Error(`Unhandled fetch: ${url}`));
+      }),
+    );
+
+    renderWithProviders(<WAFIPGroupsPage />);
+
+    await screen.findByText('暂无 IP 组');
+    await userEvent.click(screen.getByRole('button', { name: /新建 IP 组/ }));
+    await userEvent.selectOptions(screen.getByLabelText('类型'), 'automatic');
+    await userEvent.click(screen.getByText('单 IP 404 高频扫描'));
+    await userEvent.click(screen.getByText('单 IP 直连访问异常'));
+
+    const textarea = screen.getByLabelText(/自动配置 JSON/);
+    const value = (textarea as HTMLTextAreaElement).value;
+    expect(value).toContain('request_count > 100 && status_404_ratio >= 0.8');
+    expect(value).toContain('ip_host_count > 50 && ip_host_ratio > 0.5');
+  });
+
   it('opens IP group management from WAF page and references an IP group', async () => {
     vi.stubGlobal(
       'fetch',

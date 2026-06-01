@@ -119,9 +119,9 @@ func ListWAFIPGroupsByIDs(ids []uint) ([]*WAFIPGroup, error) {
 	return groups, err
 }
 
-func ListDueSubscriptionWAFIPGroups(now time.Time) ([]*WAFIPGroup, error) {
+func ListDueWAFIPGroups(now time.Time) ([]*WAFIPGroup, error) {
 	var groups []*WAFIPGroup
-	err := DB.Where("type = ? AND enabled = ? AND subscription_url <> '' AND (next_sync_at IS NULL OR next_sync_at <= ?)", "subscription", true, now).
+	err := DB.Where("enabled = ? AND (type = ? OR (type = ? AND subscription_url <> '')) AND (next_sync_at IS NULL OR next_sync_at <= ?)", true, "automatic", "subscription", now).
 		Order("id asc").
 		Find(&groups).Error
 	return groups, err

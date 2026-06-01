@@ -130,6 +130,10 @@ func ListNodeAccessLogs(query NodeAccessLogQuery) (logs []*NodeAccessLog, err er
 	return all[start:end], nil
 }
 
+func ListNodeAccessLogsForWAFIPGroup(query NodeAccessLogQuery) ([]*NodeAccessLog, error) {
+	return listNodeAccessLogsAcrossShards(query)
+}
+
 func CountNodeAccessLogs(query NodeAccessLogQuery) (totalRecords int64, totalIPs int64, err error) {
 	all, err := listNodeAccessLogsAcrossShards(query)
 	if err != nil {

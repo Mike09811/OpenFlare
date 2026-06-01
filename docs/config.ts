@@ -69,6 +69,7 @@ function sidebarGuide(): DefaultTheme.SidebarItem[] {
         { text: '概览', link: '' },
         { text: '快速开始', link: 'quick-start' },
         { text: '基础使用', link: 'usage' },
+        { text: 'WAF 自动 IP 组语法', link: 'waf-ip-group-expr' },
         { text: 'SSO 登录配置', link: 'sso' },
         { text: '发布第一份配置', link: 'first-site' },
         { text: '故障排查', link: 'troubleshooting' }

@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"openflare/model"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestWAFRuleGroupValidationAndNormalization(t *testing.T) {
@@ -211,6 +213,63 @@ func TestSyncWAFIPGroupDownloadsSubscription(t *testing.T) {
 	}
 }
 
+func TestSyncWAFIPGroupAutomaticExprRules(t *testing.T) {
+	setupServiceTestDB(t)
+
+	now := time.Now().UTC()
+	seedWAFNodeAccessLogs(t, now, "203.0.113.10", "app.example.com", 101, 81)
+	seedWAFNodeAccessLogs(t, now, "203.0.113.11", "198.51.100.10", 60, 0)
+	seedWAFNodeAccessLogs(t, now, "203.0.113.12", "app.example.com", 120, 10)
+
+	group, err := CreateWAFIPGroup(WAFIPGroupInput{
+		Name:    "auto blacklist",
+		Type:    WAFIPGroupTypeAutomatic,
+		Enabled: true,
+		AutoConfig: json.RawMessage(`{
+			"lookback_minutes": 60,
+			"rules": [
+				{"name":"单 IP 404 高频扫描","expr":"request_count > 100 && status_404_ratio >= 0.8"},
+				{"name":"单 IP 直连访问异常","expr":"ip_host_count > 50 && ip_host_ratio > 0.5"}
+			]
+		}`),
+	})
+	if err != nil {
+		t.Fatalf("CreateWAFIPGroup failed: %v", err)
+	}
+	result, err := SyncWAFIPGroup(group.ID)
+	if err != nil {
+		t.Fatalf("SyncWAFIPGroup failed: %v", err)
+	}
+	if result.IPCount != 2 {
+		t.Fatalf("expected two matched IPs, got %#v", result)
+	}
+	want := map[string]bool{"203.0.113.10": true, "203.0.113.11": true}
+	for _, item := range result.Group.IPList {
+		if !want[item] {
+			t.Fatalf("unexpected matched IP %s in %#v", item, result.Group.IPList)
+		}
+		delete(want, item)
+	}
+	if len(want) != 0 {
+		t.Fatalf("missing matched IPs: %#v", want)
+	}
+}
+
+func TestWAFIPGroupAutomaticRejectsInvalidExpr(t *testing.T) {
+	setupServiceTestDB(t)
+
+	if _, err := CreateWAFIPGroup(WAFIPGroupInput{
+		Name:    "bad auto",
+		Type:    WAFIPGroupTypeAutomatic,
+		Enabled: true,
+		AutoConfig: json.RawMessage(`{
+			"rules": [{"name":"bad","expr":"request_count > "}]
+		}`),
+	}); err == nil {
+		t.Fatal("expected invalid Expr to be rejected")
+	}
+}
+
 func TestPublishConfigVersionExpandsWAFIPGroupReferences(t *testing.T) {
 	setupServiceTestDB(t)
 
@@ -263,5 +322,25 @@ func TestPublishConfigVersionExpandsWAFIPGroupReferences(t *testing.T) {
 	}
 	if !found {
 		t.Fatalf("expected expanded IP group in waf_config.json, got %#v", files)
+	}
+}
+
+func seedWAFNodeAccessLogs(t *testing.T, loggedAt time.Time, remoteAddr string, host string, total int, notFound int) {
+	t.Helper()
+	for i := 0; i < total; i++ {
+		statusCode := http.StatusOK
+		if i < notFound {
+			statusCode = http.StatusNotFound
+		}
+		if err := model.DB.Create(&model.NodeAccessLog{
+			NodeID:     "node-waf-auto",
+			LoggedAt:   loggedAt.Add(-time.Duration(i%30) * time.Second),
+			RemoteAddr: remoteAddr,
+			Host:       host,
+			Path:       "/probe",
+			StatusCode: statusCode,
+		}).Error; err != nil {
+			t.Fatalf("failed to seed access log: %v", err)
+		}
 	}
 }

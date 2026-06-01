@@ -6,13 +6,17 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"openflare/model"
 	"sort"
 	"strings"
 	"time"
 
+	exprlang "github.com/expr-lang/expr"
+	"github.com/expr-lang/expr/vm"
 	"gorm.io/gorm"
 )
 
@@ -25,10 +29,43 @@ const (
 	WAFIPGroupSubscriptionFormatJSON = "json"
 
 	defaultWAFIPGroupSyncIntervalMinutes = 1440
+	defaultWAFIPGroupAutoLookbackMinutes = 60
 	minWAFIPGroupSyncIntervalMinutes     = 5
 	maxWAFIPGroupSyncIntervalMinutes     = 43200
 	maxWAFIPGroupSubscriptionBytes       = 2 * 1024 * 1024
 )
+
+type wafIPGroupAutoConfig struct {
+	LookbackMinutes int                  `json:"lookback_minutes"`
+	Rules           []wafIPGroupAutoRule `json:"rules"`
+}
+
+type wafIPGroupAutoRule struct {
+	Name string `json:"name"`
+	Expr string `json:"expr"`
+}
+
+type wafIPGroupAutoRuleEnv struct {
+	IP               string  `expr:"ip"`
+	RequestCount     int     `expr:"request_count"`
+	Status404Count   int     `expr:"status_404_count"`
+	Status404Ratio   float64 `expr:"status_404_ratio"`
+	IPHostCount      int     `expr:"ip_host_count"`
+	IPHostRatio      float64 `expr:"ip_host_ratio"`
+	ClientErrorCount int     `expr:"client_error_count"`
+	ServerErrorCount int     `expr:"server_error_count"`
+	LastSeenUnix     int64   `expr:"last_seen_unix"`
+}
+
+type wafIPGroupAutoAccumulator struct {
+	ip               string
+	requestCount     int
+	status404Count   int
+	ipHostCount      int
+	clientErrorCount int
+	serverErrorCount int
+	lastSeen         time.Time
+}
 
 type WAFIPGroupInput struct {
 	Name                    string          `json:"name"`
@@ -160,7 +197,7 @@ func SyncWAFIPGroup(id uint) (*WAFIPGroupSyncResult, error) {
 
 func SyncDueWAFIPGroups() error {
 	now := time.Now().UTC()
-	groups, err := model.ListDueSubscriptionWAFIPGroups(now)
+	groups, err := model.ListDueWAFIPGroups(now)
 	if err != nil {
 		return err
 	}
@@ -193,14 +230,11 @@ func buildWAFIPGroup(group *model.WAFIPGroup, input WAFIPGroupInput) (*model.WAF
 		subscriptionFormat = WAFIPGroupSubscriptionFormatText
 		mappingRule = ""
 	case WAFIPGroupTypeAutomatic:
-		raw := strings.TrimSpace(string(input.AutoConfig))
-		if raw == "" {
-			raw = "{}"
+		normalizedConfig, err := normalizeWAFIPGroupAutoConfig(input.AutoConfig)
+		if err != nil {
+			return nil, err
 		}
-		if !json.Valid([]byte(raw)) || strings.HasPrefix(raw, "[") {
-			return nil, errors.New("自动 IP 组配置必须是 JSON 对象")
-		}
-		autoConfig = raw
+		autoConfig = normalizedConfig
 		subscriptionFormat = WAFIPGroupSubscriptionFormatText
 		mappingRule = ""
 	case WAFIPGroupTypeSubscription:
@@ -278,9 +312,17 @@ func syncWAFIPGroup(group *model.WAFIPGroup, now time.Time) (*WAFIPGroupSyncResu
 	if group == nil {
 		return nil, errors.New("IP 组不存在")
 	}
-	if group.Type != WAFIPGroupTypeSubscription {
-		return nil, errors.New("只有订阅类型 IP 组支持同步")
+	switch group.Type {
+	case WAFIPGroupTypeSubscription:
+		return syncWAFIPGroupSubscription(group, now)
+	case WAFIPGroupTypeAutomatic:
+		return syncWAFIPGroupAutomatic(group, now)
+	default:
+		return nil, errors.New("只有自动和订阅类型 IP 组支持同步")
 	}
+}
+
+func syncWAFIPGroupSubscription(group *model.WAFIPGroup, now time.Time) (*WAFIPGroupSyncResult, error) {
 	content, err := downloadWAFIPGroupSubscription(group.SubscriptionURL)
 	if err != nil {
 		recordWAFIPGroupSyncFailure(group, now, err)
@@ -315,6 +357,36 @@ func syncWAFIPGroup(group *model.WAFIPGroup, now time.Time) (*WAFIPGroupSyncResu
 	}, nil
 }
 
+func syncWAFIPGroupAutomatic(group *model.WAFIPGroup, now time.Time) (*WAFIPGroupSyncResult, error) {
+	ips, err := evaluateWAFIPGroupAutoConfig(group.AutoConfig, now)
+	if err != nil {
+		recordWAFIPGroupSyncFailure(group, now, err)
+		return nil, err
+	}
+	ipListJSON, _ := json.Marshal(ips)
+	nextSyncAt := now.Add(time.Duration(normalizeWAFIPGroupSyncInterval(group.SyncIntervalMinutes)) * time.Minute)
+	group.IPList = string(ipListJSON)
+	group.LastSyncedAt = &now
+	group.NextSyncAt = &nextSyncAt
+	group.LastSyncStatus = "success"
+	group.LastSyncMessage = fmt.Sprintf("自动规则执行成功，共命中 %d 个 IP", len(ips))
+	if err := group.UpdateSyncResult(); err != nil {
+		return nil, err
+	}
+	view, err := GetWAFIPGroup(group.ID)
+	if err != nil {
+		return nil, err
+	}
+	return &WAFIPGroupSyncResult{
+		Group:      *view,
+		IPCount:    len(ips),
+		SyncedAt:   now.Format(time.RFC3339),
+		NextSyncAt: nextSyncAt.Format(time.RFC3339),
+		Status:     group.LastSyncStatus,
+		Message:    group.LastSyncMessage,
+	}, nil
+}
+
 func recordWAFIPGroupSyncFailure(group *model.WAFIPGroup, now time.Time, syncErr error) {
 	nextSyncAt := now.Add(time.Duration(normalizeWAFIPGroupSyncInterval(group.SyncIntervalMinutes)) * time.Minute)
 	group.LastSyncedAt = &now
@@ -322,6 +394,168 @@ func recordWAFIPGroupSyncFailure(group *model.WAFIPGroup, now time.Time, syncErr
 	group.LastSyncStatus = "failed"
 	group.LastSyncMessage = syncErr.Error()
 	_ = group.UpdateSyncResult()
+}
+
+func normalizeWAFIPGroupAutoConfig(raw json.RawMessage) (string, error) {
+	text := strings.TrimSpace(string(raw))
+	if text == "" {
+		text = "{}"
+	}
+	var config wafIPGroupAutoConfig
+	if err := json.Unmarshal([]byte(text), &config); err != nil {
+		return "", errors.New("自动 IP 组配置必须是 JSON 对象")
+	}
+	var object map[string]any
+	if err := json.Unmarshal([]byte(text), &object); err != nil || object == nil {
+		return "", errors.New("自动 IP 组配置必须是 JSON 对象")
+	}
+	if config.LookbackMinutes <= 0 {
+		config.LookbackMinutes = defaultWAFIPGroupAutoLookbackMinutes
+	}
+	if config.LookbackMinutes < 5 {
+		config.LookbackMinutes = 5
+	}
+	if config.LookbackMinutes > 43200 {
+		config.LookbackMinutes = 43200
+	}
+	if config.Rules == nil {
+		config.Rules = []wafIPGroupAutoRule{}
+	}
+	for i, rule := range config.Rules {
+		rule.Name = strings.TrimSpace(rule.Name)
+		rule.Expr = strings.TrimSpace(rule.Expr)
+		if rule.Expr == "" {
+			return "", fmt.Errorf("自动规则 %d 的 Expr 表达式不能为空", i+1)
+		}
+		if _, err := exprlang.Compile(rule.Expr, exprlang.Env(wafIPGroupAutoRuleEnv{}), exprlang.AsBool()); err != nil {
+			return "", fmt.Errorf("自动规则 %s Expr 无效: %w", displayWAFIPGroupAutoRuleName(rule, i), err)
+		}
+		config.Rules[i] = rule
+	}
+	normalized, _ := json.Marshal(config)
+	return string(normalized), nil
+}
+
+func evaluateWAFIPGroupAutoConfig(raw string, now time.Time) ([]string, error) {
+	normalized, err := normalizeWAFIPGroupAutoConfig(json.RawMessage(raw))
+	if err != nil {
+		return nil, err
+	}
+	var config wafIPGroupAutoConfig
+	if err := json.Unmarshal([]byte(normalized), &config); err != nil {
+		return nil, err
+	}
+	if len(config.Rules) == 0 {
+		return []string{}, nil
+	}
+	programs := make([]*vm.Program, 0, len(config.Rules))
+	for i, rule := range config.Rules {
+		program, err := exprlang.Compile(rule.Expr, exprlang.Env(wafIPGroupAutoRuleEnv{}), exprlang.AsBool())
+		if err != nil {
+			return nil, fmt.Errorf("自动规则 %s Expr 无效: %w", displayWAFIPGroupAutoRuleName(rule, i), err)
+		}
+		programs = append(programs, program)
+	}
+	logs, err := model.ListNodeAccessLogsForWAFIPGroup(model.NodeAccessLogQuery{
+		Since: now.Add(-time.Duration(config.LookbackMinutes) * time.Minute),
+		Until: now,
+	})
+	if err != nil {
+		return nil, err
+	}
+	accumulators := make(map[string]*wafIPGroupAutoAccumulator)
+	for _, item := range logs {
+		if item == nil {
+			continue
+		}
+		ip, ok := normalizeIPLiteral(item.RemoteAddr)
+		if !ok {
+			continue
+		}
+		acc := accumulators[ip]
+		if acc == nil {
+			acc = &wafIPGroupAutoAccumulator{ip: ip}
+			accumulators[ip] = acc
+		}
+		acc.requestCount++
+		if item.StatusCode == http.StatusNotFound {
+			acc.status404Count++
+		}
+		if item.StatusCode >= 400 && item.StatusCode < 500 {
+			acc.clientErrorCount++
+		}
+		if item.StatusCode >= 500 {
+			acc.serverErrorCount++
+		}
+		if hostIsIPLiteral(item.Host) {
+			acc.ipHostCount++
+		}
+		if item.LoggedAt.After(acc.lastSeen) {
+			acc.lastSeen = item.LoggedAt
+		}
+	}
+	matched := make([]string, 0)
+	for _, acc := range accumulators {
+		env := acc.toExprEnv()
+		for _, program := range programs {
+			output, err := exprlang.Run(program, env)
+			if err != nil {
+				return nil, fmt.Errorf("执行自动规则失败: %w", err)
+			}
+			if matchedRule, ok := output.(bool); ok && matchedRule {
+				matched = append(matched, acc.ip)
+				break
+			}
+		}
+	}
+	return normalizeWAFIPList(matched)
+}
+
+func (acc *wafIPGroupAutoAccumulator) toExprEnv() wafIPGroupAutoRuleEnv {
+	env := wafIPGroupAutoRuleEnv{
+		IP:               acc.ip,
+		RequestCount:     acc.requestCount,
+		Status404Count:   acc.status404Count,
+		IPHostCount:      acc.ipHostCount,
+		ClientErrorCount: acc.clientErrorCount,
+		ServerErrorCount: acc.serverErrorCount,
+	}
+	if acc.requestCount > 0 {
+		env.Status404Ratio = float64(acc.status404Count) / float64(acc.requestCount)
+		env.IPHostRatio = float64(acc.ipHostCount) / float64(acc.requestCount)
+	}
+	if !acc.lastSeen.IsZero() {
+		env.LastSeenUnix = acc.lastSeen.Unix()
+	}
+	return env
+}
+
+func displayWAFIPGroupAutoRuleName(rule wafIPGroupAutoRule, index int) string {
+	if rule.Name != "" {
+		return rule.Name
+	}
+	return fmt.Sprintf("#%d", index+1)
+}
+
+func normalizeIPLiteral(value string) (string, bool) {
+	host := strings.TrimSpace(value)
+	if host == "" {
+		return "", false
+	}
+	if parsedHost, _, err := net.SplitHostPort(host); err == nil {
+		host = parsedHost
+	}
+	host = strings.Trim(host, "[]")
+	addr, err := netip.ParseAddr(host)
+	if err != nil {
+		return "", false
+	}
+	return addr.String(), true
+}
+
+func hostIsIPLiteral(value string) bool {
+	_, ok := normalizeIPLiteral(value)
+	return ok
 }
 
 func downloadWAFIPGroupSubscription(rawURL string) ([]byte, error) {
@@ -493,7 +727,7 @@ func normalizeWAFIPGroupSyncInterval(value int) int {
 }
 
 func nextWAFIPGroupSyncAt(groupType string, enabled bool, interval int, current *time.Time) *time.Time {
-	if groupType != WAFIPGroupTypeSubscription || !enabled {
+	if (groupType != WAFIPGroupTypeSubscription && groupType != WAFIPGroupTypeAutomatic) || !enabled {
 		return nil
 	}
 	if current != nil && current.After(time.Now().UTC()) {
