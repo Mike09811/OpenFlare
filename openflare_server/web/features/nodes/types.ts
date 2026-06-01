@@ -19,7 +19,7 @@ export interface NodeItem {
   geo_latitude?: number | null;
   geo_longitude?: number | null;
   geo_manual_override: boolean;
-  agent_token: string;
+  access_token: string;
   auto_update_enabled: boolean;
   update_requested: boolean;
   update_channel: ReleaseChannel;

@@ -1,5 +1,5 @@
 services:
-  openflare-agent:
+  agent:
     build:
         context: .
         dockerfile: openflare_agent/Dockerfile
@@ -22,7 +22,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  openflare-relay:
+  relay:
     build:
       context: .
       dockerfile: openflare_relay/Dockerfile
@@ -37,7 +37,7 @@ services:
       - "host.docker.internal:host-gateway"
 
 
-  openflare-flared:
+  flared:
     build:
       context: .
       dockerfile: openflared/Dockerfile

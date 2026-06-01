@@ -52,36 +52,63 @@ func (r *Runner) Run(ctx context.Context) error {
 }
 
 func (r *Runner) handleConnection(ctx context.Context, conn *wsclient.Connection) {
+	// Send pings at 2× heartbeat interval to keep the server-side read deadline
+	// from expiring (server closes the WS if no data arrives within ~30 s).
+	pingInterval := r.Config.HeartbeatInterval.Duration() * 2
+	pingTicker := time.NewTicker(pingInterval)
+	defer pingTicker.Stop()
+
+	messages := make(chan service.WSMessage, 8)
+	readDone := make(chan error, 1)
+	go func() {
+		for {
+			msg, err := conn.Receive()
+			if err != nil {
+				readDone <- err
+				return
+			}
+			select {
+			case messages <- msg:
+			case <-ctx.Done():
+				readDone <- ctx.Err()
+				return
+			}
+		}
+	}()
+
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		default:
-		}
-
-		msg, err := conn.Receive()
-		if err != nil {
+		case err := <-readDone:
 			slog.Error("relay ws receive failed", "error", err)
 			return
-		}
-
-		switch msg.Type {
-		case "ping":
-			_ = conn.SendPong()
-		case "relay_config":
-			payloadBytes, ok := msg.Payload.(json.RawMessage)
-			if !ok {
-				slog.Error("invalid relay_config payload type")
-				continue
+		case <-pingTicker.C:
+			if err := conn.SendPing(); err != nil {
+				slog.Error("relay ws send ping failed", "error", err)
+				return
 			}
-			var cfg service.RelayConfig
-			if err := json.Unmarshal(payloadBytes, &cfg); err != nil {
-				slog.Error("failed to unmarshal relay_config", "error", err)
-				continue
+		case msg := <-messages:
+			switch msg.Type {
+			case "ping":
+				_ = conn.SendPong()
+			case "pong":
+				slog.Debug("relay ws pong received")
+			case "relay_config":
+				payloadBytes, ok := msg.Payload.(json.RawMessage)
+				if !ok {
+					slog.Error("invalid relay_config payload type")
+					continue
+				}
+				var cfg service.RelayConfig
+				if err := json.Unmarshal(payloadBytes, &cfg); err != nil {
+					slog.Error("failed to unmarshal relay_config", "error", err)
+					continue
+				}
+				r.FrpsManager.UpdateConfig(&cfg)
+			default:
+				slog.Debug("ignored unknown ws message type", "type", msg.Type)
 			}
-			r.FrpsManager.UpdateConfig(&cfg)
-		default:
-			slog.Debug("ignored unknown ws message type", "type", msg.Type)
 		}
 	}
 }

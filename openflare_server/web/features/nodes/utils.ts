@@ -112,6 +112,26 @@ export function getOpenrestyStatusLabel(status: NodeItem['openresty_status']) {
   return '未知';
 }
 
+export function isNodeAbnormal(node: NodeItem, activeVersion?: string) {
+  if (node.status === 'offline') {
+    return true;
+  }
+
+  if (activeVersion && node.current_version !== activeVersion) {
+    return true;
+  }
+
+  if (node.node_type === 'tunnel_relay') {
+    return node.relay_status === 'unhealthy';
+  }
+
+  if (node.node_type === 'edge_node') {
+    return node.openresty_status === 'unhealthy';
+  }
+
+  return false;
+}
+
 function parseVersionParts(version: string) {
   const normalized = version.trim().replace(/^v/i, '');
   if (!normalized || normalized.toLowerCase() === 'unknown') {
@@ -220,7 +240,10 @@ export function getRelayStatusLabel(status: string | null | undefined) {
 const relayInstallerScriptUrl =
   'https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/install-relay.sh';
 
-export function buildRelayInstallCommand(serverUrl: string, discoveryToken: string) {
+export function buildRelayInstallCommand(
+  serverUrl: string,
+  discoveryToken: string,
+) {
   return [
     `curl -fsSL ${relayInstallerScriptUrl} | bash -s -- \\`,
     `  --server-url ${serverUrl} \\`,
@@ -244,7 +267,10 @@ export function buildRelayDockerInstallCommand(
   ].join('\n');
 }
 
-export function buildTunnelInstallCommand(serverUrl: string, tunnelToken: string) {
+export function buildTunnelInstallCommand(
+  serverUrl: string,
+  tunnelToken: string,
+) {
   const flaredInstallerScriptUrl =
     'https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/install-flared.sh';
   return [

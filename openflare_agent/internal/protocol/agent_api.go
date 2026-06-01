@@ -72,8 +72,8 @@ type NodePayload struct {
 	NodeID                string                        `json:"node_id"`
 	Name                  string                        `json:"name"`
 	IP                    string                        `json:"ip"`
-	Version               string                        `json:"agent_version"`
-	ExtVersion            string                        `json:"nginx_version"`
+	Version               string                        `json:"version"`
+	ExtVersion            string                        `json:"ext_version"`
 	CurrentVersion        string                        `json:"current_version"`
 	LastError             string                        `json:"last_error"`
 	OpenrestyStatus       string                        `json:"openresty_status"`

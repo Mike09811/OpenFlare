@@ -90,6 +90,16 @@ func buildWebsocketURL(baseURL string) (string, error) {
 	return parsed.String(), nil
 }
 
+func (conn *Connection) SendPing() error {
+	if conn == nil || conn.conn == nil {
+		return errors.New("relay ws connection is nil")
+	}
+	slog.Debug("relay ws sending ping")
+	return websocket.JSON.Send(conn.conn, service.WSMessage{
+		Type: "ping",
+	})
+}
+
 func (conn *Connection) SendPong() error {
 	if conn == nil || conn.conn == nil {
 		return errors.New("relay ws connection is nil")

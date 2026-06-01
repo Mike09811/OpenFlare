@@ -405,12 +405,12 @@ function EdgeNodeDetailPage({ node }: { node: NodeItem }) {
 
   const normalizedServerUrl = getServerUrl(serverUrl);
   const nodeInstallCommand =
-    normalizedServerUrl && node.agent_token
-      ? buildNodeInstallCommand(normalizedServerUrl, node.agent_token)
+    normalizedServerUrl && node.access_token
+      ? buildNodeInstallCommand(normalizedServerUrl, node.access_token)
       : '';
   const nodeDockerInstallCommand =
-    normalizedServerUrl && node.agent_token
-      ? buildNodeDockerInstallCommand(normalizedServerUrl, node.agent_token)
+    normalizedServerUrl && node.access_token
+      ? buildNodeDockerInstallCommand(normalizedServerUrl, node.access_token)
       : '';
   const updateMode = getUpdateMode(node);
   const selectedAgentRelease =
@@ -1446,7 +1446,7 @@ function EdgeNodeDetailPage({ node }: { node: NodeItem }) {
                         Agent Token
                       </p>
                       <p className="mt-2 text-sm break-all text-[var(--foreground-primary)]">
-                        {node.agent_token || '暂无'}
+                        {node.access_token || '暂无'}
                       </p>
                     </div>
                   </div>

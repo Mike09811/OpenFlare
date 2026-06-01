@@ -27,10 +27,7 @@ import {
   updateNode,
 } from '@/features/nodes/api/nodes';
 import { NodeEditorModal } from '@/features/nodes/components/node-editor-modal';
-import type {
-  NodeItem,
-  NodeAgentReleaseInfo,
-} from '@/features/nodes/types';
+import type { NodeItem, NodeAgentReleaseInfo } from '@/features/nodes/types';
 import {
   CodeBlock,
   DangerButton,
@@ -50,6 +47,7 @@ import {
   getServerUrl,
   getUpdateMode,
   isMeaningfulTime,
+  isWSConnectedLastSeen,
 } from '@/features/nodes/utils';
 import {
   copyToClipboard,
@@ -216,9 +214,11 @@ export function RelayDetailPage({ node }: { node: NodeItem }) {
   });
 
   const handleDelete = () => {
-    if (!window.confirm(
-      `确认删除中继节点“${node.name}”吗？删除后该节点需要重新创建并重新接入。`,
-    )) {
+    if (
+      !window.confirm(
+        `确认删除中继节点“${node.name}”吗？删除后该节点需要重新创建并重新接入。`,
+      )
+    ) {
       return;
     }
     setFeedback(null);
@@ -265,7 +265,12 @@ export function RelayDetailPage({ node }: { node: NodeItem }) {
       default:
         return observability?.health_events ?? [];
     }
-  }, [activeHealthEvents, healthEventFilter, observability?.health_events, resolvedHealthEvents]);
+  }, [
+    activeHealthEvents,
+    healthEventFilter,
+    observability?.health_events,
+    resolvedHealthEvents,
+  ]);
 
   const tabs = useMemo(
     () =>
@@ -290,12 +295,12 @@ export function RelayDetailPage({ node }: { node: NodeItem }) {
 
   const normalizedServerUrl = getServerUrl(serverUrl);
   const relayInstallCommand =
-    normalizedServerUrl && node.agent_token
-      ? buildRelayInstallCommand(normalizedServerUrl, node.agent_token)
+    normalizedServerUrl && node.access_token
+      ? buildRelayInstallCommand(normalizedServerUrl, node.access_token)
       : '';
   const relayDockerInstallCommand =
-    normalizedServerUrl && node.agent_token
-      ? buildRelayDockerInstallCommand(normalizedServerUrl, node.agent_token)
+    normalizedServerUrl && node.access_token
+      ? buildRelayDockerInstallCommand(normalizedServerUrl, node.access_token)
       : '';
 
   const updateMode = getUpdateMode(node);
@@ -570,7 +575,9 @@ export function RelayDetailPage({ node }: { node: NodeItem }) {
                           总内存
                         </p>
                         <p className="mt-2 text-sm text-[var(--foreground-primary)]">
-                          {formatBytes(observability.profile.total_memory_bytes)}
+                          {formatBytes(
+                            observability.profile.total_memory_bytes,
+                          )}
                         </p>
                       </div>
                       <div>
@@ -614,7 +621,9 @@ export function RelayDetailPage({ node }: { node: NodeItem }) {
                     <div className="grid gap-4 md:grid-cols-2">
                       <MetricBar
                         label="CPU"
-                        value={formatPercent(latestMetricSnapshot.cpu_usage_percent)}
+                        value={formatPercent(
+                          latestMetricSnapshot.cpu_usage_percent,
+                        )}
                         progress={latestMetricSnapshot.cpu_usage_percent}
                         hint={
                           isMeaningfulTime(latestMetricSnapshot.captured_at)
@@ -723,8 +732,12 @@ export function RelayDetailPage({ node }: { node: NodeItem }) {
                             variant={getHealthEventVariant(event)}
                           />
                           <StatusBadge
-                            label={event.status === 'active' ? '活动中' : '已恢复'}
-                            variant={event.status === 'active' ? 'warning' : 'success'}
+                            label={
+                              event.status === 'active' ? '活动中' : '已恢复'
+                            }
+                            variant={
+                              event.status === 'active' ? 'warning' : 'success'
+                            }
                           />
                         </div>
                         <p className="mt-3 text-sm text-[var(--foreground-secondary)]">
@@ -768,17 +781,26 @@ export function RelayDetailPage({ node }: { node: NodeItem }) {
             </div>
 
             <div className="grid gap-6 xl:grid-cols-1">
-              <AppCard title="隧道活跃通道状态" description="展示中继节点上活跃并连接的 frps 网络隧道代理。">
+              <AppCard
+                title="隧道活跃通道状态"
+                description="展示中继节点上活跃并连接的 frps 网络隧道代理。"
+              >
                 {observability?.relay_dashboard?.proxies?.length ? (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm text-[var(--foreground-secondary)]">
                       <thead className="border-b border-[var(--border-default)]">
                         <tr>
-                          <th className="px-4 py-3 font-medium">代理名称 (Proxy Name)</th>
+                          <th className="px-4 py-3 font-medium">
+                            代理名称 (Proxy Name)
+                          </th>
                           <th className="px-4 py-3 font-medium">代理类型</th>
                           <th className="px-4 py-3 font-medium">在线状态</th>
-                          <th className="px-4 py-3 font-medium">客户端接入地址</th>
-                          <th className="px-4 py-3 font-medium">最近连接时间</th>
+                          <th className="px-4 py-3 font-medium">
+                            客户端接入地址
+                          </th>
+                          <th className="px-4 py-3 font-medium">
+                            最近连接时间
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[var(--border-default)]">
@@ -790,8 +812,12 @@ export function RelayDetailPage({ node }: { node: NodeItem }) {
                             <td className="px-4 py-3">{proxy.type}</td>
                             <td className="px-4 py-3">
                               <StatusBadge
-                                label={proxy.status === 'online' ? '在线' : '离线'}
-                                variant={proxy.status === 'online' ? 'success' : 'info'}
+                                label={
+                                  proxy.status === 'online' ? '在线' : '离线'
+                                }
+                                variant={
+                                  proxy.status === 'online' ? 'success' : 'info'
+                                }
                               />
                             </td>
                             <td className="px-4 py-3">{proxy.client_addr}</td>
@@ -894,7 +920,9 @@ export function RelayDetailPage({ node }: { node: NodeItem }) {
                     </p>
                     <div className="mt-3 flex flex-wrap items-center gap-3">
                       <StatusBadge
-                        label={isTargetVersionApplied ? '已追平目标版本' : '同步落后'}
+                        label={
+                          isTargetVersionApplied ? '已追平目标版本' : '同步落后'
+                        }
                         variant={isTargetVersionApplied ? 'success' : 'warning'}
                       />
                     </div>
@@ -989,7 +1017,7 @@ export function RelayDetailPage({ node }: { node: NodeItem }) {
                         Discovery Token (中继注册 Token)
                       </p>
                       <p className="mt-2 text-sm break-all text-[var(--foreground-primary)]">
-                        {node.agent_token || '暂无'}
+                        {node.access_token || '暂无'}
                       </p>
                     </div>
                   </div>
@@ -1044,6 +1072,18 @@ export function RelayDetailPage({ node }: { node: NodeItem }) {
                       绑定控制端口
                     </p>
                     <p className="mt-1">{node.relay_bind_port || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-[var(--foreground-primary)]">
+                      最后心跳
+                    </p>
+                    <p className="mt-1">
+                      {isWSConnectedLastSeen(node.last_seen_at)
+                        ? 'WS 已连接'
+                        : isMeaningfulTime(node.last_seen_at)
+                          ? `${formatRelativeTime(node.last_seen_at)} · ${formatDateTime(node.last_seen_at)}`
+                          : '暂无'}
+                    </p>
                   </div>
                   <div>
                     <p className="font-medium text-[var(--foreground-primary)]">
@@ -1199,12 +1239,8 @@ export function RelayDetailPage({ node }: { node: NodeItem }) {
           />
         ) : (
           <div className="space-y-3 text-sm text-[var(--foreground-secondary)]">
-            <p>
-              该操作会删除此中继节点在控制端记录的所有健康诊断事件历史。
-            </p>
-            <p>
-              这不会影响节点在后续运行中继续捕捉并上报新的故障。
-            </p>
+            <p>该操作会删除此中继节点在控制端记录的所有健康诊断事件历史。</p>
+            <p>这不会影响节点在后续运行中继续捕捉并上报新的故障。</p>
           </div>
         )}
       </AppModal>
@@ -1273,8 +1309,12 @@ export function RelayDetailPage({ node }: { node: NodeItem }) {
                   {selectedReleaseChannel === 'preview' ? '预览版' : '正式版'}
                 </p>
                 <StatusBadge
-                  label={selectedReleaseChannel === 'preview' ? 'Preview' : 'Stable'}
-                  variant={selectedReleaseChannel === 'preview' ? 'warning' : 'info'}
+                  label={
+                    selectedReleaseChannel === 'preview' ? 'Preview' : 'Stable'
+                  }
+                  variant={
+                    selectedReleaseChannel === 'preview' ? 'warning' : 'info'
+                  }
                 />
               </div>
             </AppCard>
@@ -1327,7 +1367,9 @@ export function RelayDetailPage({ node }: { node: NodeItem }) {
                         ? '发现可升级版本'
                         : '当前已是最新版本'
                     }
-                    variant={selectedAgentRelease.has_update ? 'warning' : 'success'}
+                    variant={
+                      selectedAgentRelease.has_update ? 'warning' : 'success'
+                    }
                   />
                   {selectedAgentRelease.prerelease ? (
                     <StatusBadge label="Preview 发布" variant="warning" />
