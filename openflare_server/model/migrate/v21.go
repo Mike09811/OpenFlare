@@ -38,15 +38,38 @@ func migrateV21(ctx Context, db *gorm.DB, backend string) error {
 		}
 	}
 
+	// Rename agent_version → version (target may already exist if AutoMigrate ran earlier)
 	if migrator.HasColumn(&nodeV21{}, "agent_version") {
-		if err := migrator.RenameColumn(&nodeV21{}, "agent_version", "version"); err != nil {
-			return fmt.Errorf("failed to rename agent_version to version: %w", err)
+		if migrator.HasColumn(&nodeV21{}, "version") {
+			// version already created by AutoMigrate with empty default; backfill from agent_version
+			slog.Info("v21: version column already exists, backfilling from agent_version")
+			if err := db.Exec(`UPDATE nodes SET version = agent_version WHERE version = ''`).Error; err != nil {
+				return fmt.Errorf("failed to backfill version from agent_version: %w", err)
+			}
+			if err := migrator.DropColumn(&nodeV21{}, "agent_version"); err != nil {
+				slog.Warn("failed to drop agent_version after backfill", "error", err)
+			}
+		} else {
+			if err := migrator.RenameColumn(&nodeV21{}, "agent_version", "version"); err != nil {
+				return fmt.Errorf("failed to rename agent_version to version: %w", err)
+			}
 		}
 	}
 
+	// Rename nginx_version → ext_version (target may already exist if AutoMigrate ran earlier)
 	if migrator.HasColumn(&nodeV21{}, "nginx_version") {
-		if err := migrator.RenameColumn(&nodeV21{}, "nginx_version", "ext_version"); err != nil {
-			return fmt.Errorf("failed to rename nginx_version to ext_version: %w", err)
+		if migrator.HasColumn(&nodeV21{}, "ext_version") {
+			slog.Info("v21: ext_version column already exists, backfilling from nginx_version")
+			if err := db.Exec(`UPDATE nodes SET ext_version = nginx_version WHERE ext_version IS NULL OR ext_version = ''`).Error; err != nil {
+				return fmt.Errorf("failed to backfill ext_version from nginx_version: %w", err)
+			}
+			if err := migrator.DropColumn(&nodeV21{}, "nginx_version"); err != nil {
+				slog.Warn("failed to drop nginx_version after backfill", "error", err)
+			}
+		} else {
+			if err := migrator.RenameColumn(&nodeV21{}, "nginx_version", "ext_version"); err != nil {
+				return fmt.Errorf("failed to rename nginx_version to ext_version: %w", err)
+			}
 		}
 	}
 

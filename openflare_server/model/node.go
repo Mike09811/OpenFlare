@@ -18,7 +18,7 @@ type Node struct {
 	UpdateChannel             string    `json:"update_channel" gorm:"size:16;not null;default:'stable'"`
 	UpdateTag                 string    `json:"update_tag" gorm:"size:64"`
 	RestartOpenrestyRequested bool      `json:"restart_openresty_requested" gorm:"not null;default:false"`
-	Version                   string    `json:"version" gorm:"size:64;not null"`
+	Version                   string    `json:"version" gorm:"size:64;not null;default:''"`
 	ExtVersion                string    `json:"ext_version" gorm:"size:64"`
 	OpenrestyStatus           string    `json:"openresty_status" gorm:"size:16;not null;default:'unknown'"`
 	OpenrestyMessage          string    `json:"openresty_message" gorm:"type:text"`

@@ -184,21 +184,27 @@ func migrateObservabilityLegacyColumns(db *gorm.DB) error {
 }
 
 func applyCurrentSchema(db *gorm.DB, backend string) error {
+	slog.Info("applyCurrentSchema: step 1/5 - auto migrate schema metadata")
 	if err := autoMigrateSchemaMetadata(db); err != nil {
 		return err
 	}
+	slog.Info("applyCurrentSchema: step 2/5 - migrate proxy route https column")
 	if err := migrateProxyRouteEnableHTTPSColumn(db); err != nil {
 		return err
 	}
+	slog.Info("applyCurrentSchema: step 3/5 - auto migrate all models")
 	if err := autoMigrateAll(db); err != nil {
 		return err
 	}
+	slog.Info("applyCurrentSchema: step 4/5 - migrate text columns")
 	if err := migrateTextColumns(db, backend); err != nil {
 		return err
 	}
+	slog.Info("applyCurrentSchema: step 5/5 - migrate observability legacy columns")
 	if err := migrateObservabilityLegacyColumns(db); err != nil {
 		return err
 	}
+	slog.Info("applyCurrentSchema: completed")
 	return nil
 }
 

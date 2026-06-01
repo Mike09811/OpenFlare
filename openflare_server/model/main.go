@@ -123,10 +123,14 @@ func openDatabase() (*gorm.DB, string, error) {
 }
 
 func autoMigrateAll(db *gorm.DB) error {
-	for _, item := range registeredModels() {
+	models := registeredModels()
+	for i, item := range models {
+		name := fmt.Sprintf("%T", item)
+		slog.Info("autoMigrateAll: migrating model", "index", fmt.Sprintf("%d/%d", i+1, len(models)), "model", name)
 		if err := db.AutoMigrate(item); err != nil {
-			return err
+			return fmt.Errorf("AutoMigrate %s failed: %w", name, err)
 		}
+		slog.Info("autoMigrateAll: migrated model", "model", name)
 	}
 	return nil
 }

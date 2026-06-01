@@ -64,7 +64,12 @@ func migrateV19(ctx Context, db *gorm.DB, backend string) error {
 		slog.Info("dropped tunnel_id column from proxy_routes")
 	}
 
-	return ctx.ApplyCurrentSchema(db, backend)
+	slog.Info("v19: starting ApplyCurrentSchema (auto-migrate all tables)")
+	if err := ctx.ApplyCurrentSchema(db, backend); err != nil {
+		return err
+	}
+	slog.Info("v19: ApplyCurrentSchema completed")
+	return nil
 }
 
 func validateV19(ctx Context, db *gorm.DB, backend string) error {
