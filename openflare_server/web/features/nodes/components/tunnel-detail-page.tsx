@@ -48,7 +48,6 @@ import {
   getApplyLabel,
   getApplyVariant,
   getNodeStatusLabel,
-  getNodeStatusVariant,
   getServerUrl,
   getUpdateMode,
   isMeaningfulTime,
@@ -292,12 +291,12 @@ export function TunnelDetailPage({ node }: { node: NodeItem }) {
 
   const normalizedServerUrl = getServerUrl(serverUrl);
   const tunnelInstallCommand =
-    normalizedServerUrl && node.agent_token
-      ? buildTunnelInstallCommand(normalizedServerUrl, node.agent_token)
+    normalizedServerUrl && node.access_token
+      ? buildTunnelInstallCommand(normalizedServerUrl, node.access_token)
       : '';
   const tunnelDockerInstallCommand =
-    normalizedServerUrl && node.agent_token
-      ? buildTunnelDockerInstallCommand(normalizedServerUrl, node.agent_token)
+    normalizedServerUrl && node.access_token
+      ? buildTunnelDockerInstallCommand(normalizedServerUrl, node.access_token)
       : '';
 
   const updateMode = getUpdateMode(node);
@@ -923,7 +922,7 @@ export function TunnelDetailPage({ node }: { node: NodeItem }) {
                         Tunnel Token
                       </p>
                       <p className="mt-2 text-sm break-all text-[var(--foreground-primary)]">
-                        {node.agent_token || '暂无'}
+                        {node.access_token || '暂无'}
                       </p>
                     </div>
                   </div>
