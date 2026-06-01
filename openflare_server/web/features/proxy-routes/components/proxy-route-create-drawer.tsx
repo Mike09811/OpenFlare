@@ -20,6 +20,7 @@ import {
   parseOriginUrls,
   validateDomains,
 } from '@/features/proxy-routes/helpers';
+import { getTunnels } from '@/features/tunnels/api/tunnels';
 import type { ProxyRouteItem } from '@/features/proxy-routes/types';
 import { getTlsCertificates } from '@/features/tls-certificates/api/tls-certificates';
 import {
@@ -39,7 +40,11 @@ const createWebsiteSchema = z
   .object({
     site_name: z.string().trim().max(255, '站点标识不能超过 255 个字符'),
     domain_rows: z.array(domainRowSchema).min(1),
-    origin_urls_text: z.string().trim().min(1, '请至少填写一个上游地址'),
+    upstream_type: z.enum(['direct', 'tunnel']),
+    origin_urls_text: z.string().trim(),
+    tunnel_id: z.string().optional(),
+    tunnel_target_addr: z.string().trim().optional(),
+    tunnel_target_protocol: z.enum(['http', 'https']).optional(),
     enabled: z.boolean(),
     redirect_http: z.boolean(),
     remark: z.string().max(255, '备注不能超过 255 个字符'),
@@ -57,13 +62,38 @@ const createWebsiteSchema = z
       });
     }
 
-    const { error } = parseOriginUrls(value.origin_urls_text);
-    if (error) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['origin_urls_text'],
-        message: error,
-      });
+    if (value.upstream_type === 'direct') {
+      if (!value.origin_urls_text.trim()) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['origin_urls_text'],
+          message: '请至少填写一个上游地址',
+        });
+      } else {
+        const { error } = parseOriginUrls(value.origin_urls_text);
+        if (error) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['origin_urls_text'],
+            message: error,
+          });
+        }
+      }
+    } else {
+      if (!value.tunnel_id) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['tunnel_id'],
+          message: '请选择内网穿透隧道',
+        });
+      }
+      if (!value.tunnel_target_addr) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['tunnel_target_addr'],
+          message: '请填写内网服务地址 (如 127.0.0.1:8080)',
+        });
+      }
     }
 
     const selectedCertificateCount = new Set(
@@ -85,7 +115,11 @@ type CreateWebsiteFormValues = z.infer<typeof createWebsiteSchema>;
 const defaultValues: CreateWebsiteFormValues = {
   site_name: '',
   domain_rows: [{ domain: '', certificateId: '' }],
+  upstream_type: 'direct',
   origin_urls_text: '',
+  tunnel_id: '',
+  tunnel_target_addr: '',
+  tunnel_target_protocol: 'http',
   enabled: true,
   redirect_http: false,
   remark: '',
@@ -138,6 +172,11 @@ export function ProxyRouteCreateDrawer({
     queryFn: getTlsCertificates,
     enabled: open,
   });
+  const tunnelsQuery = useQuery({
+    queryKey: ['tunnels'],
+    queryFn: getTunnels,
+    enabled: open,
+  });
 
   const combinedDomainSuggestions = useMemo(
     () => [
@@ -159,29 +198,40 @@ export function ProxyRouteCreateDrawer({
       const selectedCertIDs = normalizeSelectedCertificateIDs(
         values.domain_rows,
       );
-      const { urls } = parseOriginUrls(values.origin_urls_text);
-      const primaryOrigin = parseOriginUrl(urls[0]);
+      
+      let originUrl = '';
+      const originHost = '';
+      let upstreams: string[] = [];
+      
+      if (values.upstream_type === 'direct') {
+        const { urls } = parseOriginUrls(values.origin_urls_text);
+        const primaryOrigin = parseOriginUrl(urls[0]);
+        originUrl = buildOriginUrl(
+          primaryOrigin.scheme,
+          primaryOrigin.address,
+          primaryOrigin.port,
+          primaryOrigin.uri,
+        );
+        upstreams = urls.slice(1);
+      } else {
+        originUrl = `${values.tunnel_target_protocol}://${values.tunnel_target_addr}`;
+      }
 
       return createProxyRoute({
         site_name: values.site_name.trim() || domains[0],
         domain: domains[0],
         domains,
         origin_id: null,
-        origin_url: buildOriginUrl(
-          primaryOrigin.scheme,
-          primaryOrigin.address,
-          primaryOrigin.port,
-          primaryOrigin.uri,
-        ),
-        origin_scheme: primaryOrigin.scheme,
-        origin_address: primaryOrigin.address,
-        origin_port: primaryOrigin.port,
-        origin_uri: primaryOrigin.uri,
-        origin_host: '',
-        upstreams: urls.slice(1),
+        origin_url: originUrl,
+        origin_scheme: values.upstream_type === 'direct' ? parseOriginUrl(originUrl).scheme : 'http',
+        origin_address: values.upstream_type === 'direct' ? parseOriginUrl(originUrl).address : values.tunnel_target_addr || '',
+        origin_port: values.upstream_type === 'direct' ? parseOriginUrl(originUrl).port : '80',
+        origin_uri: values.upstream_type === 'direct' ? parseOriginUrl(originUrl).uri : '',
+        origin_host: originHost,
+        upstreams,
         enabled: values.enabled,
         enable_https: selectedCertIDs.length > 0,
-        cert_id: selectedCertIDs[0] ?? null,
+        cert_id: selectedCertIDs.length > 0 ? selectedCertIDs[0] : null,
         cert_ids: selectedCertIDs,
         domain_cert_ids: domainCertIDs,
         redirect_http:
@@ -196,9 +246,11 @@ export function ProxyRouteCreateDrawer({
         pow_enabled: false,
         pow_config: '{}',
         basic_auth_enabled: false,
-        basic_auth_username: '',
-        basic_auth_password: '',
         remark: values.remark.trim(),
+        upstream_type: values.upstream_type,
+        tunnel_id: values.upstream_type === 'tunnel' && values.tunnel_id ? Number(values.tunnel_id) : null,
+        tunnel_target_addr: values.upstream_type === 'tunnel' ? values.tunnel_target_addr : '',
+        tunnel_target_protocol: values.upstream_type === 'tunnel' ? values.tunnel_target_protocol : '',
       });
     },
     onSuccess: (route) => {
@@ -285,19 +337,90 @@ export function ProxyRouteCreateDrawer({
           }
         />
 
-        <ResourceField
-          label="上游地址"
-          hint="每行一个完整 URL。第一行作为主回源，多上游模式请保持相同协议且不要包含 path 或 query。"
-          error={form.formState.errors.origin_urls_text?.message}
-        >
-          <ResourceTextarea
-            aria-label="上游地址"
-            placeholder={
-              'https://origin-a.internal:443\nhttps://origin-b.internal:443'
-            }
-            {...form.register('origin_urls_text')}
-          />
-        </ResourceField>
+        <div className="space-y-3">
+          <label className="text-sm font-medium text-[var(--foreground-primary)] block">回源方式</label>
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 text-sm text-[var(--foreground-primary)] cursor-pointer">
+              <input
+                type="radio"
+                value="direct"
+                {...form.register('upstream_type')}
+                className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+              />
+              直连上游
+            </label>
+            <label className="flex items-center gap-2 text-sm text-[var(--foreground-primary)] cursor-pointer">
+              <input
+                type="radio"
+                value="tunnel"
+                {...form.register('upstream_type')}
+                className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+              />
+              内网穿透 (Tunnel)
+            </label>
+          </div>
+        </div>
+
+        {form.watch('upstream_type') === 'direct' ? (
+          <ResourceField
+            label="上游地址"
+            hint="每行一个完整 URL。第一行作为主回源，多上游模式请保持相同协议且不要包含 path 或 query。"
+            error={form.formState.errors.origin_urls_text?.message}
+          >
+            <ResourceTextarea
+              aria-label="上游地址"
+              placeholder={
+                'https://origin-a.internal:443\nhttps://origin-b.internal:443'
+              }
+              {...form.register('origin_urls_text')}
+            />
+          </ResourceField>
+        ) : (
+          <div className="p-4 rounded-xl border border-[var(--border-default)] bg-[var(--surface-muted)] space-y-4">
+            <ResourceField
+              label="选择内网穿透隧道"
+              hint="将请求转发到该隧道连接的客户端节点。"
+              error={form.formState.errors.tunnel_id?.message}
+            >
+              <select
+                {...form.register('tunnel_id')}
+                className="block w-full rounded-xl border border-[var(--border-default)] bg-[var(--control-background)] px-4 py-2.5 text-sm text-[var(--foreground-primary)] placeholder-[var(--foreground-muted)] outline-none transition focus:border-[var(--border-strong)] focus:ring-1 focus:ring-[var(--border-strong)]"
+              >
+                <option value="">请选择...</option>
+                {(tunnelsQuery.data ?? []).map((tunnel) => (
+                  <option key={tunnel.id} value={tunnel.id}>
+                    {tunnel.name} ({tunnel.status === 'online' ? '在线' : '离线'})
+                  </option>
+                ))}
+              </select>
+            </ResourceField>
+            
+            <ResourceField
+              label="内网服务协议"
+              hint="转发到内网服务时使用的协议。"
+              error={form.formState.errors.tunnel_target_protocol?.message}
+            >
+              <select
+                {...form.register('tunnel_target_protocol')}
+                className="block w-full rounded-xl border border-[var(--border-default)] bg-[var(--control-background)] px-4 py-2.5 text-sm text-[var(--foreground-primary)] placeholder-[var(--foreground-muted)] outline-none transition focus:border-[var(--border-strong)] focus:ring-1 focus:ring-[var(--border-strong)]"
+              >
+                <option value="http">HTTP</option>
+                <option value="https">HTTPS</option>
+              </select>
+            </ResourceField>
+
+            <ResourceField
+              label="内网服务地址"
+              hint="例如: 127.0.0.1:8080 或 192.168.1.10:80"
+              error={form.formState.errors.tunnel_target_addr?.message}
+            >
+              <ResourceInput
+                placeholder="127.0.0.1:8080"
+                {...form.register('tunnel_target_addr')}
+              />
+            </ResourceField>
+          </div>
+        )}
 
         <ToggleField
           label="创建后立即启用"

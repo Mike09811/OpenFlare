@@ -3,9 +3,15 @@ import type { ReleaseChannel } from '@/features/update/types';
 export interface NodeItem {
   id: number;
   node_id: string;
+  type: 'edge_node' | 'tunnel_relay';
   name: string;
   ip: string;
   ip_manual_override: boolean;
+  relay_bind_port: number;
+  relay_client_access_addr: string;
+  relay_client_proxy_url: string;
+  relay_auth_token: string;
+  relay_status: string;
   geo_name: string;
   geo_latitude?: number | null;
   geo_longitude?: number | null;
@@ -40,9 +46,13 @@ export interface NodeBootstrapToken {
 }
 
 export interface NodeMutationPayload {
+  type: 'edge_node' | 'tunnel_relay';
   name: string;
   ip: string;
   ip_manual_override: boolean;
+  relay_bind_port?: number;
+  relay_client_access_addr?: string;
+  relay_client_proxy_url?: string;
   auto_update_enabled: boolean;
   geo_name: string;
   geo_latitude?: number | null;

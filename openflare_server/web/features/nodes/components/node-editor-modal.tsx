@@ -37,6 +37,7 @@ type RegionOption = {
 
 const nodeEditorSchema = z
   .object({
+    type: z.enum(['edge_node', 'tunnel_relay']),
     name: z
       .string()
       .trim()
@@ -45,6 +46,9 @@ const nodeEditorSchema = z
     ip: z.string().trim().max(64, '节点 IP 不能超过 64 个字符'),
     ip_manual_override: z.boolean(),
     auto_update_enabled: z.boolean(),
+    relay_bind_port: z.string().trim(),
+    relay_client_access_addr: z.string().trim(),
+    relay_client_proxy_url: z.string().trim(),
     geo_manual_override: z.boolean(),
     geo_region: z.string(),
     geo_name: z.string().trim().max(128, '位置名不能超过 128 个字符'),
@@ -58,6 +62,17 @@ const nodeEditorSchema = z
         path: ['ip'],
         message: '锁定节点 IP 时必须填写节点 IP',
       });
+    }
+
+    if (values.type === 'tunnel_relay') {
+      const port = Number(values.relay_bind_port);
+      if (Number.isNaN(port) || port < 1 || port > 65535) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['relay_bind_port'],
+          message: '请填写正确的端口号 (1-65535)',
+        });
+      }
     }
 
     if (!values.geo_manual_override) {
@@ -107,10 +122,14 @@ const nodeEditorSchema = z
 type NodeEditorValues = z.infer<typeof nodeEditorSchema>;
 
 const defaultValues: NodeEditorValues = {
+  type: 'edge_node',
   name: '',
   ip: '',
   ip_manual_override: false,
   auto_update_enabled: false,
+  relay_bind_port: '7000',
+  relay_client_access_addr: '',
+  relay_client_proxy_url: '',
   geo_manual_override: false,
   geo_region: '',
   geo_name: '',
@@ -192,10 +211,14 @@ function buildFormValues(node?: Partial<NodeItem> | null): NodeEditorValues {
   }
 
   return {
+    type: node.type ?? 'edge_node',
     name: node.name ?? '',
     ip: node.ip ?? '',
     ip_manual_override: node.ip_manual_override ?? false,
     auto_update_enabled: node.auto_update_enabled ?? false,
+    relay_bind_port: String(node.relay_bind_port ?? 7000),
+    relay_client_access_addr: node.relay_client_access_addr ?? '',
+    relay_client_proxy_url: node.relay_client_proxy_url ?? '',
     geo_manual_override: node.geo_manual_override ?? false,
     geo_region: node.geo_manual_override ? (node.geo_name ?? '') : '',
     geo_name: node.geo_name ?? '',
@@ -211,12 +234,20 @@ function buildFormValues(node?: Partial<NodeItem> | null): NodeEditorValues {
 }
 
 function toPayload(values: NodeEditorValues): NodeMutationPayload {
+  const basePayload = {
+    type: values.type,
+    name: values.name.trim(),
+    ip: values.ip.trim(),
+    ip_manual_override: values.ip_manual_override,
+    auto_update_enabled: values.auto_update_enabled,
+    relay_bind_port: values.type === 'tunnel_relay' ? Number(values.relay_bind_port) : undefined,
+    relay_client_access_addr: values.type === 'tunnel_relay' ? values.relay_client_access_addr.trim() : undefined,
+    relay_client_proxy_url: values.type === 'tunnel_relay' ? values.relay_client_proxy_url.trim() : undefined,
+  };
+
   if (!values.geo_manual_override) {
     return {
-      name: values.name.trim(),
-      ip: values.ip.trim(),
-      ip_manual_override: values.ip_manual_override,
-      auto_update_enabled: values.auto_update_enabled,
+      ...basePayload,
       geo_manual_override: false,
       geo_name: '',
       geo_latitude: null,
@@ -225,10 +256,7 @@ function toPayload(values: NodeEditorValues): NodeMutationPayload {
   }
 
   return {
-    name: values.name.trim(),
-    ip: values.ip.trim(),
-    ip_manual_override: values.ip_manual_override,
-    auto_update_enabled: values.auto_update_enabled,
+    ...basePayload,
     geo_manual_override: true,
     geo_name: values.geo_name.trim(),
     geo_latitude:
@@ -262,6 +290,10 @@ export function NodeEditorModal({
     defaultValues,
   });
 
+  const watchedType = useWatch({
+    control: form.control,
+    name: 'type',
+  });
   const watchedAutoUpdate = useWatch({
     control: form.control,
     name: 'auto_update_enabled',
@@ -315,6 +347,16 @@ export function NodeEditorModal({
     >
       <form id="node-editor-form" className="space-y-5" onSubmit={handleSubmit}>
         <ResourceField
+          label="节点类型"
+          hint="边缘节点用于常规的网站代理和缓存；隧道中继节点用于内网穿透的流量中转服务器。"
+        >
+          <ResourceSelect {...form.register('type')} disabled={!!node}>
+            <option value="edge_node">边缘节点 (Edge Node)</option>
+            <option value="tunnel_relay">隧道中继节点 (Tunnel Relay)</option>
+          </ResourceSelect>
+        </ResourceField>
+
+        <ResourceField
           label="节点名"
           hint="示例：shanghai-edge-1"
           error={form.formState.errors.name?.message}
@@ -324,6 +366,35 @@ export function NodeEditorModal({
             {...form.register('name')}
           />
         </ResourceField>
+
+        {watchedType === 'tunnel_relay' && (
+          <div className="space-y-5 rounded-lg border border-border p-4 bg-muted/50">
+            <h4 className="text-sm font-medium">中继配置 (Relay Config)</h4>
+            <ResourceField
+              label="中继绑定端口 (Bind Port)"
+              hint="中继服务端在此端口监听并接受 Flared 客户端连接。"
+              error={form.formState.errors.relay_bind_port?.message}
+            >
+              <ResourceInput placeholder="7000" {...form.register('relay_bind_port')} />
+            </ResourceField>
+            
+            <ResourceField
+              label="客户端接入地址 (Client Access Addr)"
+              hint="可选，如果不填默认使用节点的 IP + 绑定端口。"
+              error={form.formState.errors.relay_client_access_addr?.message}
+            >
+              <ResourceInput placeholder="例如: relay.example.com:7000" {...form.register('relay_client_access_addr')} />
+            </ResourceField>
+
+            <ResourceField
+              label="代理地址 (Proxy URL)"
+              hint="可选，下发给客户端。当客户端连接中继需要经过 HTTP 代理时使用。"
+              error={form.formState.errors.relay_client_proxy_url?.message}
+            >
+              <ResourceInput placeholder="例如: http://10.0.0.1:3128" {...form.register('relay_client_proxy_url')} />
+            </ResourceField>
+          </div>
+        )}
 
         <ResourceField
           label="节点 IP"
@@ -363,17 +434,19 @@ export function NodeEditorModal({
           }
         />
 
-        <ToggleField
-          label="启用自动更新"
-          description="开启后 Agent 心跳返回会提示节点自动执行自更新。"
-          checked={watchedAutoUpdate}
-          onChange={(checked) =>
-            form.setValue('auto_update_enabled', checked, {
-              shouldDirty: true,
-              shouldValidate: true,
-            })
-          }
-        />
+        {watchedType === 'edge_node' && (
+          <ToggleField
+            label="启用自动更新"
+            description="开启后 Agent 心跳返回会提示节点自动执行自更新。"
+            checked={watchedAutoUpdate}
+            onChange={(checked) =>
+              form.setValue('auto_update_enabled', checked, {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
+          />
+        )}
 
         <ToggleField
           label="手动指定地图地区"

@@ -33,6 +33,8 @@ import {
   getNodeStatusVariant,
   getOpenrestyStatusLabel,
   getOpenrestyStatusVariant,
+  getRelayStatusLabel,
+  getRelayStatusVariant,
   isMeaningfulTime,
   isWSConnectedLastSeen,
 } from '@/features/nodes/utils';
@@ -304,9 +306,20 @@ export function NodesPage() {
                       <tr key={node.id} className="align-top">
                         <td className="px-3 py-4">
                           <div className="space-y-1">
-                            <p className="font-medium text-[var(--foreground-primary)]">
-                              {node.name}
-                            </p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-[var(--foreground-primary)]">
+                                {node.name}
+                              </p>
+                              {node.type === 'tunnel_relay' ? (
+                                <span className="rounded-full border border-blue-500/20 bg-blue-50 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                  Relay
+                                </span>
+                              ) : (
+                                <span className="rounded-full border border-gray-500/20 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800/50 dark:text-gray-300">
+                                  Edge
+                                </span>
+                              )}
+                            </div>
                             <p className="text-xs text-[var(--foreground-secondary)]">
                               IP：{node.ip || 'null'}
                               {node.ip_manual_override ? '（已锁定）' : ''}
@@ -328,14 +341,21 @@ export function NodesPage() {
                         </td>
                         <td className="px-3 py-4">
                           <div className="space-y-2">
-                            <StatusBadge
-                              label={getOpenrestyStatusLabel(
-                                node.openresty_status,
-                              )}
-                              variant={getOpenrestyStatusVariant(
-                                node.openresty_status,
-                              )}
-                            />
+                            {node.type === 'tunnel_relay' ? (
+                              <StatusBadge
+                                label={getRelayStatusLabel(node.relay_status)}
+                                variant={getRelayStatusVariant(node.relay_status)}
+                              />
+                            ) : (
+                              <StatusBadge
+                                label={getOpenrestyStatusLabel(
+                                  node.openresty_status,
+                                )}
+                                variant={getOpenrestyStatusVariant(
+                                  node.openresty_status,
+                                )}
+                              />
+                            )}
                           </div>
                         </td>
                         <td className="px-3 py-4 text-[var(--foreground-secondary)]">

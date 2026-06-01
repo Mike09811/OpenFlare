@@ -196,3 +196,50 @@ export function buildNodeDockerInstallCommand(
     `  ${image}`,
   ].join('\n');
 }
+
+export function getRelayStatusVariant(status: string | null | undefined) {
+  if (status === 'healthy') {
+    return 'success';
+  }
+  if (status === 'unhealthy') {
+    return 'danger';
+  }
+  return 'warning';
+}
+
+export function getRelayStatusLabel(status: string | null | undefined) {
+  if (status === 'healthy') {
+    return '健康';
+  }
+  if (status === 'unhealthy') {
+    return '异常';
+  }
+  return '未知';
+}
+
+const relayInstallerScriptUrl =
+  'https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/install-relay.sh';
+
+export function buildRelayInstallCommand(serverUrl: string, discoveryToken: string) {
+  return [
+    `curl -fsSL ${relayInstallerScriptUrl} | bash -s -- \\`,
+    `  --server-url ${serverUrl} \\`,
+    `  --discovery-token ${discoveryToken}`,
+  ].join('\n');
+}
+
+export function buildRelayDockerInstallCommand(
+  serverUrl: string,
+  discoveryToken: string,
+) {
+  const image = 'ghcr.io/rain-kl/openflare-relay:latest';
+
+  return [
+    `docker pull ${image}`,
+    `docker rm -f openflare-relay 2>/dev/null || true`,
+    `docker run -d --name openflare-relay --net host --restart unless-stopped \\`,
+    `  -e OPENFLARE_SERVER_URL=${serverUrl} \\`,
+    `  -e OPENFLARE_DISCOVERY_TOKEN=${discoveryToken} \\`,
+    `  ${image}`,
+  ].join('\n');
+}
