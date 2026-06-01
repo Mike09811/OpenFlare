@@ -1,8 +1,12 @@
 package config
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"net"
+	"openflare/utils/geoip"
+	"openflare/utils/geoip/iputil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -124,6 +128,9 @@ func applyDefaults(cfg *Config, baseDir string) {
 		host, _ := os.Hostname()
 		cfg.NodeName = strings.TrimSpace(host)
 	}
+	if cfg.NodeIP == "" {
+		cfg.NodeIP = detectNodeIP()
+	}
 	if cfg.StatePath == "" {
 		cfg.StatePath = filepath.Join(cfg.DataDir, "relay-state.json")
 	}
@@ -170,4 +177,58 @@ func (cfg *Config) Save() error {
 		return err
 	}
 	return os.WriteFile(cfg.configPath, data, 0o644)
+}
+
+func detectNodeIP() string {
+	if ip := detectOutboundNodeIP(); ip != "" {
+		return ip
+	}
+	return detectLocalNodeIP()
+}
+
+func detectOutboundNodeIP() string {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ip, err := geoip.GetOutboundIP(ctx)
+	if err != nil || ip == nil {
+		return ""
+	}
+	return ip.String()
+}
+
+func detectLocalNodeIP() string {
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		return ""
+	}
+	bestIP := ""
+	bestPriority := -1
+	for _, iface := range interfaces {
+		if iface.Flags&net.FlagUp == 0 || iface.Flags&net.FlagLoopback != 0 {
+			continue
+		}
+		addrs, err := iface.Addrs()
+		if err != nil {
+			continue
+		}
+		for _, addr := range addrs {
+			ipNet, ok := addr.(*net.IPNet)
+			if !ok || ipNet.IP == nil || ipNet.IP.IsLoopback() {
+				continue
+			}
+			ipv4 := ipNet.IP.To4()
+			if ipv4 == nil {
+				continue
+			}
+			priority := iputil.Score(ipv4)
+			if priority > bestPriority {
+				bestIP = ipv4.String()
+				bestPriority = priority
+			}
+			if bestPriority == 2 {
+				return bestIP
+			}
+		}
+	}
+	return bestIP
 }
