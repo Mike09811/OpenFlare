@@ -401,26 +401,26 @@ export function NodeEditorModal({
             
             <ResourceField
               label="中继 Vhost HTTP 端口 (Vhost HTTP Port)"
-              hint="中继服务端在此端口监听 HTTP 虚拟主机流量，用于 Nginx 转发到中继。"
+              hint="中继服务端在此端口监听 HTTP 虚拟主机流量，用于 Openresty 转发到中继。"
               error={form.formState.errors.relay_vhost_http_port?.message}
             >
               <ResourceInput placeholder="8080" {...form.register('relay_vhost_http_port')} />
             </ResourceField>
-            
+
             <ResourceField
-              label="客户端接入地址 (Client Access Addr)"
-              hint="可选，如果不填默认使用节点的 IP + 绑定端口。"
-              error={form.formState.errors.relay_client_access_addr?.message}
+                label="边缘节点接入地址 (Edge Node Access Addr)"
+                hint="用于 Edge Node 转发请求。默认与 Client Access Addr 或 IP + 绑定端口一致。"
+                error={form.formState.errors.relay_agent_access_addr?.message}
             >
-              <ResourceInput placeholder="例如: relay.example.com:7000" {...form.register('relay_client_access_addr')} />
+              <ResourceInput placeholder="例如: 10.0.0.1:7000" {...form.register('relay_agent_access_addr')} />
             </ResourceField>
 
             <ResourceField
-              label="边缘节点接入地址 (Edge Node Access Addr)"
-              hint="可选，用于 Edge Node 转发请求。默认与 Client Access Addr 或 IP + 绑定端口一致。"
-              error={form.formState.errors.relay_agent_access_addr?.message}
+              label="客户端接入地址 (Client Access Addr)"
+              hint="如果不填默认使用节点的 IP + 绑定端口。"
+              error={form.formState.errors.relay_client_access_addr?.message}
             >
-              <ResourceInput placeholder="例如: 10.0.0.1:7000" {...form.register('relay_agent_access_addr')} />
+              <ResourceInput placeholder="例如: relay.example.com:7000" {...form.register('relay_client_access_addr')} />
             </ResourceField>
 
             <ResourceField
@@ -433,7 +433,7 @@ export function NodeEditorModal({
 
             <ToggleField
               label="开启 FRPS WebUI"
-              description="开启后可以通过浏览器直接访问 FRPS 的 Web 界面。安全起见，访问密码固定为当前中继节点的接入 Server Token。"
+              description="访问端口 17500。用户 admin 密码为当前中继节点的接入 Token。"
               checked={form.watch('relay_web_server_enabled')}
               onChange={(checked) =>
                 form.setValue('relay_web_server_enabled', checked, {

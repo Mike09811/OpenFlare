@@ -154,7 +154,7 @@ func (m *Manager) renderConfig(cfg *service.RelayConfig) error {
 	} else {
 		buf.WriteString("addr = \"127.0.0.1\"\n")
 	}
-	buf.WriteString(fmt.Sprintf("port = %d\n", cfg.BindPort+500))
+	buf.WriteString(fmt.Sprintf("port = %d\n", 17500))
 	buf.WriteString("user = \"admin\"\n")
 
 	password := m.agentToken
