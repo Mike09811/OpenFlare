@@ -22,6 +22,8 @@ OpenFlare 的管理端 API 与 Agent API 都使用 JSON。
 | --- | --- |
 | 管理端 API | 由管理端 Session 鉴权 |
 | Agent API | 固定放在 `/api/agent/*` |
+| Relay API | 固定放在 `/api/relay/*`，使用 `X-Agent-Token` 鉴权（与 Agent 复用同一 token） |
+| OpenFlared API | 固定放在 `/api/flared/*`，使用 `X-Tunnel-Token` 鉴权（独立的 tunnel_token） |
 | 只读接口 | 使用 `GET` |
 | 变更类接口 | 使用 `POST` |
 
@@ -105,6 +107,38 @@ Agent 也可以在应用新版本后主动请求差异同步：
 | `POST` | `/api/agent/waf/ip-groups/sync` | 根据 Agent 上报的 `ids` 与 `checksums` 返回不一致的 IP 组 |
 
 当 Server 侧 IP 组更新时，已连接的 Agent WebSocket 会收到 `type = "waf_ip_groups"` 的消息，payload 为发生变化的 IP 组数组。Agent 应只更新收到的组，不要求 Server 每次下发全部 IP 组。
+
+## OpenFlared API
+
+OpenFlared 客户端用于内网穿透场景，通过 `tunnel_token` 与 Server 通信，独立于 Agent 认证体系。所有接口都使用 `X-Tunnel-Token` 鉴权，Server 会校验节点 `node_type = tunnel_client`，否则返回 `403`。
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| `POST` | `/api/flared/heartbeat` | 客户端心跳，刷新在线状态并返回 tunnel 配置版本摘要 |
+| `GET` | `/api/flared/config/active` | 拉取完整的 tunnel 路由配置（relay 列表 + frpc 代理定义） |
+| `POST` | `/api/flared/apply-log` | 上报配置应用结果（success / warning / failed） |
+| `GET` | `/api/flared/ws` | 升级为 WebSocket，用于实时接收 `active_config` 推送 |
+
+心跳请求示例：
+
+```http
+POST /api/flared/heartbeat
+X-Tunnel-Token: <tunnel_token>
+Content-Type: application/json
+
+{
+  "client_version": "v0.2.0",
+  "frp_version": "0.61.0",
+  "tunnel_status": "running",
+  "connected_relays": [
+    { "relay_node_id": "node-relay-1", "status": "healthy", "proxy_count": 3 }
+  ],
+  "current_version": "v1",
+  "current_checksum": "sha256..."
+}
+```
+
+心跳响应包含 `active_config` 摘要与 `tunnel_settings`（包含心跳间隔、WebSocket 升级开关等运行时参数）。当 Server 发布新版本时，已连接的 OpenFlared WebSocket 会收到 `type = "active_config"` 消息，payload 为版本摘要，客户端应立即拉取完整配置并应用。
 
 日志中不得打印完整 Token。
 

@@ -356,6 +356,7 @@ func PublishConfigVersion(createdBy string, force bool) (*ReleaseResult, error) 
 		Checksum: record.Checksum,
 	}
 	BroadcastAgentWSActiveConfig(activeConfig)
+	BroadcastFlaredWSActiveConfig(activeConfig)
 	return &ReleaseResult{
 		Version: record,
 		Routes:  bundle.Routes,
@@ -403,10 +404,12 @@ func ActivateConfigVersion(id uint) (*model.ConfigVersion, error) {
 		return nil, err
 	}
 	version.IsActive = true
-	BroadcastAgentWSActiveConfig(&ActiveConfigMeta{
+	activeConfig := &ActiveConfigMeta{
 		Version:  version.Version,
 		Checksum: version.Checksum,
-	})
+	}
+	BroadcastAgentWSActiveConfig(activeConfig)
+	BroadcastFlaredWSActiveConfig(activeConfig)
 	return version, nil
 }
 

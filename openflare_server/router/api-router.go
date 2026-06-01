@@ -232,6 +232,14 @@ func SetApiRouter(router *gin.Engine) {
 			relayRoute.POST("/heartbeat", controller.RelayHeartbeat)
 			relayRoute.GET("/ws", controller.RelayWebSocket)
 		}
+		flaredRoute := apiRouter.Group("/flared")
+		flaredRoute.Use(middleware.TunnelAuth())
+		{
+			flaredRoute.POST("/heartbeat", controller.FlaredHeartbeat)
+			flaredRoute.GET("/config/active", controller.FlaredGetActiveConfig)
+			flaredRoute.POST("/apply-log", controller.FlaredReportApplyLog)
+			flaredRoute.GET("/ws", controller.FlaredWebSocket)
+		}
 
 	}
 }

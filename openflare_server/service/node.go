@@ -166,6 +166,7 @@ func DeleteNode(id uint) error {
 	}
 	invalidateAccessTokenCache(node.AccessToken)
 	DisconnectAgentWSClient(node.NodeID)
+	DisconnectFlaredWSClient(node.NodeID)
 	return nil
 }
 
@@ -364,6 +365,9 @@ func nodeViewLastSeenAt(node *model.Node) any {
 	}
 	if node.NodeType == "tunnel_relay" && IsRelayWSConnected(node.NodeID) {
 		return RelayWSConnectedLastSeenValue
+	}
+	if node.NodeType == "tunnel_client" && IsFlaredWSConnected(node.NodeID) {
+		return FlaredWSConnectedLastSeenValue
 	}
 	if IsAgentWSConnected(node.NodeID) {
 		return AgentWSConnectedLastSeenValue

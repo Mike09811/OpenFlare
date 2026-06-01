@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"openflare/common"
@@ -192,6 +193,115 @@ type FlaredHeartbeatPayload struct {
 	ConnectedRelays []FlaredConnectedRelay `json:"connected_relays"`
 	CurrentVersion  string                 `json:"current_version"`
 	CurrentChecksum string                 `json:"current_checksum"`
+}
+
+func normalizeFlaredHeartbeatPayload(payload FlaredHeartbeatPayload) FlaredHeartbeatPayload {
+	payload.ClientVersion = strings.TrimSpace(payload.ClientVersion)
+	payload.FrpVersion = strings.TrimSpace(payload.FrpVersion)
+	payload.TunnelStatus = strings.ToLower(strings.TrimSpace(payload.TunnelStatus))
+	payload.CurrentVersion = strings.TrimSpace(payload.CurrentVersion)
+	payload.CurrentChecksum = strings.TrimSpace(payload.CurrentChecksum)
+	cleaned := make([]FlaredConnectedRelay, 0, len(payload.ConnectedRelays))
+	for _, relay := range payload.ConnectedRelays {
+		relay.RelayNodeID = strings.TrimSpace(relay.RelayNodeID)
+		relay.Status = strings.ToLower(strings.TrimSpace(relay.Status))
+		if relay.RelayNodeID == "" {
+			continue
+		}
+		if relay.Status == "" {
+			relay.Status = "unknown"
+		}
+		cleaned = append(cleaned, relay)
+	}
+	payload.ConnectedRelays = cleaned
+	return payload
+}
+
+// HeartbeatFlared processes an OpenFlared heartbeat, refreshes node status,
+// persists the connected relay snapshot, and returns the active tunnel
+// config summary plus runtime settings.
+func HeartbeatFlared(node *model.Node, payload FlaredHeartbeatPayload) (*FlaredHeartbeatResponse, error) {
+	if node == nil {
+		return nil, fmt.Errorf("tunnel client node is nil")
+	}
+	if node.NodeType != "tunnel_client" {
+		return nil, fmt.Errorf("node %s is not a tunnel_client", node.NodeID)
+	}
+	slog.Debug("flared heartbeat received", "node_id", node.NodeID, "client_version", payload.ClientVersion)
+	payload = normalizeFlaredHeartbeatPayload(payload)
+
+	now := time.Now()
+	previous := *node
+
+	changes := make(map[string]any)
+	if previous.Version != payload.ClientVersion {
+		changes["version"] = payload.ClientVersion
+	}
+	if previous.ExtVersion != payload.FrpVersion {
+		changes["ext_version"] = payload.FrpVersion
+	}
+	if previous.CurrentVersion != payload.CurrentVersion {
+		changes["current_version"] = payload.CurrentVersion
+	}
+	if !previous.LastSeenAt.Equal(now) {
+		changes["last_seen_at"] = now
+	}
+	changes["status"] = NodeStatusOnline
+
+	node.Version = payload.ClientVersion
+	node.ExtVersion = payload.FrpVersion
+	node.CurrentVersion = payload.CurrentVersion
+	node.LastSeenAt = now
+	node.Status = NodeStatusOnline
+	if !node.GeoManualOverride {
+		applyGeoInfoFromIP(node, node.IP)
+	}
+
+	if len(changes) > 0 {
+		if err := model.DB.Model(node).Updates(changes).Error; err != nil {
+			return nil, fmt.Errorf("update flared heartbeat: %w", err)
+		}
+	}
+	refreshAccessTokenCache(node)
+	persistFlaredObservability(node.NodeID, payload, now)
+
+	activeConfig, err := GetActiveConfigMetaForAgent()
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	return &FlaredHeartbeatResponse{
+		ActiveConfig:   activeConfig,
+		TunnelSettings: buildRelaySettings(),
+	}, nil
+}
+
+// persistFlaredObservability records the latest connection snapshot and
+// health event for the OpenFlared client.
+func persistFlaredObservability(nodeID string, payload FlaredHeartbeatPayload, reportedAt time.Time) {
+	connected := make([]string, 0, len(payload.ConnectedRelays))
+	for _, relay := range payload.ConnectedRelays {
+		connected = append(connected, fmt.Sprintf("%s:%s", relay.RelayNodeID, relay.Status))
+	}
+	managedTypes := map[string]struct{}{
+		"flared_runtime_unhealthy": {},
+	}
+	var events []AgentNodeHealthEvent
+	if payload.TunnelStatus == "unhealthy" {
+		events = append(events, AgentNodeHealthEvent{
+			EventType:       "flared_runtime_unhealthy",
+			Severity:        NodeHealthSeverityCritical,
+			Message:         "openflared runtime is not healthy",
+			TriggeredAtUnix: reportedAt.Unix(),
+			Metadata: map[string]string{
+				"tunnel_status":    payload.TunnelStatus,
+				"client_version":   payload.ClientVersion,
+				"current_version":  payload.CurrentVersion,
+				"current_checksum": payload.CurrentChecksum,
+				"connected_relays": strings.Join(connected, ","),
+			},
+		})
+	}
+	_ = reconcileScopedNodeHealthEvents(model.DB, nodeID, events, reportedAt, managedTypes)
 }
 
 // FlaredConnectedRelay describes the status of a relay connection from a client.
