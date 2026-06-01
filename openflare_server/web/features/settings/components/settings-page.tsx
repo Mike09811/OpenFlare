@@ -2004,7 +2004,11 @@ export function SettingsPage() {
       <PageHeader title="设置" />
 
       {feedback ? (
-        <InlineMessage tone={feedback.tone} message={feedback.message} />
+        <InlineMessage
+          tone={feedback.tone}
+          message={feedback.message}
+          onClear={() => setFeedback(null)}
+        />
       ) : null}
 
       <div className="flex flex-wrap gap-3">

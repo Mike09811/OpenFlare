@@ -163,7 +163,11 @@ export function CertificateApplyModal({
     >
       <form className="space-y-5" onSubmit={onSubmit}>
         {feedback ? (
-          <InlineMessage tone={feedback.tone} message={feedback.message} />
+          <InlineMessage
+            tone={feedback.tone}
+            message={feedback.message}
+            onClear={() => setFeedback(null)}
+          />
         ) : null}
 
         <div className="grid gap-4 md:grid-cols-2">

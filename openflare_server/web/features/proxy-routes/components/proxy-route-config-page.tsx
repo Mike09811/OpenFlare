@@ -1252,7 +1252,11 @@ export function ProxyRouteConfigPage({
       />
 
       {feedback ? (
-        <InlineMessage tone={feedback.tone} message={feedback.message} />
+        <InlineMessage
+          tone={feedback.tone}
+          message={feedback.message}
+          onClear={() => setFeedback(null)}
+        />
       ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">

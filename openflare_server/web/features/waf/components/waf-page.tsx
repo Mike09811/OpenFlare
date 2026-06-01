@@ -340,7 +340,11 @@ export function WAFPage() {
         />
 
         {feedback ? (
-          <InlineMessage tone={feedback.tone} message={feedback.message} />
+          <InlineMessage
+            tone={feedback.tone}
+            message={feedback.message}
+            onClear={() => setFeedback(null)}
+          />
         ) : null}
 
         <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">

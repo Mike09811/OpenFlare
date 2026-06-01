@@ -147,7 +147,11 @@ export function CertificateImportModal({
     >
       <div className="space-y-6">
         {feedback ? (
-          <InlineMessage tone={feedback.tone} message={feedback.message} />
+          <InlineMessage
+            tone={feedback.tone}
+            message={feedback.message}
+            onClear={() => setFeedback(null)}
+          />
         ) : null}
 
         <div className="inline-flex rounded-2xl border border-[var(--border-default)] bg-[var(--surface-elevated)] p-1">

@@ -752,9 +752,6 @@ export function WAFIPGroupsPage() {
                 </div>
               </div>
             )}
-            <div className="rounded-2xl bg-[var(--surface-muted)] p-4 text-xs text-[var(--foreground-secondary)] leading-relaxed">
-              💡 提示：抓取记录持久化存储在 IP 组的 <code>ext_ips</code> 扩展字段中。未来如需为已抓取到的 IP 记录更多维度的扩展元数据，可直接在此 JSON 对象中添加字段以供扩展。
-            </div>
           </div>
         </AppModal>
       ) : null}
