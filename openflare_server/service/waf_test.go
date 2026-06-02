@@ -464,3 +464,50 @@ func seedWAFNodeAccessLogs(t *testing.T, loggedAt time.Time, remoteAddr string, 
 		}
 	}
 }
+
+func TestSyncWAFIPGroupAutomaticCustomStatusRules(t *testing.T) {
+	setupServiceTestDB(t)
+
+	now := time.Now().UTC()
+	// Seed 10 requests from 203.0.113.50, where 3 return 403, 7 return 200
+	seedWAFNodeAccessLogsWithStatus(t, now, "203.0.113.50", "app.example.com", 7, http.StatusOK)
+	seedWAFNodeAccessLogsWithStatus(t, now, "203.0.113.50", "app.example.com", 3, http.StatusForbidden)
+
+	group, err := CreateWAFIPGroup(WAFIPGroupInput{
+		Name:    "custom status code blacklist",
+		Type:    WAFIPGroupTypeAutomatic,
+		Enabled: true,
+		AutoConfig: json.RawMessage(`{
+			"lookback_minutes": 60,
+			"rules": [
+				{"name":"高频 403 探测","expr":"StatusCount(403) >= 3 && StatusRatio(403) >= 0.3"}
+			]
+		}`),
+	})
+	if err != nil {
+		t.Fatalf("CreateWAFIPGroup failed: %v", err)
+	}
+	result, err := SyncWAFIPGroup(group.ID)
+	if err != nil {
+		t.Fatalf("SyncWAFIPGroup failed: %v", err)
+	}
+	if result.IPCount != 1 || result.Group.IPList[0] != "203.0.113.50" {
+		t.Fatalf("expected 203.0.113.50 to be matched, got %#v", result)
+	}
+}
+
+func seedWAFNodeAccessLogsWithStatus(t *testing.T, loggedAt time.Time, remoteAddr string, host string, count int, statusCode int) {
+	t.Helper()
+	for i := 0; i < count; i++ {
+		if err := model.DB.Create(&model.NodeAccessLog{
+			NodeID:     "node-waf-auto",
+			LoggedAt:   loggedAt.Add(-time.Duration(i%30) * time.Second),
+			RemoteAddr: remoteAddr,
+			Host:       host,
+			Path:       "/probe",
+			StatusCode: statusCode,
+		}).Error; err != nil {
+			t.Fatalf("failed to seed access log: %v", err)
+		}
+	}
+}

@@ -69,6 +69,21 @@ type wafIPGroupAutoRuleEnv struct {
 	ClientErrorCount int     `expr:"client_error_count"`
 	ServerErrorCount int     `expr:"server_error_count"`
 	LastSeenUnix     int64   `expr:"last_seen_unix"`
+	statusCounts     map[int]int
+}
+
+func (env wafIPGroupAutoRuleEnv) StatusCount(code int) int {
+	if env.statusCounts == nil {
+		return 0
+	}
+	return env.statusCounts[code]
+}
+
+func (env wafIPGroupAutoRuleEnv) StatusRatio(code int) float64 {
+	if env.RequestCount <= 0 || env.statusCounts == nil {
+		return 0.0
+	}
+	return float64(env.statusCounts[code]) / float64(env.RequestCount)
 }
 
 type wafIPGroupAutoAccumulator struct {
@@ -79,6 +94,7 @@ type wafIPGroupAutoAccumulator struct {
 	clientErrorCount int
 	serverErrorCount int
 	lastSeen         time.Time
+	statusCounts     map[int]int
 }
 
 type WAFIPGroupInput struct {
@@ -755,10 +771,14 @@ func evaluateParsedWAFIPGroupAutoConfig(config wafIPGroupAutoConfig, now time.Ti
 		}
 		acc := accumulators[ip]
 		if acc == nil {
-			acc = &wafIPGroupAutoAccumulator{ip: ip}
+			acc = &wafIPGroupAutoAccumulator{
+				ip:           ip,
+				statusCounts: make(map[int]int),
+			}
 			accumulators[ip] = acc
 		}
 		acc.requestCount++
+		acc.statusCounts[item.StatusCode]++
 		if item.StatusCode == http.StatusNotFound {
 			acc.status404Count++
 		}
@@ -800,6 +820,7 @@ func (acc *wafIPGroupAutoAccumulator) toExprEnv() wafIPGroupAutoRuleEnv {
 		IPHostCount:      acc.ipHostCount,
 		ClientErrorCount: acc.clientErrorCount,
 		ServerErrorCount: acc.serverErrorCount,
+		statusCounts:     acc.statusCounts,
 	}
 	if acc.requestCount > 0 {
 		env.Status404Ratio = float64(acc.status404Count) / float64(acc.requestCount)

@@ -587,7 +587,7 @@ export function WAFIPGroupsPage() {
                 </ResourceField>
                 <ResourceField
                   label="自动配置 JSON"
-                  hint="可用字段：request_count、status_404_count、status_404_ratio、ip_host_count、ip_host_ratio。支持 ttl（秒，默认 -1 永久拉黑）。"
+                  hint="可用字段：request_count、status_404_count、status_404_ratio、ip_host_count、ip_host_ratio。方法：StatusCount(code)、StatusRatio(code)。支持 ttl（秒，默认 -1 永久拉黑）。"
                 >
                   <ResourceTextarea
                     value={draft.auto_config_text}
