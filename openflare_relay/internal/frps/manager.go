@@ -102,18 +102,31 @@ func (m *Manager) UpdateConfig(cfg *service.RelayConfig) {
 		m.activeConfig.WebServerEnabled == cfg.WebServerEnabled {
 		if m.cmd == nil && !m.stopping {
 			slog.Warn("frps config unchanged but process is not running, restarting")
-			if err := m.restartProcess(); err != nil {
+			m.stopping = false
+			m.generation++
+			generation := m.generation
+			if err := m.renderConfig(cfg); err != nil {
+				slog.Error("failed to render frps config", "error", err)
 				m.status = "unhealthy"
 				m.lastError = err.Error()
-				slog.Error("failed to restart frps with unchanged config", "error", err)
+				return
 			}
+			go m.supervise(generation)
 		}
 		return
 	}
 
 	m.activeConfig = cfg
 	m.stopping = false
+	m.generation++
+	generation := m.generation
 	slog.Info("relay config updated, reloading frps")
+
+	if m.cmd != nil && m.cmd.Process != nil {
+		slog.Debug("stopping existing frps process")
+		_ = m.cmd.Process.Kill()
+		m.cmd = nil
+	}
 
 	if err := m.renderConfig(cfg); err != nil {
 		slog.Error("failed to render frps config", "error", err)
@@ -122,14 +135,7 @@ func (m *Manager) UpdateConfig(cfg *service.RelayConfig) {
 		return
 	}
 
-	if err := m.restartProcess(); err != nil {
-		slog.Error("failed to restart frps", "error", err)
-		m.status = "unhealthy"
-		m.lastError = err.Error()
-	} else {
-		m.status = "healthy"
-		m.lastError = ""
-	}
+	go m.supervise(generation)
 }
 
 func (m *Manager) renderConfig(cfg *service.RelayConfig) error {
@@ -166,63 +172,95 @@ func (m *Manager) renderConfig(cfg *service.RelayConfig) error {
 	return os.WriteFile(m.configPath, buf.Bytes(), 0644)
 }
 
-func (m *Manager) restartProcess() error {
-	m.generation++
-	generation := m.generation
-	if m.cmd != nil && m.cmd.Process != nil {
-		slog.Debug("stopping existing frps process")
-		_ = m.cmd.Process.Kill()
-		m.cmd = nil
-	}
-	return m.startProcessLocked(generation)
-}
+func (m *Manager) supervise(generation uint64) {
+	backoff := 1 * time.Second
+	const maxBackoff = 60 * time.Second
 
-func (m *Manager) startProcessLocked(generation uint64) error {
-	cmd := exec.Command(m.frpsPath, "-c", m.configPath)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Start(); err != nil {
-		return err
-	}
-
-	m.cmd = cmd
-	m.status = "healthy"
-	m.lastError = ""
-
-	go func(c *exec.Cmd) {
-		err := c.Wait()
-		slog.Warn("frps process exited", "error", err)
+	for {
 		m.mu.Lock()
-		if m.cmd == c {
+		if m.stopping || m.generation != generation {
+			m.mu.Unlock()
+			return
+		}
+
+		cmd := exec.Command(m.frpsPath, "-c", m.configPath)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		err := cmd.Start()
+		if err != nil {
+			m.status = "unhealthy"
+			m.lastError = fmt.Sprintf("failed to start: %v", err)
+			slog.Error("failed to start frps", "error", err, "generation", generation)
+			m.mu.Unlock()
+
+			if !m.sleepOrInterrupt(generation, backoff) {
+				return
+			}
+			backoff = backoff * 2
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+			continue
+		}
+
+		m.cmd = cmd
+		m.status = "healthy"
+		m.lastError = ""
+		m.mu.Unlock()
+
+		startedAt := time.Now()
+		waitErr := cmd.Wait()
+
+		m.mu.Lock()
+		if m.cmd == cmd {
 			m.cmd = nil
 			m.status = "unhealthy"
-			if err != nil {
-				m.lastError = err.Error()
+			if waitErr != nil {
+				m.lastError = fmt.Sprintf("exited with error: %v", waitErr)
 			} else {
-				m.lastError = "frps process exited"
+				m.lastError = "exited unexpectedly"
+			}
+			slog.Warn("frps process exited unexpectedly", "error", waitErr, "generation", generation)
+		}
+		shouldContinue := !m.stopping && m.generation == generation
+		m.mu.Unlock()
+
+		if !shouldContinue {
+			return
+		}
+
+		if time.Since(startedAt) >= 10*time.Second {
+			backoff = 1 * time.Second
+		}
+
+		if !m.sleepOrInterrupt(generation, backoff) {
+			return
+		}
+		backoff = backoff * 2
+		if backoff > maxBackoff {
+			backoff = maxBackoff
+		}
+	}
+}
+
+func (m *Manager) sleepOrInterrupt(generation uint64, d time.Duration) bool {
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+
+	deadline := time.Now().Add(d)
+	for time.Now().Before(deadline) {
+		select {
+		case <-ticker.C:
+			m.mu.RLock()
+			interrupted := m.stopping || m.generation != generation
+			m.mu.RUnlock()
+			if interrupted {
+				return false
 			}
 		}
-		shouldRestart := !m.stopping && m.generation == generation
-		m.mu.Unlock()
-		if !shouldRestart {
-			return
-		}
-		time.Sleep(2 * time.Second)
-		m.mu.Lock()
-		defer m.mu.Unlock()
-		if m.stopping || m.generation != generation {
-			return
-		}
-		slog.Warn("restarting frps after unexpected exit")
-		if err := m.startProcessLocked(generation); err != nil {
-			m.status = "unhealthy"
-			m.lastError = err.Error()
-			slog.Error("failed to auto restart frps", "error", err)
-		}
-	}(cmd)
-
-	return nil
+	}
+	return true
 }
 
 func (m *Manager) Stop() {
