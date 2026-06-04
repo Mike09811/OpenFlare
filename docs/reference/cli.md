@@ -8,7 +8,7 @@
 
 ```bash
 cd openflare_server
-export SESSION_SECRET='replace-with-random-string'
+export JWT_SECRET='replace-with-random-string'
 export SQLITE_PATH='./openflare.db'
 export LOG_LEVEL='info'
 go run .

@@ -1,17 +1,19 @@
 package middleware
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"openflare/common"
 	"openflare/model"
+
+	jwt "github.com/appleboy/gin-jwt/v2"
+	"github.com/gin-gonic/gin"
 )
 
 const OpenFlareTokenHeader = "OpenFlare-Token"
 
 func authHelper(c *gin.Context, minRole int) {
-	token := c.GetHeader(OpenFlareTokenHeader)
-	if token == "" {
+	tokenStr := c.GetHeader(OpenFlareTokenHeader)
+	if tokenStr == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"success": false,
 			"message": "无权进行此操作，未登录或 token 无效",
@@ -20,16 +22,49 @@ func authHelper(c *gin.Context, minRole int) {
 		return
 	}
 
-	user := model.ValidateUserToken(token)
-	if user == nil || user.Username == "" {
+	token, err := JWTMiddleware.ParseTokenString(tokenStr)
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"success": false,
-			"message": "无权进行此操作，token 无效",
+			"message": "无权进行此操作，token 无效: " + err.Error(),
 		})
 		c.Abort()
 		return
 	}
-	if user.Status == common.UserStatusDisabled {
+
+	claims := jwt.ExtractClaimsFromToken(token)
+	id, ok := claims["id"].(float64)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"success": false,
+			"message": "无权进行此操作，token 格式错误",
+		})
+		c.Abort()
+		return
+	}
+
+	dbUser := &model.User{}
+	dbErr := model.DB.Select([]string{"id", "username", "display_name", "role", "status", "token"}).
+		First(dbUser, "id = ?", int(id)).Error
+	if dbErr != nil || dbUser.Username == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"success": false,
+			"message": "无权进行此操作，用户不存在",
+		})
+		c.Abort()
+		return
+	}
+
+	if dbUser.Token != tokenStr {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"success": false,
+			"message": "无权进行此操作，token 已失效或已登出",
+		})
+		c.Abort()
+		return
+	}
+
+	if dbUser.Status == common.UserStatusDisabled {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
 			"message": "用户已被封禁",
@@ -37,7 +72,8 @@ func authHelper(c *gin.Context, minRole int) {
 		c.Abort()
 		return
 	}
-	if user.Role < minRole {
+
+	if int(dbUser.Role) < minRole {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
 			"message": "无权进行此操作，权限不足",
@@ -45,9 +81,10 @@ func authHelper(c *gin.Context, minRole int) {
 		c.Abort()
 		return
 	}
-	c.Set("username", user.Username)
-	c.Set("role", user.Role)
-	c.Set("id", user.Id)
+
+	c.Set("username", dbUser.Username)
+	c.Set("role", dbUser.Role)
+	c.Set("id", dbUser.Id)
 	c.Set("authByToken", true)
 	c.Next()
 }

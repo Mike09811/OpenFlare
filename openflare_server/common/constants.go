@@ -17,6 +17,7 @@ var HomePageLink = ""
 // Any options with "Secret", "Token" in its key won't be return by GetOptions
 
 var SessionSecret = uuid.New().String()
+var JWTSecret = "" // if empty, falls back to SessionSecret; set via JWT_SECRET env var
 var SQLitePath = "openflare.db"
 var SQLDSN = ""
 

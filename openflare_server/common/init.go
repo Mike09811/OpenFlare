@@ -48,6 +48,9 @@ func ParseFlags() {
 	if os.Getenv("SESSION_SECRET") != "" {
 		SessionSecret = os.Getenv("SESSION_SECRET")
 	}
+	if os.Getenv("JWT_SECRET") != "" {
+		JWTSecret = os.Getenv("JWT_SECRET")
+	}
 	if os.Getenv("SQLITE_PATH") != "" {
 		SQLitePath = os.Getenv("SQLITE_PATH")
 	}

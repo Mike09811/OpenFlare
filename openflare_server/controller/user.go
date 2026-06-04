@@ -1,16 +1,14 @@
 package controller
 
 import (
-	"errors"
 	"openflare/common"
+	"openflare/middleware"
 	"openflare/model"
 	"openflare/utils/security"
 	"openflare/utils/validation"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 type LoginRequest struct {
@@ -47,8 +45,13 @@ func Login(c *gin.Context) {
 
 // setup token and then return user info
 func setLoginToken(user *model.User) (*model.User, error) {
-	token, err := ensureUserOpenFlareToken(user)
+	// Generate a signed JWT using gin-jwt middleware
+	tokenString, _, err := middleware.JWTMiddleware.TokenGenerator(user)
 	if err != nil {
+		return nil, err
+	}
+	// Persist JWT in DB so we can invalidate it on logout
+	if err := model.DB.Model(user).Update("token", tokenString).Error; err != nil {
 		return nil, err
 	}
 	cleanUser := &model.User{
@@ -57,7 +60,7 @@ func setLoginToken(user *model.User) (*model.User, error) {
 		DisplayName: user.DisplayName,
 		Role:        user.Role,
 		Status:      user.Status,
-		Token:       token,
+		Token:       tokenString,
 	}
 	return cleanUser, nil
 }
@@ -83,24 +86,6 @@ func Logout(c *gin.Context) {
 		}
 	}
 	respondSuccessMessage(c, "")
-}
-
-func ensureUserOpenFlareToken(user *model.User) (string, error) {
-	if user.Token != "" {
-		return user.Token, nil
-	}
-	for i := 0; i < 3; i++ {
-		token := strings.Replace(uuid.New().String(), "-", "", -1)
-		if model.DB.Where("token = ?", token).First(&model.User{}).RowsAffected != 0 {
-			continue
-		}
-		if err := model.DB.Model(user).Update("token", token).Error; err != nil {
-			return "", err
-		}
-		user.Token = token
-		return token, nil
-	}
-	return "", errors.New("生成登录凭证失败，请重试")
 }
 
 func currentUserFromOpenFlareToken(c *gin.Context) *model.User {
@@ -163,19 +148,17 @@ func GenerateToken(c *gin.Context) {
 		respondFailure(c, err.Error())
 		return
 	}
-	user.Token = uuid.New().String()
-	user.Token = strings.Replace(user.Token, "-", "", -1)
-
-	if model.DB.Where("token = ?", user.Token).First(user).RowsAffected != 0 {
-		respondFailure(c, "请重试，系统生成的 UUID 竟然重复了！")
+	// Generate a fresh JWT for the user
+	tokenString, _, err := middleware.JWTMiddleware.TokenGenerator(user)
+	if err != nil {
+		respondFailure(c, "生成 Token 失败: "+err.Error())
 		return
 	}
-
+	user.Token = tokenString
 	if err := user.Update(false); err != nil {
 		respondFailure(c, err.Error())
 		return
 	}
-
 	respondSuccess(c, user.Token)
 }
 

@@ -10,7 +10,8 @@ export default defineAdditionalConfig({
     sidebar: {
       '/guide/': { base: '/guide/', items: sidebarGuide() },
       '/reference/': { base: '/reference/', items: sidebarReference() },
-      '/design/': { base: '/design/', items: sidebarDesign() }
+      '/design/': { base: '/design/', items: sidebarDesign() },
+      '/changelog/': false
     },
 
     editLink: {
@@ -57,7 +58,8 @@ function nav(): DefaultTheme.NavItem[] {
   return [
     { text: '指南', link: '/guide/', activeMatch: '/guide/' },
     { text: '参考', link: '/reference/', activeMatch: '/reference/' },
-    { text: '设计', link: '/design/', activeMatch: '/design/' }
+    { text: '设计', link: '/design/', activeMatch: '/design/' },
+    { text: '更新日志', link: '/changelog/', activeMatch: '/changelog/' }
   ]
 }
 

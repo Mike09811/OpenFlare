@@ -2,7 +2,7 @@
 
 你会学到：OpenFlare 的推荐部署方式、Server 与 Agent 的运行要求、源码启动方式、联调步骤、升级与卸载入口。
 
-生产环境建议使用 PostgreSQL 作为 Server 数据库，并为 Server 显式配置 `SESSION_SECRET`。Agent 部署方式推荐为 Docker 部署（即直接使用内置 OpenResty 的 Agent 镜像）；亦支持通过安装脚本或手动本地运行。
+生产环境建议使用 PostgreSQL 作为 Server 数据库，并为 Server 显式配置 `JWT_SECRET`。Agent 部署方式推荐为 Docker 部署（即直接使用内置 OpenResty 的 Agent 镜像）；亦支持通过安装脚本或手动本地运行。
 
 ## 部署拓扑
 
@@ -107,7 +107,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      SESSION_SECRET: replace-with-a-long-random-string
+      JWT_SECRET: replace-with-a-long-random-string
       DSN: postgres://openflare:replace-with-strong-password@postgres:5432/openflare?sslmode=disable
       GIN_MODE: release
       LOG_LEVEL: info
@@ -144,7 +144,7 @@ pnpm build
 
 ```bash
 cd openflare_server
-export SESSION_SECRET='replace-with-a-long-random-string'
+export JWT_SECRET='replace-with-a-long-random-string'
 export SQLITE_PATH='./openflare.db'
 export LOG_LEVEL='info'
 # 可选：设置后优先使用 PostgreSQL。

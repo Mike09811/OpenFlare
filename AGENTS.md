@@ -3,7 +3,7 @@
 本文件是 OpenFlare 的 AI 接手入口，不承载详细设计、规范和计划。接手项目时，请根据以下分层文档指引进行阅读与开发：
 
 
-### 面向 AI 的开发指导规范 (AI Guidelines) 必须阅读 ⚠️
+### 面向 AI 的开发指导规范 (AI Guidelines) 必须阅读
 
 为了理解 OpenFlare 的设计理念、产品边界、核心机制以及代码编写的工程约束，**AI 在接手项目时必须首先且完整阅读以下文档**：
 
@@ -66,5 +66,5 @@
 * 产品启动、部署、升级、联调方式变化：更新 `docs/guide/quick-start.md`、`docs/deployment/deployment.md` 和 `README.md`
 * 用户操作路径、常见场景变化：更新 `docs/guide/usage.md`
 * 本地开发、测试、构建方式变化：更新 `docs/design/development.md`
-* 常见故障、排查路径变化：更新 `docs/guide/troubleshooting.md`
 * 环境变量、命令行参数、运行时配置、Agent 配置变化：更新 `docs/reference/configuration.md`
+* **任何代码、配置或文档变更完成后：必须在 [`docs/changelog/index.md`](./docs/changelog/index.md) 的 `[Unreleased]` 区块补充对应条目（新增 / 变更 / 修复），格式遵循文件内已有模板。**

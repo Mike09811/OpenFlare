@@ -39,7 +39,7 @@ SQLite 模式：
 
 ```bash
 cd openflare_server
-export SESSION_SECRET='dev-session-secret'
+export JWT_SECRET='dev-jwt-secret'
 export SQLITE_PATH='./openflare-dev.db'
 export LOG_LEVEL='debug'
 go run .
@@ -49,7 +49,7 @@ PostgreSQL 模式：
 
 ```bash
 cd openflare_server
-export SESSION_SECRET='dev-session-secret'
+export JWT_SECRET='dev-jwt-secret'
 export DSN='postgres://openflare:secret@127.0.0.1:5432/openflare?sslmode=disable'
 export LOG_LEVEL='debug'
 go run .

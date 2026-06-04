@@ -4,7 +4,6 @@ import (
 	"errors"
 	"openflare/common"
 	"openflare/utils/security"
-	"strings"
 )
 
 // User if you add sensitive fields, don't forget to clean them in setupLogin function.
@@ -150,11 +149,13 @@ func (user *User) FillUserByUsername() error {
 	return nil
 }
 
+// ValidateUserToken looks up a user by their stored JWT token string.
+// JWT signature verification is handled by middleware/auth.go; this
+// function is used by Logout to find and clear the token from DB.
 func ValidateUserToken(token string) (user *User) {
 	if token == "" {
 		return nil
 	}
-	token = strings.Replace(token, "Bearer ", "", 1)
 	user = &User{}
 	if DB.Where("token = ?", token).First(user).RowsAffected == 1 {
 		return user

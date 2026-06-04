@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"openflare/common"
+	"openflare/middleware"
 	"openflare/model"
 	"openflare/router"
 	"openflare/service"
@@ -485,6 +486,7 @@ func setupTestDB(t *testing.T) {
 	if err := model.InitDB(); err != nil {
 		t.Fatalf("failed to init db: %v", err)
 	}
+	middleware.InitJWTMiddleware()
 	t.Cleanup(func() {
 		if err := model.CloseDB(); err != nil {
 			t.Fatalf("failed to close db: %v", err)
@@ -498,11 +500,15 @@ func prepareRootToken(t *testing.T) string {
 	if err := user.FillUserByUsername(); err != nil {
 		t.Fatalf("failed to load root user: %v", err)
 	}
-	user.Token = "phase1-test-token"
-	if err := model.DB.Model(user).Update("token", user.Token).Error; err != nil {
+	// Generate a proper JWT so auth middleware can validate it
+	tokenString, _, err := middleware.JWTMiddleware.TokenGenerator(user)
+	if err != nil {
+		t.Fatalf("failed to generate JWT for root user: %v", err)
+	}
+	if err := model.DB.Model(user).Update("token", tokenString).Error; err != nil {
 		t.Fatalf("failed to set root token: %v", err)
 	}
-	return user.Token
+	return tokenString
 }
 
 func performJSONRequest(t *testing.T, engine http.Handler, token string, method string, path string, body any) apiResponse {

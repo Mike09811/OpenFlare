@@ -13,7 +13,7 @@ OpenFlare Server 是 Gin + GORM 单体控制面，负责管理端 UI、管理 AP
 | pnpm | 推荐通过 `corepack enable` 使用项目声明的 pnpm |
 | 数据库 | SQLite 文件目录可写，或可访问的 PostgreSQL 实例 |
 
-生产环境建议显式配置 `SESSION_SECRET`，并优先使用 PostgreSQL。
+生产环境必须显式配置 `JWT_SECRET`，并优先使用 PostgreSQL。
 
 ## 构建管理端前端
 
@@ -38,7 +38,7 @@ pnpm test
 
 ```bash
 cd openflare_server
-export SESSION_SECRET='replace-with-a-long-random-string'
+export JWT_SECRET='replace-with-a-long-random-string'
 export SQLITE_PATH='./openflare.db'
 export LOG_LEVEL='info'
 go run .
@@ -54,7 +54,7 @@ http://localhost:3000
 
 ```bash
 cd openflare_server
-export SESSION_SECRET='replace-with-a-long-random-string'
+export JWT_SECRET='replace-with-a-long-random-string'
 export DSN='postgres://openflare:secret@127.0.0.1:5432/openflare?sslmode=disable'
 export LOG_LEVEL='info'
 go run .
@@ -81,7 +81,7 @@ docker run -d \
   --name openflare-server \
   -p 3000:3000 \
   -v $(pwd)/openflare-data:/data \
-  -e SESSION_SECRET='replace-with-a-long-random-string' \
+  -e JWT_SECRET='replace-with-a-long-random-string' \
   -e SQLITE_PATH='/data/openflare.db' \
   -e GIN_MODE='release' \
   -e LOG_LEVEL='info' \
@@ -91,7 +91,7 @@ docker run -d \
 启动参数说明：
 * **`-p 3000:3000`**：映射宿主机 `3000` 端口到容器内 `3000` 端口。
 * **`-v $(pwd)/openflare-data:/data`**：挂载本地目录到容器的 `/data`，确保数据库文件 `openflare.db` 在重启或重建容器时不丢失。
-* **`SESSION_SECRET`**：建议配置的临时 Session 签名密钥，主要用于 OAuth 状态等非管理端 API 鉴权流程；管理端 API 登录凭证通过 `OPENFLARE_TOKEN` 请求头传递。
+* **`JWT_SECRET`**：管理端 API 登录令牌的 JWT 签名密钥，生产环境必须配置，避免重启后已登录令牌全部失效。
 
 ---
 
@@ -127,7 +127,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      SESSION_SECRET: replace-with-random-string
+      JWT_SECRET: replace-with-random-string
       SQLITE_PATH: /data/openflare.db
       DSN: postgres://openflare:replace-with-strong-password@postgres:5432/openflare?sslmode=disable
       GIN_MODE: release
