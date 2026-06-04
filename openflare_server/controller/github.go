@@ -11,7 +11,6 @@ import (
 	"openflare/model"
 	"time"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -79,9 +78,7 @@ func getGitHubUserInfoByCode(code string) (*GitHubUser, error) {
 }
 
 func GitHubOAuth(c *gin.Context) {
-	session := sessions.Default(c)
-	username := session.Get("username")
-	if username != nil {
+	if currentUserFromOpenFlareToken(c) != nil {
 		GitHubBind(c)
 		return
 	}
@@ -135,10 +132,12 @@ func GitHubBind(c *gin.Context) {
 		respondFailure(c, "该 GitHub 账户已被绑定")
 		return
 	}
-	session := sessions.Default(c)
-	id := session.Get("id")
-	// id := c.GetInt("id")  // critical bug!
-	user.Id = id.(int)
+	currentUser := currentUserFromOpenFlareToken(c)
+	if currentUser == nil {
+		respondFailure(c, "无权进行此操作，未登录或 token 无效")
+		return
+	}
+	user.Id = currentUser.Id
 	err = user.FillUserById()
 	if err != nil {
 		respondFailure(c, err.Error())

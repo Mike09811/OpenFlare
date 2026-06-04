@@ -10,7 +10,7 @@ import (
 // @Summary List TLS certificates
 // @Tags TLSCertificates
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Success 200 {object} map[string]interface{}
 // @Router /api/tls-certificates/ [get]
 func GetTLSCertificates(c *gin.Context) {
@@ -26,7 +26,7 @@ func GetTLSCertificates(c *gin.Context) {
 // @Summary Get TLS certificate detail
 // @Tags TLSCertificates
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Certificate ID"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
@@ -49,7 +49,7 @@ func GetTLSCertificate(c *gin.Context) {
 // @Summary Get TLS certificate PEM content
 // @Tags TLSCertificates
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Certificate ID"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
@@ -73,7 +73,7 @@ func GetTLSCertificateContent(c *gin.Context) {
 // @Tags TLSCertificates
 // @Accept json
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param payload body service.TLSCertificateInput true "TLS certificate payload"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
@@ -96,7 +96,7 @@ func CreateTLSCertificate(c *gin.Context) {
 // @Tags TLSCertificates
 // @Accept json
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Certificate ID"
 // @Param payload body service.TLSCertificateInput true "TLS certificate payload"
 // @Success 200 {object} map[string]interface{}
@@ -126,7 +126,7 @@ func UpdateTLSCertificate(c *gin.Context) {
 // @Tags TLSCertificates
 // @Accept multipart/form-data
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param name formData string true "Certificate name"
 // @Param remark formData string false "Remark"
 // @Param cert_file formData file true "Certificate file"
@@ -159,7 +159,7 @@ func ImportTLSCertificateFile(c *gin.Context) {
 // @Summary Delete TLS certificate
 // @Tags TLSCertificates
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Certificate ID"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
@@ -181,7 +181,7 @@ func DeleteTLSCertificate(c *gin.Context) {
 // @Tags TLSCertificates
 // @Accept json
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param payload body service.TLSApplyInput true "TLS apply payload"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
@@ -204,7 +204,7 @@ func ApplyTLSCertificate(c *gin.Context) {
 // @Tags TLSCertificates
 // @Accept json
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Certificate ID"
 // @Param payload body service.TLSApplyInput true "TLS apply payload"
 // @Success 200 {object} map[string]interface{}
@@ -233,7 +233,7 @@ func UpdateAcmeCertificate(c *gin.Context) {
 // @Tags TLSCertificates
 // @Accept json
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Certificate ID"
 // @Param payload body service.TLSApplyInput true "TLS apply payload"
 // @Success 200 {object} map[string]interface{}
@@ -261,7 +261,7 @@ func ConvertTLSCertificateToAcme(c *gin.Context) {
 // @Summary Renew TLS certificate
 // @Tags TLSCertificates
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Certificate ID"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}

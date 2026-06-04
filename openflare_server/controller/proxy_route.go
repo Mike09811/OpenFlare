@@ -10,7 +10,7 @@ import (
 // @Summary List proxy routes
 // @Tags ProxyRoutes
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Success 200 {object} map[string]interface{}
 // @Router /api/proxy-routes/ [get]
 func GetProxyRoutes(c *gin.Context) {
@@ -26,7 +26,7 @@ func GetProxyRoutes(c *gin.Context) {
 // @Summary Get proxy route detail
 // @Tags ProxyRoutes
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Route ID"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
@@ -49,7 +49,7 @@ func GetProxyRoute(c *gin.Context) {
 // @Tags ProxyRoutes
 // @Accept json
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param payload body service.ProxyRouteInput true "Proxy route payload"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
@@ -72,7 +72,7 @@ func CreateProxyRoute(c *gin.Context) {
 // @Tags ProxyRoutes
 // @Accept json
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Route ID"
 // @Param payload body service.ProxyRouteInput true "Proxy route payload"
 // @Success 200 {object} map[string]interface{}
@@ -99,7 +99,7 @@ func UpdateProxyRoute(c *gin.Context) {
 // @Summary Delete proxy route
 // @Tags ProxyRoutes
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Route ID"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}

@@ -127,7 +127,7 @@ func TestPhase2BatchOptionUpdateIsAtomic(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPost, "/api/option/update-batch", bytes.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
-	req.AddCookie(loginCookie)
+	req.Header.Set("OPENFLARE_TOKEN", loginCookie)
 
 	recorder := httptest.NewRecorder()
 	engine.ServeHTTP(recorder, req)
@@ -320,7 +320,7 @@ func TestExternalAccountBindingsCanBeListedAndDeleted(t *testing.T) {
 	}
 }
 
-func loginAsRoot(t *testing.T, engine http.Handler) *http.Cookie {
+func loginAsRoot(t *testing.T, engine http.Handler) string {
 	t.Helper()
 	payload, err := json.Marshal(map[string]any{
 		"username": "root",
@@ -346,16 +346,17 @@ func loginAsRoot(t *testing.T, engine http.Handler) *http.Cookie {
 		t.Fatalf("root login failed: %s", resp.Message)
 	}
 
-	for _, cookie := range recorder.Result().Cookies() {
-		if cookie.Name == "session" {
-			return cookie
-		}
+	var user model.User
+	if err = json.Unmarshal(resp.Data, &user); err != nil {
+		t.Fatalf("failed to decode login user: %v", err)
 	}
-	t.Fatal("expected session cookie after root login")
-	return nil
+	if user.Token == "" {
+		t.Fatal("expected OPENFLARE_TOKEN after root login")
+	}
+	return user.Token
 }
 
-func performSessionJSONRequest(t *testing.T, engine http.Handler, sessionCookie *http.Cookie, method string, path string, body any) apiResponse {
+func performSessionJSONRequest(t *testing.T, engine http.Handler, token string, method string, path string, body any) apiResponse {
 	t.Helper()
 	var payload []byte
 	var err error
@@ -370,7 +371,7 @@ func performSessionJSONRequest(t *testing.T, engine http.Handler, sessionCookie 
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	req.AddCookie(sessionCookie)
+	req.Header.Set("OPENFLARE_TOKEN", token)
 
 	recorder := httptest.NewRecorder()
 	engine.ServeHTTP(recorder, req)

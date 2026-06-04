@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"openflare/common"
 	"openflare/model"
 	"openflare/utils/security"
@@ -8,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -45,14 +45,9 @@ func Login(c *gin.Context) {
 	setupLogin(&user, c)
 }
 
-// setup session & cookies and then return user info
-func setLoginSession(user *model.User, c *gin.Context) (*model.User, error) {
-	session := sessions.Default(c)
-	session.Set("id", user.Id)
-	session.Set("username", user.Username)
-	session.Set("role", user.Role)
-	session.Set("status", user.Status)
-	err := session.Save()
+// setup token and then return user info
+func setLoginToken(user *model.User) (*model.User, error) {
+	token, err := ensureUserOpenFlareToken(user)
 	if err != nil {
 		return nil, err
 	}
@@ -62,12 +57,13 @@ func setLoginSession(user *model.User, c *gin.Context) (*model.User, error) {
 		DisplayName: user.DisplayName,
 		Role:        user.Role,
 		Status:      user.Status,
+		Token:       token,
 	}
 	return cleanUser, nil
 }
 
 func setupLogin(user *model.User, c *gin.Context) {
-	cleanUser, err := setLoginSession(user, c)
+	cleanUser, err := setLoginToken(user)
 	if err != nil {
 		respondFailure(c, "无法保存会话信息，请重试")
 		return
@@ -76,14 +72,43 @@ func setupLogin(user *model.User, c *gin.Context) {
 }
 
 func Logout(c *gin.Context) {
-	session := sessions.Default(c)
-	session.Clear()
-	err := session.Save()
-	if err != nil {
-		respondFailure(c, err.Error())
-		return
+	token := c.GetHeader("OPENFLARE_TOKEN")
+	if token != "" {
+		user := model.ValidateUserToken(token)
+		if user != nil && user.Id != 0 {
+			if err := model.DB.Model(user).Update("token", "").Error; err != nil {
+				respondFailure(c, err.Error())
+				return
+			}
+		}
 	}
 	respondSuccessMessage(c, "")
+}
+
+func ensureUserOpenFlareToken(user *model.User) (string, error) {
+	if user.Token != "" {
+		return user.Token, nil
+	}
+	for i := 0; i < 3; i++ {
+		token := strings.Replace(uuid.New().String(), "-", "", -1)
+		if model.DB.Where("token = ?", token).First(&model.User{}).RowsAffected != 0 {
+			continue
+		}
+		if err := model.DB.Model(user).Update("token", token).Error; err != nil {
+			return "", err
+		}
+		user.Token = token
+		return token, nil
+	}
+	return "", errors.New("生成登录凭证失败，请重试")
+}
+
+func currentUserFromOpenFlareToken(c *gin.Context) *model.User {
+	token := c.GetHeader("OPENFLARE_TOKEN")
+	if token == "" {
+		return nil
+	}
+	return model.ValidateUserToken(token)
 }
 
 func Register(c *gin.Context) {

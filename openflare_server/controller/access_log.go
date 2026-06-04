@@ -11,7 +11,7 @@ import (
 // @Summary List access logs
 // @Tags AccessLogs
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param node_id query string false "Node ID"
 // @Param remote_addr query string false "Remote address"
 // @Param host query string false "Host"
@@ -35,7 +35,7 @@ func GetAccessLogs(c *gin.Context) {
 // @Summary List folded access logs
 // @Tags AccessLogs
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param node_id query string false "Node ID"
 // @Param remote_addr query string false "Remote address"
 // @Param host query string false "Host"
@@ -62,7 +62,7 @@ func GetFoldedAccessLogs(c *gin.Context) {
 // @Summary List folded access log IP summaries
 // @Tags AccessLogs
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param node_id query string false "Node ID"
 // @Param remote_addr query string false "Remote address"
 // @Param host query string false "Host"
@@ -99,7 +99,7 @@ func GetFoldedAccessLogIPs(c *gin.Context) {
 // @Summary List access log IP summaries
 // @Tags AccessLogs
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param node_id query string false "Node ID"
 // @Param remote_addr query string false "Remote address"
 // @Param host query string false "Host"
@@ -130,7 +130,7 @@ func GetAccessLogIPSummaries(c *gin.Context) {
 // @Summary Get access log IP trend
 // @Tags AccessLogs
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param node_id query string false "Node ID"
 // @Param remote_addr query string true "Remote address"
 // @Param host query string false "Host"
@@ -158,7 +158,7 @@ func GetAccessLogIPTrend(c *gin.Context) {
 // @Tags AccessLogs
 // @Accept json
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Success 200 {object} map[string]interface{}
 // @Router /api/access-logs/cleanup [post]
 func CleanupAccessLogs(c *gin.Context) {

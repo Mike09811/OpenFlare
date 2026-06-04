@@ -79,7 +79,7 @@ Agent 本地 Pages 部署目录
 
 * Gin 提供 HTTP 服务。
 * GORM 访问 SQLite 或 PostgreSQL。
-* 现有登录体系提供管理端 Session。
+* 现有登录体系签发管理端用户 Token，管理端 API 通过 `OPENFLARE_TOKEN` 请求头鉴权。
 * 认证源与外部账号绑定支持 GitHub OAuth 和标准 OIDC。
 * Go Server 托管 `openflare_server/web` 静态构建产物。
 

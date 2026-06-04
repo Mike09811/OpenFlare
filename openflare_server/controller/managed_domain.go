@@ -11,7 +11,7 @@ import (
 // @Summary List managed domains
 // @Tags ManagedDomains
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Success 200 {object} map[string]interface{}
 // @Router /api/managed-domains/ [get]
 func GetManagedDomains(c *gin.Context) {
@@ -28,7 +28,7 @@ func GetManagedDomains(c *gin.Context) {
 // @Tags ManagedDomains
 // @Accept json
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param payload body service.ManagedDomainInput true "Managed domain payload"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
@@ -51,7 +51,7 @@ func CreateManagedDomain(c *gin.Context) {
 // @Tags ManagedDomains
 // @Accept json
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Managed domain ID"
 // @Param payload body service.ManagedDomainInput true "Managed domain payload"
 // @Success 200 {object} map[string]interface{}
@@ -78,7 +78,7 @@ func UpdateManagedDomain(c *gin.Context) {
 // @Summary Delete managed domain
 // @Tags ManagedDomains
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Managed domain ID"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
@@ -99,7 +99,7 @@ func DeleteManagedDomain(c *gin.Context) {
 // @Summary Match certificate for domain
 // @Tags ManagedDomains
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param domain query string true "Domain"
 // @Success 200 {object} map[string]interface{}
 // @Router /api/managed-domains/match [get]

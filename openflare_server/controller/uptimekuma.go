@@ -11,7 +11,7 @@ import (
 // @Tags UptimeKuma
 // @Accept json
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Success 200 {object} map[string]interface{}
 // @Router /api/uptimekuma/sync [post]
 func SyncUptimeKuma(c *gin.Context) {

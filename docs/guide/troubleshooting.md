@@ -9,7 +9,7 @@
 | 现象 | 先看哪里 |
 | --- | --- |
 | 管理端打不开 | Server 容器或进程日志、端口监听 |
-| 登录异常 | 默认账号、Session Secret、浏览器请求、Server 日志 |
+| 登录异常 | 默认账号、OPENFLARE_TOKEN、浏览器请求、Server 日志 |
 | 数据无法保存 | 数据库连接、SQLite 文件权限、PostgreSQL 健康状态 |
 | Agent 离线 | Agent 日志、Token、Server 地址、网络连通性 |
 | 发布后节点未更新 | 激活版本、节点 heartbeat、应用记录 |
@@ -85,8 +85,8 @@ NEXT_DEV_BACKEND_URL=http://127.0.0.1:3000 pnpm dev
 
 1. 确认连接的是预期数据库，避免 `SQLITE_PATH` 或 `DSN` 指向了另一个环境。
 2. 查看 Server 日志中使用的是 `sqlite` 还是 `postgres`。
-3. 如果部署在多副本或反向代理后，确认 `SESSION_SECRET` 固定且各实例一致。
-4. 清理浏览器 Cookie 后重新登录。
+3. 在浏览器开发者工具中确认管理端 API 请求携带 `OPENFLARE_TOKEN` 请求头。
+4. 清理浏览器本地存储中的旧 `openflare_token` 后重新登录。
 
 ### 应急重置管理员密码
 

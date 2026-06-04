@@ -1,4 +1,5 @@
 import { apiRequest } from '@/lib/api/client';
+import { setStoredOpenFlareToken } from '@/lib/api/auth-token';
 
 import type {
   BootstrapTokenPayload,
@@ -109,7 +110,10 @@ export function updateSelf(payload: UpdateSelfPayload) {
 }
 
 export function generateAccessToken() {
-  return apiRequest<string>('/user/token');
+  return apiRequest<string>('/user/token').then((token) => {
+    setStoredOpenFlareToken(token);
+    return token;
+  });
 }
 
 export function bindWeChat(code: string) {

@@ -1,4 +1,5 @@
 import { publicEnv } from '@/lib/env/public-env';
+import { getStoredOpenFlareToken } from '@/lib/api/auth-token';
 import type { ApiEnvelope } from '@/types/api';
 
 export class ApiError extends Error {
@@ -22,6 +23,12 @@ export async function apiRequest<T>(path: string, init?: RequestInit) {
 
   if (!(init?.body instanceof FormData) && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
+  }
+  if (!headers.has('OPENFLARE_TOKEN')) {
+    const token = getStoredOpenFlareToken();
+    if (token) {
+      headers.set('OPENFLARE_TOKEN', token);
+    }
   }
 
   const response = await fetch(getApiUrl(path), {

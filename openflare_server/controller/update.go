@@ -21,7 +21,7 @@ type serverUpgradeRequest struct {
 // @Summary Get latest GitHub release
 // @Tags Update
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Success 200 {object} map[string]interface{}
 // @Router /api/update/latest-release [get]
 func GetLatestRelease(c *gin.Context) {

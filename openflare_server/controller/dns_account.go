@@ -16,7 +16,7 @@ type DnsAccountInput struct {
 // @Summary List DNS accounts
 // @Tags DnsAccounts
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Success 200 {object} map[string]interface{}
 // @Router /api/dns-accounts/ [get]
 func GetDnsAccounts(c *gin.Context) {
@@ -33,7 +33,7 @@ func GetDnsAccounts(c *gin.Context) {
 // @Tags DnsAccounts
 // @Accept json
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param payload body DnsAccountInput true "DNS account payload"
 // @Success 200 {object} map[string]interface{}
 // @Router /api/dns-accounts/ [post]
@@ -62,7 +62,7 @@ func CreateDnsAccount(c *gin.Context) {
 // @Tags DnsAccounts
 // @Accept json
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "DNS Account ID"
 // @Param payload body DnsAccountInput true "DNS account payload"
 // @Success 200 {object} map[string]interface{}
@@ -100,7 +100,7 @@ func UpdateDnsAccount(c *gin.Context) {
 // @Summary Delete DNS account
 // @Tags DnsAccounts
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "DNS Account ID"
 // @Success 200 {object} map[string]interface{}
 // @Router /api/dns-accounts/{id}/delete [post]

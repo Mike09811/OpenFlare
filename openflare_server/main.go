@@ -33,10 +33,10 @@ var indexPage []byte
 // @description OpenFlare Server 管理端与 Agent API 文档。
 // @BasePath /
 // @schemes http https
-// @securityDefinitions.apikey BearerAuth
+// @securityDefinitions.apikey OpenFlareTokenAuth
 // @in header
-// @name Authorization
-// @description 管理端可使用 Bearer Token，例如：Bearer <token>
+// @name OPENFLARE_TOKEN
+// @description 管理端 API 使用登录后返回的用户 Token
 // @securityDefinitions.apikey AccessTokenAuth
 // @in header
 // @name X-Agent-Token

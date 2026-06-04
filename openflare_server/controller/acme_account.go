@@ -10,7 +10,7 @@ import (
 // @Summary Get default ACME account
 // @Tags AcmeAccounts
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Success 200 {object} map[string]interface{}
 // @Router /api/acme-accounts/default [get]
 func GetDefaultAcmeAccount(c *gin.Context) {

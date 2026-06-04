@@ -10,7 +10,7 @@ import (
 // @Summary List config versions
 // @Tags ConfigVersions
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Success 200 {object} map[string]interface{}
 // @Router /api/config-versions/ [get]
 func GetConfigVersions(c *gin.Context) {
@@ -26,7 +26,7 @@ func GetConfigVersions(c *gin.Context) {
 // @Summary Get config version detail
 // @Tags ConfigVersions
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Version ID"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
@@ -48,7 +48,7 @@ func GetConfigVersion(c *gin.Context) {
 // @Summary Get active config version
 // @Tags ConfigVersions
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Success 200 {object} map[string]interface{}
 // @Router /api/config-versions/active [get]
 func GetActiveConfigVersion(c *gin.Context) {
@@ -64,7 +64,7 @@ func GetActiveConfigVersion(c *gin.Context) {
 // @Summary Preview config rendering
 // @Tags ConfigVersions
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Success 200 {object} map[string]interface{}
 // @Router /api/config-versions/preview [get]
 func PreviewConfigVersion(c *gin.Context) {
@@ -80,7 +80,7 @@ func PreviewConfigVersion(c *gin.Context) {
 // @Summary Diff current draft against active version
 // @Tags ConfigVersions
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Success 200 {object} map[string]interface{}
 // @Router /api/config-versions/diff [get]
 func DiffConfigVersion(c *gin.Context) {
@@ -96,7 +96,7 @@ func DiffConfigVersion(c *gin.Context) {
 // @Summary Publish a new config version
 // @Tags ConfigVersions
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Success 200 {object} map[string]interface{}
 // @Router /api/config-versions/publish [post]
 func PublishConfigVersion(c *gin.Context) {
@@ -114,7 +114,7 @@ func PublishConfigVersion(c *gin.Context) {
 // @Summary Activate an existing config version
 // @Tags ConfigVersions
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Version ID"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
@@ -140,7 +140,7 @@ type CleanupConfigVersionRequest struct {
 // @Summary Cleanup old config versions
 // @Tags ConfigVersions
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param request body CleanupConfigVersionRequest true "Cleanup request"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}

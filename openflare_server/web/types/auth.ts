@@ -4,6 +4,7 @@ export interface AuthUser {
   display_name: string;
   role: number;
   status: number;
+  token?: string;
   email?: string;
   github_id?: string;
   wechat_id?: string;

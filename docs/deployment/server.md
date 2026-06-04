@@ -91,7 +91,7 @@ docker run -d \
 启动参数说明：
 * **`-p 3000:3000`**：映射宿主机 `3000` 端口到容器内 `3000` 端口。
 * **`-v $(pwd)/openflare-data:/data`**：挂载本地目录到容器的 `/data`，确保数据库文件 `openflare.db` 在重启或重建容器时不丢失。
-* **`SESSION_SECRET`**：必须配置的 Session 密钥签名哈希。
+* **`SESSION_SECRET`**：建议配置的临时 Session 签名密钥，主要用于 OAuth 状态等非管理端 API 鉴权流程；管理端 API 登录凭证通过 `OPENFLARE_TOKEN` 请求头传递。
 
 ---
 

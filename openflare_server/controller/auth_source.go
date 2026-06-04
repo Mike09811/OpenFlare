@@ -199,10 +199,8 @@ func OAuthCallback(c *gin.Context) {
 		return
 	}
 	var currentUserID *int
-	if value := session.Get("id"); value != nil {
-		if idValue, ok := value.(int); ok {
-			currentUserID = &idValue
-		}
+	if currentUser := currentUserFromOpenFlareToken(c); currentUser != nil {
+		currentUserID = &currentUser.Id
 	}
 	result, pending, err := service.CompleteOAuthLogin(source, profile, currentUserID)
 	if err != nil {
@@ -224,7 +222,7 @@ func OAuthCallback(c *gin.Context) {
 		return
 	}
 	if result.User != nil {
-		cleanUser, err := setLoginSession(result.User, c)
+		cleanUser, err := setLoginToken(result.User)
 		if err != nil {
 			respondFailure(c, "无法保存会话信息，请重试")
 			return
@@ -261,7 +259,7 @@ func LinkExistingOAuthAccount(c *gin.Context) {
 		respondFailure(c, "无法更新会话信息，请重试")
 		return
 	}
-	cleanUser, err := setLoginSession(user, c)
+	cleanUser, err := setLoginToken(user)
 	if err != nil {
 		respondFailure(c, "无法保存会话信息，请重试")
 		return

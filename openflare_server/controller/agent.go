@@ -296,7 +296,7 @@ func handleAgentWSStatus(c *gin.Context, node *model.Node, message service.Agent
 // @Summary List nodes
 // @Tags Nodes
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Success 200 {object} map[string]interface{}
 // @Router /api/nodes/ [get]
 func GetNodes(c *gin.Context) {
@@ -312,7 +312,7 @@ func GetNodes(c *gin.Context) {
 // @Summary List apply logs
 // @Tags ApplyLogs
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param node_id query string false "Node ID"
 // @Success 200 {object} map[string]interface{}
 // @Router /api/apply-logs/ [get]
@@ -334,7 +334,7 @@ func GetApplyLogs(c *gin.Context) {
 // @Tags ApplyLogs
 // @Accept json
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Success 200 {object} map[string]interface{}
 // @Router /api/apply-logs/cleanup [post]
 func CleanupApplyLogs(c *gin.Context) {

@@ -77,13 +77,22 @@ func TestLatestReleaseProxy(t *testing.T) {
 	if loginRecorder.Code != http.StatusOK {
 		t.Fatalf("unexpected login status code: %d", loginRecorder.Code)
 	}
-	loginResult := loginRecorder.Result()
-	defer loginResult.Body.Close()
+	var loginResp apiResponse
+	if err = json.Unmarshal(loginRecorder.Body.Bytes(), &loginResp); err != nil {
+		t.Fatalf("failed to decode login response: %v", err)
+	}
+	var loginUser struct {
+		Token string `json:"token"`
+	}
+	if err = json.Unmarshal(loginResp.Data, &loginUser); err != nil {
+		t.Fatalf("failed to decode login user: %v", err)
+	}
+	if loginUser.Token == "" {
+		t.Fatal("expected OPENFLARE_TOKEN after login")
+	}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/update/latest-release", nil)
-	for _, cookieValue := range loginResult.Cookies() {
-		req.AddCookie(cookieValue)
-	}
+	req.Header.Set("OPENFLARE_TOKEN", loginUser.Token)
 
 	recorder := httptest.NewRecorder()
 	engine.ServeHTTP(recorder, req)
@@ -111,7 +120,7 @@ func TestLatestReleaseProxy(t *testing.T) {
 	}
 }
 
-func loginRootAndBuildEngine(t *testing.T) (*gin.Engine, []*http.Cookie) {
+func loginRootAndBuildEngine(t *testing.T) (*gin.Engine, string) {
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 	common.RedisEnabled = false
@@ -135,10 +144,21 @@ func loginRootAndBuildEngine(t *testing.T) (*gin.Engine, []*http.Cookie) {
 	if loginRecorder.Code != http.StatusOK {
 		t.Fatalf("unexpected login status code: %d", loginRecorder.Code)
 	}
-	loginResult := loginRecorder.Result()
-	defer loginResult.Body.Close()
+	var loginResp apiResponse
+	if err = json.Unmarshal(loginRecorder.Body.Bytes(), &loginResp); err != nil {
+		t.Fatalf("failed to decode login response: %v", err)
+	}
+	var loginUser struct {
+		Token string `json:"token"`
+	}
+	if err = json.Unmarshal(loginResp.Data, &loginUser); err != nil {
+		t.Fatalf("failed to decode login user: %v", err)
+	}
+	if loginUser.Token == "" {
+		t.Fatal("expected OPENFLARE_TOKEN after login")
+	}
 
-	return engine, loginResult.Cookies()
+	return engine, loginUser.Token
 }
 
 func fakeManualServerBinary(version string) (string, []byte) {
@@ -157,7 +177,7 @@ func TestManualUploadRoute(t *testing.T) {
 		service.SetServerUpgradeDispatchDelayForTest(500 * time.Millisecond)
 	})
 
-	engine, cookies := loginRootAndBuildEngine(t)
+	engine, token := loginRootAndBuildEngine(t)
 	fileName, content := fakeManualServerBinary("v0.5.0")
 
 	body := &bytes.Buffer{}
@@ -175,9 +195,7 @@ func TestManualUploadRoute(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPost, "/api/update/manual-upload", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
-	for _, cookieValue := range cookies {
-		req.AddCookie(cookieValue)
-	}
+	req.Header.Set("OPENFLARE_TOKEN", token)
 
 	recorder := httptest.NewRecorder()
 	engine.ServeHTTP(recorder, req)
@@ -225,7 +243,7 @@ func TestManualUpgradeConfirmRoute(t *testing.T) {
 		service.SetServerUpgradeDispatchDelayForTest(originalDelay)
 	})
 
-	engine, cookies := loginRootAndBuildEngine(t)
+	engine, token := loginRootAndBuildEngine(t)
 	fileName, content := fakeManualServerBinary("v0.5.0")
 
 	body := &bytes.Buffer{}
@@ -243,9 +261,7 @@ func TestManualUpgradeConfirmRoute(t *testing.T) {
 
 	uploadReq := httptest.NewRequest(http.MethodPost, "/api/update/manual-upload", body)
 	uploadReq.Header.Set("Content-Type", writer.FormDataContentType())
-	for _, cookieValue := range cookies {
-		uploadReq.AddCookie(cookieValue)
-	}
+	uploadReq.Header.Set("OPENFLARE_TOKEN", token)
 
 	uploadRecorder := httptest.NewRecorder()
 	engine.ServeHTTP(uploadRecorder, uploadReq)
@@ -276,9 +292,7 @@ func TestManualUpgradeConfirmRoute(t *testing.T) {
 	}
 	confirmReq := httptest.NewRequest(http.MethodPost, "/api/update/manual-upgrade", bytes.NewReader(confirmBody))
 	confirmReq.Header.Set("Content-Type", "application/json")
-	for _, cookieValue := range cookies {
-		confirmReq.AddCookie(cookieValue)
-	}
+	confirmReq.Header.Set("OPENFLARE_TOKEN", token)
 
 	confirmRecorder := httptest.NewRecorder()
 	engine.ServeHTTP(confirmRecorder, confirmReq)

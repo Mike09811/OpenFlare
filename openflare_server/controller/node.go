@@ -21,7 +21,7 @@ type nodeObservabilityQuery struct {
 // @Tags Nodes
 // @Accept json
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param payload body service.NodeInput true "Node payload"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
@@ -44,7 +44,7 @@ func CreateNode(c *gin.Context) {
 // @Summary Get global discovery token
 // @Tags Nodes
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Success 200 {object} map[string]interface{}
 // @Router /api/nodes/bootstrap-token [get]
 func GetNodeBootstrapToken(c *gin.Context) {
@@ -60,7 +60,7 @@ func GetNodeBootstrapToken(c *gin.Context) {
 // @Summary Rotate global discovery token
 // @Tags Nodes
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Success 200 {object} map[string]interface{}
 // @Router /api/nodes/bootstrap-token/rotate [post]
 func RotateNodeBootstrapToken(c *gin.Context) {
@@ -77,7 +77,7 @@ func RotateNodeBootstrapToken(c *gin.Context) {
 // @Tags Nodes
 // @Accept json
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Node ID"
 // @Param payload body service.NodeInput true "Node payload"
 // @Success 200 {object} map[string]interface{}
@@ -106,7 +106,7 @@ func UpdateNode(c *gin.Context) {
 // @Summary Delete node
 // @Tags Nodes
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Node ID"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
@@ -128,7 +128,7 @@ func DeleteNode(c *gin.Context) {
 // @Summary Request agent self-update on node
 // @Tags Nodes
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Node ID"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
@@ -162,7 +162,7 @@ func RequestNodeAgentUpdate(c *gin.Context) {
 // @Summary Request openresty restart on node
 // @Tags Nodes
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Node ID"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
@@ -185,7 +185,7 @@ func RequestNodeOpenrestyRestart(c *gin.Context) {
 // @Summary Request force sync config on node
 // @Tags Nodes
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Node ID"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
@@ -208,7 +208,7 @@ func RequestNodeForceSync(c *gin.Context) {
 // @Summary Check latest agent release for node
 // @Tags Nodes
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Node ID"
 // @Param channel query string false "stable or preview"
 // @Success 200 {object} map[string]interface{}
@@ -232,7 +232,7 @@ func GetNodeAgentRelease(c *gin.Context) {
 // @Summary Get node observability details
 // @Tags Nodes
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Node ID"
 // @Param hours query int false "Lookback window in hours"
 // @Param limit query int false "Max records per section"
@@ -266,7 +266,7 @@ func GetNodeObservability(c *gin.Context) {
 // @Summary Cleanup node health events
 // @Tags Nodes
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Param id path int true "Node ID"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}

@@ -11,7 +11,7 @@ import (
 // @Tags Options
 // @Accept json
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Success 200 {object} map[string]interface{}
 // @Router /api/option/database/cleanup [post]
 func CleanupDatabaseObservability(c *gin.Context) {

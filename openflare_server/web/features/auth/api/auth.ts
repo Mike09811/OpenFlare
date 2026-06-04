@@ -1,4 +1,8 @@
 import { apiRequest } from '@/lib/api/client';
+import {
+  clearStoredOpenFlareToken,
+  setStoredOpenFlareToken,
+} from '@/lib/api/auth-token';
 import type {
   AuthUser,
   LoginPayload,
@@ -14,11 +18,18 @@ export function login(payload: LoginPayload) {
   return apiRequest<AuthUser>('/user/login', {
     method: 'POST',
     body: JSON.stringify(payload),
+  }).then((user) => {
+    if (user.token) {
+      setStoredOpenFlareToken(user.token);
+    }
+    return user;
   });
 }
 
 export function logout() {
-  return apiRequest<void>('/user/logout');
+  return apiRequest<void>('/user/logout').finally(() => {
+    clearStoredOpenFlareToken();
+  });
 }
 
 export function register(payload: RegisterPayload) {
@@ -48,7 +59,14 @@ export function resetPassword(payload: PasswordResetRequestPayload) {
 }
 
 export function exchangeGitHubCode(code: string) {
-  return apiRequest<AuthUser>(`/oauth/github?code=${encodeURIComponent(code)}`);
+  return apiRequest<AuthUser>(
+    `/oauth/github?code=${encodeURIComponent(code)}`,
+  ).then((user) => {
+    if (user.token) {
+      setStoredOpenFlareToken(user.token);
+    }
+    return user;
+  });
 }
 
 export interface OAuthAuthorizeResult {
@@ -79,12 +97,22 @@ export function exchangeOAuthCode(
   const searchParams = new URLSearchParams({ code, state });
   return apiRequest<OAuthCallbackResult>(
     `/oauth/${encodeURIComponent(String(source))}/callback?${searchParams.toString()}`,
-  );
+  ).then((result) => {
+    if (result.user?.token) {
+      setStoredOpenFlareToken(result.user.token);
+    }
+    return result;
+  });
 }
 
 export function linkExistingOAuthAccount(payload: LinkExistingOAuthPayload) {
   return apiRequest<OAuthCallbackResult>('/oauth/link-existing', {
     method: 'POST',
     body: JSON.stringify(payload),
+  }).then((result) => {
+    if (result.user?.token) {
+      setStoredOpenFlareToken(result.user.token);
+    }
+    return result;
   });
 }

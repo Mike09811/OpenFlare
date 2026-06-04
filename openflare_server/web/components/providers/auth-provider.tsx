@@ -14,6 +14,7 @@ import {
   logout as logoutRequest,
   getCurrentUser,
 } from '@/features/auth/api/auth';
+import { clearStoredOpenFlareToken } from '@/lib/api/auth-token';
 import type { AuthUser } from '@/types/auth';
 
 interface AuthContextValue {
@@ -41,6 +42,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUserState(nextUser);
       return nextUser;
     } catch {
+      clearStoredOpenFlareToken();
       setUserState(null);
       return null;
     } finally {

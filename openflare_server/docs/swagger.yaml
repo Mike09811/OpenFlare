@@ -541,7 +541,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: List access logs
       tags:
       - AccessLogs
@@ -558,7 +558,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Cleanup access logs by retention days
       tags:
       - AccessLogs
@@ -610,7 +610,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: List folded access logs
       tags:
       - AccessLogs
@@ -668,7 +668,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: List folded access log IP summaries
       tags:
       - AccessLogs
@@ -712,7 +712,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: List access log IP summaries
       tags:
       - AccessLogs
@@ -749,7 +749,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Get access log IP trend
       tags:
       - AccessLogs
@@ -764,7 +764,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Get default ACME account
       tags:
       - AcmeAccounts
@@ -923,7 +923,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: List apply logs
       tags:
       - ApplyLogs
@@ -940,7 +940,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Cleanup apply logs
       tags:
       - ApplyLogs
@@ -955,7 +955,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: List config versions
       tags:
       - ConfigVersions
@@ -981,7 +981,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Get config version detail
       tags:
       - ConfigVersions
@@ -1007,7 +1007,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Activate an existing config version
       tags:
       - ConfigVersions
@@ -1022,7 +1022,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Get active config version
       tags:
       - ConfigVersions
@@ -1049,7 +1049,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Cleanup old config versions
       tags:
       - ConfigVersions
@@ -1064,7 +1064,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Diff current draft against active version
       tags:
       - ConfigVersions
@@ -1079,7 +1079,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Preview config rendering
       tags:
       - ConfigVersions
@@ -1094,7 +1094,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Publish a new config version
       tags:
       - ConfigVersions
@@ -1114,7 +1114,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Get dashboard overview
       tags:
       - Dashboard
@@ -1129,7 +1129,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: List DNS accounts
       tags:
       - DnsAccounts
@@ -1152,7 +1152,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Create DNS account
       tags:
       - DnsAccounts
@@ -1173,7 +1173,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Delete DNS account
       tags:
       - DnsAccounts
@@ -1202,7 +1202,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Update DNS account
       tags:
       - DnsAccounts
@@ -1293,7 +1293,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: List managed domains
       tags:
       - ManagedDomains
@@ -1321,7 +1321,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Create managed domain
       tags:
       - ManagedDomains
@@ -1347,7 +1347,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Delete managed domain
       tags:
       - ManagedDomains
@@ -1381,7 +1381,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Update managed domain
       tags:
       - ManagedDomains
@@ -1402,7 +1402,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Match certificate for domain
       tags:
       - ManagedDomains
@@ -1417,7 +1417,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: List nodes
       tags:
       - Nodes
@@ -1445,7 +1445,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Create node
       tags:
       - Nodes
@@ -1475,7 +1475,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Check latest agent release for node
       tags:
       - Nodes
@@ -1501,7 +1501,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Request agent self-update on node
       tags:
       - Nodes
@@ -1527,7 +1527,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Delete node
       tags:
       - Nodes
@@ -1553,7 +1553,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Request force sync config on node
       tags:
       - Nodes
@@ -1587,7 +1587,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Get node observability details
       tags:
       - Nodes
@@ -1613,7 +1613,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Cleanup node health events
       tags:
       - Nodes
@@ -1639,7 +1639,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Request openresty restart on node
       tags:
       - Nodes
@@ -1673,7 +1673,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Update node
       tags:
       - Nodes
@@ -1688,7 +1688,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Get global discovery token
       tags:
       - Nodes
@@ -1703,7 +1703,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Rotate global discovery token
       tags:
       - Nodes
@@ -1733,7 +1733,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Cleanup observability tables
       tags:
       - Options
@@ -1829,7 +1829,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: List proxy routes
       tags:
       - ProxyRoutes
@@ -1857,7 +1857,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Create proxy route
       tags:
       - ProxyRoutes
@@ -1883,7 +1883,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Get proxy route detail
       tags:
       - ProxyRoutes
@@ -1909,7 +1909,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Delete proxy route
       tags:
       - ProxyRoutes
@@ -1943,7 +1943,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Update proxy route
       tags:
       - ProxyRoutes
@@ -2008,7 +2008,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: List TLS certificates
       tags:
       - TLSCertificates
@@ -2036,7 +2036,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Create TLS certificate from PEM
       tags:
       - TLSCertificates
@@ -2062,7 +2062,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Get TLS certificate detail
       tags:
       - TLSCertificates
@@ -2088,7 +2088,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Get TLS certificate PEM content
       tags:
       - TLSCertificates
@@ -2122,7 +2122,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Convert uploaded TLS certificate to ACME managed certificate
       tags:
       - TLSCertificates
@@ -2148,7 +2148,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Delete TLS certificate
       tags:
       - TLSCertificates
@@ -2174,7 +2174,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Renew TLS certificate
       tags:
       - TLSCertificates
@@ -2208,7 +2208,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Update TLS certificate from PEM
       tags:
       - TLSCertificates
@@ -2242,7 +2242,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Update ACME TLS certificate
       tags:
       - TLSCertificates
@@ -2271,7 +2271,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Apply TLS certificate via ACME
       tags:
       - TLSCertificates
@@ -2313,7 +2313,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Import TLS certificate from files
       tags:
       - TLSCertificates
@@ -2328,7 +2328,7 @@ paths:
             additionalProperties: true
             type: object
       security:
-      - BearerAuth: []
+      - OpenFlareTokenAuth: []
       summary: Get latest GitHub release
       tags:
       - Update
@@ -2390,9 +2390,9 @@ securityDefinitions:
     in: header
     name: X-Agent-Token
     type: apiKey
-  BearerAuth:
-    description: 管理端可使用 Bearer Token，例如：Bearer <token>
+  OpenFlareTokenAuth:
+    description: 管理端 API 使用登录后返回的用户 Token
     in: header
-    name: Authorization
+    name: OPENFLARE_TOKEN
     type: apiKey
 swagger: "2.0"

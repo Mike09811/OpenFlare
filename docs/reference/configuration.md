@@ -64,7 +64,7 @@ go run . --port 3000 --log-dir ./logs
 | `PORT` | Server 监听端口 | `3000` |
 | `GIN_MODE` | Gin 运行模式 | 非 `debug` 时按 release |
 | `LOG_LEVEL` | 日志等级 | `info` |
-| `SESSION_SECRET` | Session 签名密钥 | 启动时随机生成 |
+| `SESSION_SECRET` | 临时 Session 签名密钥，主要用于 OAuth 状态等非管理端 API 鉴权流程 | 启动时随机生成 |
 | `SQLITE_PATH` | SQLite 数据库文件路径 | `openflare.db` |
 | `DSN` | PostgreSQL DSN，设置后优先于 SQLite | 空 |
 | `SQL_DSN` | 兼容旧命名的 PostgreSQL DSN，优先级低于 `DSN` | 空 |
@@ -76,7 +76,7 @@ go run . --port 3000 --log-dir ./logs
 * `DSN` 与 `SQL_DSN` 同时存在时优先使用 `DSN`。
 * `DSN` 或 `SQL_DSN` 与 `SQLITE_PATH` 同时存在时优先使用 PostgreSQL。
 * 当目标 PostgreSQL 数据库为空且本地 `SQLITE_PATH` 文件存在时，Server 启动阶段会自动迁移 SQLite 数据，并在日志中输出按表迁移进度。
-* `SESSION_SECRET` 生产环境必须显式配置。
+* `SESSION_SECRET` 生产环境建议显式配置，避免 OAuth 授权状态等临时会话在重启后失效；管理端 API 登录凭证不再通过 Cookie Session 传递，而是使用 `OPENFLARE_TOKEN` 请求头。
 * `REDIS_CONN_STRING` 未配置时，相关能力回退为进程内实现。
 
 ## 运行时 Option

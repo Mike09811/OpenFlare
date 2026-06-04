@@ -33,7 +33,7 @@ type dashboardTrendsPayload struct {
 // @Summary Get dashboard overview
 // @Tags Dashboard
 // @Produce json
-// @Security BearerAuth
+// @Security OpenFlareTokenAuth
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
 // @Router /api/dashboard/overview [get]

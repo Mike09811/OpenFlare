@@ -19,7 +19,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -94,7 +94,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "consumes": [
@@ -122,7 +122,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -203,7 +203,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -292,7 +292,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -361,7 +361,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -419,7 +419,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -667,7 +667,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -700,7 +700,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "consumes": [
@@ -728,7 +728,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -753,7 +753,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -778,7 +778,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -821,7 +821,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -846,7 +846,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -871,7 +871,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -896,7 +896,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -937,7 +937,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -978,7 +978,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -1010,7 +1010,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -1033,7 +1033,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "consumes": [
@@ -1072,7 +1072,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -1106,7 +1106,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "consumes": [
@@ -1276,7 +1276,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -1299,7 +1299,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "consumes": [
@@ -1345,7 +1345,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -1379,7 +1379,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -1420,7 +1420,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "consumes": [
@@ -1473,7 +1473,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -1496,7 +1496,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "consumes": [
@@ -1542,7 +1542,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -1567,7 +1567,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -1592,7 +1592,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -1639,7 +1639,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -1680,7 +1680,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -1721,7 +1721,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -1762,7 +1762,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -1815,7 +1815,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -1856,7 +1856,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -1897,7 +1897,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "consumes": [
@@ -1970,7 +1970,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "consumes": [
@@ -2121,7 +2121,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -2144,7 +2144,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "consumes": [
@@ -2190,7 +2190,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -2231,7 +2231,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -2272,7 +2272,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "consumes": [
@@ -2405,7 +2405,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -2428,7 +2428,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "consumes": [
@@ -2474,7 +2474,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "consumes": [
@@ -2520,7 +2520,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "consumes": [
@@ -2584,7 +2584,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -2625,7 +2625,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -2666,7 +2666,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "consumes": [
@@ -2719,7 +2719,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -2760,7 +2760,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -2801,7 +2801,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "consumes": [
@@ -2854,7 +2854,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "consumes": [
@@ -2907,7 +2907,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "OpenFlareTokenAuth": []
                     }
                 ],
                 "produces": [
@@ -3761,10 +3761,10 @@ const docTemplate = `{
             "name": "X-Agent-Token",
             "in": "header"
         },
-        "BearerAuth": {
-            "description": "管理端可使用 Bearer Token，例如：Bearer \u003ctoken\u003e",
+        "OpenFlareTokenAuth": {
+            "description": "管理端 API 使用登录后返回的用户 Token",
             "type": "apiKey",
-            "name": "Authorization",
+            "name": "OPENFLARE_TOKEN",
             "in": "header"
         }
     }
