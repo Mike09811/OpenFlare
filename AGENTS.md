@@ -9,10 +9,8 @@
 
 * **[docs/guildline/development-constraints.md](./docs/guildline/development-constraints.md)**
   *作用：掌握核心后端/Agent/前端分层约束、数据模型规范、数据库迁移升级协议、API 与鉴权设计准则。*
-* **[docs/guildline/Guidelines.md](./docs/guildline/Guidelines.md)**
+* **[docs/guildline/Guidelines.md](docs/guildline/Role.md)**
   *作用：通用的 Go 后端开发与高质量编码准则，包括架构、并发、错误处理、安全及工作流程。*
-* **[docs/guildline/Project.md](./docs/guildline/Project.md)**
-  *作用：针对 OpenFlare 后端特定的控制器参数解析、响应处理、纯净工具类与数据库逻辑完全隔离、Go 泛型切片去重及 JSON 序列化避坑细则。*
 
 ### 系统参阅文档 按需查阅
 * **[docs/reference/configuration.md](./docs/reference/configuration.md)**
