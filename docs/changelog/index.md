@@ -26,6 +26,8 @@ sidebar: false
 
 ### 变更
 
+- 提取并新增 `common/response` 通用响应子包，替换 `controller/response.go` 中的响应细节，重构所有中间件中硬编码的 `c.JSON` 响应，统一 API 响应格式并隔离 Gin 依赖。
+
 - 将 `usage.md` 改名为 `proxy-config.md`（新建反代配置），重新梳理大纲结构，专注于如何从导入/申请证书开始，一步步新增并发布代理路由规则，并同步更新全部导航与文档引用链接
 - WAF 白名单调整为准入名单语义：存在白名单规则时，未命中白名单的请求会被拦截
 - 更新仓库结构设计文档，使 `openflare_agent` 和 `openflare_server` 的目录结构描述与实际物理结构保持一致

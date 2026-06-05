@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"net/http"
 	"openflare/common"
+	"openflare/common/response"
 	"openflare/model"
 
 	jwt "github.com/appleboy/gin-jwt/v2"
@@ -14,20 +14,14 @@ const OpenFlareTokenHeader = "OpenFlare-Token"
 func authHelper(c *gin.Context, minRole int) {
 	tokenStr := c.GetHeader(OpenFlareTokenHeader)
 	if tokenStr == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"success": false,
-			"message": "无权进行此操作，未登录或 token 无效",
-		})
+		response.RespondUnauthorized(c, "无权进行此操作，未登录或 token 无效")
 		c.Abort()
 		return
 	}
 
 	token, err := JWTMiddleware.ParseTokenString(tokenStr)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"success": false,
-			"message": "无权进行此操作，token 无效: " + err.Error(),
-		})
+		response.RespondUnauthorized(c, "无权进行此操作，token 无效: "+err.Error())
 		c.Abort()
 		return
 	}
@@ -35,10 +29,7 @@ func authHelper(c *gin.Context, minRole int) {
 	claims := jwt.ExtractClaimsFromToken(token)
 	id, ok := claims["id"].(float64)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"success": false,
-			"message": "无权进行此操作，token 格式错误",
-		})
+		response.RespondUnauthorized(c, "无权进行此操作，token 格式错误")
 		c.Abort()
 		return
 	}
@@ -47,37 +38,25 @@ func authHelper(c *gin.Context, minRole int) {
 	dbErr := model.DB.Select([]string{"id", "username", "display_name", "role", "status", "token"}).
 		First(dbUser, "id = ?", int(id)).Error
 	if dbErr != nil || dbUser.Username == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"success": false,
-			"message": "无权进行此操作，用户不存在",
-		})
+		response.RespondUnauthorized(c, "无权进行此操作，用户不存在")
 		c.Abort()
 		return
 	}
 
 	if dbUser.Token != tokenStr {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"success": false,
-			"message": "无权进行此操作，token 已失效或已登出",
-		})
+		response.RespondUnauthorized(c, "无权进行此操作，token 已失效或已登出")
 		c.Abort()
 		return
 	}
 
 	if dbUser.Status == common.UserStatusDisabled {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": "用户已被封禁",
-		})
+		response.RespondFailure(c, "用户已被封禁")
 		c.Abort()
 		return
 	}
 
 	if int(dbUser.Role) < minRole {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": "无权进行此操作，权限不足",
-		})
+		response.RespondFailure(c, "无权进行此操作，权限不足")
 		c.Abort()
 		return
 	}

@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"net/http"
+	"openflare/common/response"
 	"openflare/service"
 
 	"github.com/gin-gonic/gin"
@@ -15,18 +15,12 @@ func TunnelAuth() func(c *gin.Context) {
 		token := c.GetHeader("X-Tunnel-Token")
 		node, err := service.AuthenticateAccessToken(token)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"success": false,
-				"message": "无权进行此操作，Tunnel Token 无效",
-			})
+			response.RespondUnauthorized(c, "无权进行此操作，Tunnel Token 无效")
 			c.Abort()
 			return
 		}
 		if node.NodeType != "tunnel_client" {
-			c.JSON(http.StatusForbidden, gin.H{
-				"success": false,
-				"message": "此节点不是 TunnelClient 类型",
-			})
+			response.RespondForbidden(c, "此节点不是 TunnelClient 类型")
 			c.Abort()
 			return
 		}

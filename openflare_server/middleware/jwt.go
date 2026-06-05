@@ -3,6 +3,7 @@ package middleware
 import (
 	"log"
 	"openflare/common"
+	"openflare/common/response"
 	"openflare/model"
 	"time"
 
@@ -57,10 +58,7 @@ func InitJWTMiddleware() {
 			return data != nil
 		},
 		Unauthorized: func(c *gin.Context, code int, message string) {
-			c.JSON(code, gin.H{
-				"success": false,
-				"message": "无权进行此操作，未登录或 token 无效: " + message,
-			})
+			response.RespondErrorWithStatus(c, code, "无权进行此操作，未登录或 token 无效: "+message)
 		},
 		TokenLookup:   "header: OpenFlare-Token",
 		TokenHeadName: "", // Empty for raw token value directly

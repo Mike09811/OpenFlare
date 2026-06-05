@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"net/http"
+	"openflare/common/response"
 	"openflare/service"
 )
 
@@ -11,10 +11,7 @@ func AgentAuth() func(c *gin.Context) {
 		token := c.GetHeader("X-Agent-Token")
 		node, err := service.AuthenticateAccessToken(token)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"success": false,
-				"message": "无权进行此操作，Agent Token 无效",
-			})
+			response.RespondUnauthorized(c, "无权进行此操作，Agent Token 无效")
 			c.Abort()
 			return
 		}
@@ -32,10 +29,7 @@ func AgentRegisterAuth() func(c *gin.Context) {
 			return
 		}
 		if err := service.ValidateDiscoveryToken(token); err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"success": false,
-				"message": "无权进行此操作，注册 Token 无效",
-			})
+			response.RespondUnauthorized(c, "无权进行此操作，注册 Token 无效")
 			c.Abort()
 			return
 		}
