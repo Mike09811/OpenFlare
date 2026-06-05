@@ -2,7 +2,7 @@
 
 You will learn: How to build OpenFlare's local development environment, start the Server, the Agent, and the Admin Frontend, run test and build commands, and understand the boundaries to respect before contributing code.
 
-This page is aimed at contributors. Product boundaries, data model constraints, API conventions, and frontend layering specifications are governed by [Development Constraints](../../guildline/development-constraints.md); this page only provides actionable workflows for local development.
+This page is aimed at contributors. Product boundaries, data model constraints, API conventions, and frontend layering specifications are governed by [Development Constraints](../../guideline/development-constraints.md); this page only provides actionable workflows for local development.
 
 ## Repository Structure
 
@@ -174,7 +174,7 @@ go build -o openflare-agent ./cmd/agent
 Before contributing, verify:
 
 1. The requirement matches [Product Boundaries](./index.md).
-2. The implementation conforms to [Development Constraints](../guildline/development-constraints.md).
+2. The implementation conforms to [Development Constraints](../guideline/development-constraints.md).
 3. The change does not disrupt publishing, sync, rollback, or upgrading lifecycles.
 4. Update corresponding documentation if configurations, deployments, APIs, or boundaries change.
 5. High-risk edits must be accompanied by unit tests or equivalent integration testing.

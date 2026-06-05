@@ -197,7 +197,7 @@ IP Group & Judgment Constraints:
 * Update this document when the product range or system boundaries change.
 * Update [System Architecture](./architecture.md) when the system structure or module responsibilities change.
 * Update [Agent & Publish Model](./agent-design.md) when the publishing, synchronization, rollback, or Agent model changes.
-* Update [Development Constraints](../../guildline/development-constraints.md) when developer constraints, code specifications, or API conventions change.
+* Update [Development Constraints](../../guideline/development-constraints.md) when developer constraints, code specifications, or API conventions change.
 * Update README and [Deployment Instructions](../../deployment/deployment.md) when deployment methods change.
 * Update [Configurations Reference](../reference/configuration.md) when configuration items change.
 * Completed phases should no longer be backfilled as "version plans".

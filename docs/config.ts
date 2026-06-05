@@ -70,10 +70,12 @@ function sidebarGuide(): DefaultTheme.SidebarItem[] {
       items: [
         { text: '概览', link: '' },
         { text: '快速开始', link: 'quick-start' },
-        { text: '基础使用', link: 'usage' },
+        { text: '新建反代配置', link: 'proxy-config' },
+        { text: 'Pages 静态托管使用', link: 'pages-usage' },
         { text: '内网穿透与隧道使用', link: 'tunnel-usage' },
         { text: 'WAF 安全防护使用', link: 'waf-usage' },
         { text: 'WAF 自动 IP 组语法', link: 'waf-ip-group-expr' },
+        { text: 'Uptime Kuma 监控同步', link: 'uptime-kuma' },
         { text: 'SSO 登录配置', link: 'sso' },
         { text: '发布第一份配置', link: 'first-site' },
         { text: '故障排查', link: 'troubleshooting' },
@@ -115,8 +117,9 @@ function sidebarDesign(): DefaultTheme.SidebarItem[] {
         { text: '内网穿透隧道设计', link: 'tunnel-design' },
         { text: 'WAF 设计', link: 'waf-design' },
         { text: 'Pages 静态托管设计', link: 'pages-design' },
-        { text: '仓库结构', link: 'repository' }
+        { text: 'Uptime Kuma 监控同步设计', link: 'kuma-design' }
       ]
     }
   ]
 }
+

@@ -45,7 +45,7 @@ Frontend：
 
 ## 工程分层约束
 
-各组件和模块（Server、Agent、Frontend）的物理目录分层职责详见 [仓库结构](../design/repository.md)。在此结构下，开发必须遵守以下核心分层规则：
+各组件和模块（Server、Agent、Frontend）的物理目录分层职责详见 [仓库结构](../design/index.md#仓库结构)。在此结构下，开发必须遵守以下核心分层规则：
 
 * **Server 开发规则**：
   * 禁止在 `controller/` 堆积业务逻辑，禁止在 `middleware/` 实现业务流程，禁止为简单需求新增平台层抽象。

@@ -30,7 +30,7 @@ If you are new to OpenFlare, read the documents in the following order:
 | Start Server from source code | [Launch Server](../deployment/server.md) |
 | Configure GitHub or OIDC SSO | [SSO Login Configuration](./sso.md) |
 | Upgrade Server or Agent | [Upgrade & Maintenance](../deployment/upgrade.md) |
-| Participate in development or bug fixing | [Local Development](../design/development.md) and [Development Constraints](../../guildline/development-constraints.md) |
+| Participate in development or bug fixing | [Local Development](../design/development.md) and [Development Constraints](../../guideline/development-constraints.md) |
 | Understand architecture and publishing | [System Architecture](../design/architecture.md) and [Agent & Publish Model](../design/agent-design.md) |
 | View open-source references and credits | [Credits](./credits.md) |
 

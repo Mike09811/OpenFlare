@@ -219,5 +219,5 @@ Before modifying architectural code, please read:
 
 1. [Product Boundaries](./index.md)
 2. [Agent & Publish Model](./agent-design.md)
-3. [Development Constraints](../../guildline/development-constraints.md)
+3. [Development Constraints](../../guideline/development-constraints.md)
 4. [Repository Structure](./repository.md)

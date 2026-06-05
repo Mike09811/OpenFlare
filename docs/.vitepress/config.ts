@@ -12,7 +12,9 @@ export default defineConfig({
   srcExclude: [
     'zh/**',
     'components/**',
-    'snippets/**'
+    'snippets/**',
+    'plan/**',
+    'guideline/**'
   ],
 
   markdown: {

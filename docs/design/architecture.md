@@ -1,244 +1,174 @@
 # 系统架构
 
-你会学到：OpenFlare 的整体架构、Server、Agent、OpenResty 与管理端前端的职责边界，以及一次配置发布从管理端到节点生效的请求流。
+你会学到：OpenFlare 的整体架构、各核心组件（Server, Agent, OpenResty, Relay, Client）的职责分工，以及主要数据与请求流的宏观流向。
 
-OpenFlare 由 Server、Agent、节点本地 OpenResty 和管理端前端组成。Server 是控制面，Agent 是节点侧唯一受控落地入口，OpenResty 是实际数据面。内网穿透场景中，Relay（frps 管理器）和 OpenFlared（frpc 管理器）扩展了数据面流量路径。
+OpenFlare 是一套自托管的 OpenResty 控制面。它在物理上由 Server（控制面）、Agent（配置落地端）、节点本地 OpenResty（数据面）、内网穿透组件（Relay 与 OpenFlared，数据面扩展）以及管理端前端组成。
 
-### 标准反代流量路径
+---
 
+## 流量路径概览
+
+根据不同的网站上游类型，OpenFlare 支持三种不同的数据面流量路径：
+
+### 1. 标准反代流量路径
 ```text
 Browser
   |
-  | Management UI / API
+  | HTTPS/HTTP request
   v
-OpenFlare Server (Gin + GORM + SQLite/PostgreSQL)
+OpenResty (WAF, TLS, Rate Limit)
   |
-  | Agent API / heartbeat / config pull
+  | reverse proxy (proxy_pass)
   v
-OpenFlare Agent
-  |
-  | write config / openresty -t / reload / rollback
-  v
-OpenResty binary
-  |
-  | reverse proxy
-  v
-Origin
+Origin Server (直连公网/局域网上游)
 ```
 
-### 内网穿透流量路径
-
+### 2. 内网穿透流量路径
+适用于内网受限服务器上的源站服务接入：
 ```text
 Browser
   |
-  | HTTPS request
+  | HTTPS/HTTP request
   v
-OpenResty (Agent, TLS/WAF)         <-- TunnelRelay 节点
+OpenResty (Agent 宿主机, TLS/WAF)
   |
   | proxy_pass http://localhost:vhost_port (Host header preserved)
   v
-OpenFlareRelay (frps)              <-- TunnelRelay 节点，与 Agent 同机部署
+OpenFlareRelay (frps)              <-- 与 Agent 同机部署，提供中继
   |
-  | frp tunnel protocol (HTTP Vhost routing by Host header)
+  | frp tunnel protocol (Host header routing)
   v
-OpenFlared (frpc)                  <-- 内网服务器
+OpenFlared (frpc)                  <-- 内网受限服务器
   |
   | HTTP/HTTPS forward
   v
 Internal Service (192.168.x.x)
 ```
 
-### Pages 静态托管流量路径
-
+### 3. Pages 静态托管流量路径
+适用于预构建的单页应用（SPA）或静态网站托管：
 ```text
 Browser
   |
-  | HTTPS request
+  | HTTPS/HTTP request
   v
 OpenResty (Agent, TLS/WAF)
   |
-  | root/try_files
-  v
-Agent 本地 Pages 部署目录
+  +---> [静态服务] root/try_files ---> Agent 本地 Pages 部署目录
+  |
+  +---> [API 反代] proxy_pass ---> 后端 API 服务 (如果启用了 API 代理)
 ```
+
+---
 
 ## 组件职责
 
-| 组件            | 职责                                                                   |
-| --------------- | ---------------------------------------------------------------------- |
-| Server          | 管理端 UI、管理 API、Agent/Relay/Client API、配置渲染、版本发布、Pages 部署包存储、数据存储与聚合查询 |
-| Agent           | 注册、心跳、同步、写入文件、Pages 部署包拉取与解压、校验、reload、失败回滚、自更新与轻量采集   |
-| OpenResty       | 接收真实流量，按 OpenFlare 渲染的配置执行 WAF、PoW、认证、反向代理与 Pages 静态文件服务     |
-| OpenFlareRelay  | 管理 frps 进程生命周期，提供隧道中继服务，通过心跳接收 frps 配置       |
-| OpenFlared      | 管理 frpc 进程（可多个），连接 Relay 中继，将流量转发到内网服务        |
-| Frontend        | 管理网站配置、WAF、源站、证书、节点、Tunnel、版本、用户、设置与观测页面 |
+| 组件            | 职责                                                                   | 详细设计参考 |
+| --------------- | ---------------------------------------------------------------------- | ------------ |
+| **Server**      | 管理端 UI/API、控制面状态持久化、配置编译渲染、发布版本控制、Pages 部署包存储与 Uptime Kuma 监控同步 | [Agent 与发布模型](./agent-design.md) / [Uptime Kuma 监控同步设计](./kuma-design.md) |
+| **Agent**       | 周期心跳与 WS 同步、静态资源包拉取与解压、OpenResty 配置写入/校验/重载与自愈 | [Agent 与发布模型](./agent-design.md) |
+| **OpenResty**   | 接收真实流量，执行 WAF 过滤、PoW 防护、Basic Auth 认证与静态/反代服务 | [WAF 设计](./waf-design.md) / [Pages 设计](./pages-design.md) |
+| **Relay**       | 部署于边缘节点，管理 `frps` 守护进程生命周期，接受心跳派发的穿透中继配置 | [内网穿透设计](./tunnel-design.md) |
+| **OpenFlared**  | 部署于内网，管理 `frpc` 进程组，向多个 Relay 建立反向隧道，上报连接状态 | [内网穿透设计](./tunnel-design.md) |
+| **Frontend**    | Next.js 管理界面，提供路由、WAF、证书、节点、穿透隧道和 Pages 项目的可视化管理 | [开发约束](../guideline/development-constraints.md) |
 
-## Server
+---
 
-`openflare_server` 是单体控制面：
+## 组件架构与分工
 
-* Gin 提供 HTTP 服务。
-* GORM 访问 SQLite 或 PostgreSQL。
-* 现有登录体系签发管理端用户 Token，管理端 API 通过 `OPENFLARE_TOKEN` 请求头鉴权。
-* 认证源与外部账号绑定支持 GitHub OAuth 和标准 OIDC。
-* Go Server 托管 `openflare_server/web` 静态构建产物。
+### 1. Server (控制面)
+`openflare_server` 是 Go 编写的单体控制面：
+* 提供管理端 REST API，通过 `OPENFLARE_TOKEN` 请求头鉴权。
+* 包含配置编译器（Compiler），将数据库中的规则、证书与全局参数统一编译为不可变的配置快照及 OpenResty 物理配置文件文本。
+* 存储 Pages 部署 ZIP 包于本地 Artifacts 目录，并向 Agent 提供受控的下载接口。
+* 后台集成 Uptime Kuma 监控同步服务，自动为可用站点维护 HTTP 探测任务。
+* *详细设计请参阅：[Agent 与发布模型设计](./agent-design.md) 以及 [Uptime Kuma 监控同步设计](./kuma-design.md)*
 
-Server 不直接 SSH 到节点，也不在线修改节点文件。它只保存控制面状态、生成完整配置版本，并通过 Agent API 让节点主动拉取。
+### 2. Agent (配置落地端)
+`openflare_agent` 是运行在节点本地的守护进程：
+* 启动后维持与控制面的周期性心跳，并通过可选的 WebSocket 接收实时的配置发布广播。
+* 负责拉取最新激活版本的配置文件及证书，写入本地目录，并通过 `openresty -t` 执行安全校验后平滑重载 (`reload`)。
+* 在本地处理 Pages 部署包的下载、SHA-256 校验与解压缩切换。
+* *详细设计请参阅：[Agent 与发布模型设计](./agent-design.md)*
 
-Pages 静态托管场景中，Server 保存 Pages 项目、SPA fallback 回退路径、不可变部署元数据、文件清单和 zip 部署包；发布版本只记录部署引用、checksum 与静态渲染策略，不把大体积静态资源写入 `config_versions`。
+### 3. OpenResty (数据面)
+接收访客流量并执行最终的业务落地：
+* 流量入口，支持 HTTP/2、HTTP/3（QUIC）和 TLS 证书动态绑定。
+* 嵌入 Lua 逻辑，在 `access_by_lua` 阶段高效过滤 WAF 规则、验证工作量证明 (PoW) 挑战，并在此之后执行连接数/速率限制及基础缓存。
+* *详细设计请参阅：[WAF 设计文档](./waf-design.md) 与 [Pages 静态托管设计文档](./pages-design.md)*
 
-## Agent
+### 4. Relay 与 OpenFlared (穿透组件)
+扩展数据面反穿透能力：
+* `openflare_relay` 守护本地 `frps`，接受 Server 的配置派发，自动更新中继端口。
+* `openflared` 在内网守护一组 `frpc` 客户端进程，实现多中继就近建连与高可用容灾。
+* *详细设计请参阅：[内网穿透隧道设计文档](./tunnel-design.md)*
 
-`openflare_agent` 是 Go 单体程序：
+---
 
-* 单二进制运行在节点侧。
-* 启动后读取或生成本地节点信息。
-* 周期性 heartbeat，上报状态并获取激活版本摘要。
-* 发现新版本后拉取配置、备份旧文件、写入新文件、校验并 reload。
-* 当激活配置引用 Pages 部署时，先按部署 ID 下载 zip 包，校验 checksum，解压到本地 `pages_dir` 并切换当前部署目录。
-* 应用失败时尝试恢复运行并回滚。
-* 维护 WAF GeoIP mmdb，启动时写入内置初始库，并按配置定期更新。
+## 数据与请求流概览
 
-Agent 通过 `openresty_path` 指向的 OpenResty 二进制统一执行校验、reload、启动与重启；未配置时默认调用 `openresty`。Docker 部署时，Agent 镜像内置 OpenResty 二进制，仍走同一套二进制控制逻辑。
-
-节点 IP 默认由 Agent 注册和心跳上报维护；如果管理端锁定节点 IP，Server 只更新运行状态、版本、观测等运行态字段，不再接受 Agent 上报覆盖该 IP。
-
-## Frontend
-
-`openflare_server/web` 是正式管理端前端：
-
-* Next.js 15 App Router。
-* React 19。
-* TypeScript。
-* Tailwind CSS。
-* TanStack Query 管理服务端状态。
-
-前端采用静态导出模式（`output: 'export'`），导出后由 Go Server 通过 `embed.FS` 托管。所有 API 请求应统一经过 `lib/api/`，并处理 `success/message/data` 响应结构。
-
-Server 集成以下安全特性：
-* CORS 中间件：跨域请求保护。
-* 速率限制：全局与关键接口限流。
-* 会话管理：基于 Cookie/Redis 的会话存储。
-
-## 数据与请求流
-
-### 管理端请求流
-
+### 1. 配置发布与同步流
 ```text
-Browser -> Frontend -> /api/* -> controller -> service -> model -> database
+管理端修改配置 -> 发布新版本 -> 生成全局唯一 Checksum 激活版本
+                                 |
+              +------------------+------------------+
+              | (WebSocket 广播或周期 Heartbeat)      |
+              v                                     v
+       [边缘节点 Agent]                        [内网 OpenFlared]
+  拉取最新 OpenResty 配置/证书             拉取最新 Tunnel 映射配置
+  增量拉取/解压 Pages 静态部署包            生成/重写 frpc.toml
+  Nginx 校验配置并平滑重载 (reload)          平滑重载或拉起 frpc 进程
+  上报应用状态 (Success / Error)           上报隧道连接状态与活跃指标
 ```
+* *同步与自愈的精细时序及回滚模型详见：[Agent 与发布模型设计](./agent-design.md)*
 
-管理端变更类接口使用 `POST`，只读接口使用 `GET`。成功与失败都返回清晰的 `message`。
+### 2. 静态托管与 API 代理流
+* 静态资源解压落地于 Agent 节点的 `deployments/{id}/current` 下，OpenResty 通过 `root`/`index`/`try_files` 指令在边缘直接向访客提供极低延迟的静态资源服务。
+* 当启用 API 代理时，OpenResty 自动根据站点配置的 `api_proxy_path`（如 `/api`）将 API 请求重写并转发（`proxy_pass`）给后端动态接口。
+* *部署包校验、解压逃逸防御及 Nginx 规则渲染详见：[Pages 静态托管设计文档](./pages-design.md)*
 
-### Agent 同步流
+### 3. WAF 安全过滤流
+* WAF 引擎嵌入在 OpenResty 请求生命周期中。
+* 过滤规则直接从 Agent 落地在节点本地的 `waf_config.json` 及 `waf_ip_groups.json` 读取，判决逻辑白名单优先、黑名单层层过滤，完全在本地内存中完成，不产生数据库或网络 I/O 损耗。
+* *IP组增量同步、自动 IP 组计算与拦截响应机制详见：[WAF 设计文档](./waf-design.md)*
 
-```text
-Agent HTTP heartbeat -> Server 返回激活版本摘要
-Agent 发现新版本 -> 拉取配置详情
-Agent 确保 Pages 部署包已下载、校验并解压 (如配置引用 Pages)
-Agent 写入主配置 / 路由配置 / 证书 / Lua 资源 / WAF 运行时配置
-Agent 执行 OpenResty 校验与 reload
-Agent 上报应用结果
-```
-
-### Relay 同步流
-
-Relay（OpenFlareRelay 进程）运行在 TunnelRelay 节点上，与 Agent 共享同一 `agent_token`：
-
-```text
-Relay HTTP heartbeat -> Server 返回 frps 基础配置 (bindPort, vhostHTTPPort, auth_token)
-Relay 生成 frps.toml 并启动或更新 frps 进程
-Relay 定期上报 frps 健康状态与连接统计
-Relay 尝试升级 WebSocket 连接以支持实时配置推送
-```
-
-frps 配置相对静态（端口、认证 Token），通过心跳下发，**不纳入版本化发布流**。Relay 需要监听 frps 进程异常并自动恢复。认证方式：`X-Agent-Token` + API 路径前缀 `/api/relay/*`，Server 通过 `node_type = tunnel_relay` 区分。
-
-### OpenFlared 同步流
-
-OpenFlared（客户端）运行在内网服务器，使用独立的 `tunnel_token` 认证：
-
-```text
-Client HTTP heartbeat -> Server 返回 tunnel 配置版本摘要 (version, checksum)
-Client 发现新版本 -> 拉取完整 tunnel 路由配置 (relay 列表 + frpc proxy 定义)
-Client 为每个 Relay 生成独立的 frpc.toml 配置文件
-Client 为新 Relay 启动 frpc 进程，或为已有 Relay 执行热重载 (frpc reload)
-Client 上报应用结果 (成功/失败原因)
-```
-
-OpenFlared 通过 `/api/flared/*` 端点与 Server 通信，认证使用 `X-Tunnel-Token`。Tunnel 路由配置随发布流程版本化同步，所有配置变更通过单一版本号关联并一致性发布到 Agent 和 Client。
-
-**WebSocket 升级流程**（可选，通过 `AgentWebsocketUpgradeEnabled` 选项控制）：
-
-当启用 WebSocket 升级时：
-1. Agent 通过 HTTP heartbeat 获取运行配置与设置。
-2. Agent 尝试升级连接到 `GET /api/agent/ws`（WebSocket）。
-3. WS 连接成功后，周期性状态上报和实时消息由 WebSocket 承载，降低延迟。
-4. Server 发布或激活版本后，可向已连接 Agent 立即广播激活版本摘要，使 Agent 立即进入同步流程。
-5. 若 WebSocket 断开或建立失败，Agent 自动降级回 HTTP heartbeat，保证可用性。
-
-通过 `OpenRestyWebsocketEnabled` 选项，可在 OpenResty 层面启用或禁用 WebSocket 反向代理支持。
-
-### 反向代理流
-
-```text
-Client -> OpenResty server block -> WAF Lua -> named upstream -> Origin
-```
-
-网站配置是反向代理聚合边界。一条网站配置可绑定多个域名，并共享站点级流量限制、反向代理和缓存配置。
-
-WAF 在 OpenResty `access_by_lua_file` 阶段执行。规则来自当前激活版本携带的 `waf_config.json`，全局规则组默认生效，网站可叠加自定义规则组。`waf_config.json` 只保存规则组直接 IP 和 IP 组引用 ID；IP 组成员由 Agent 独立同步到本地 `waf_ip_groups.json`，OpenResty Lua 按引用 ID 合并判断。
-
-WAF IP 组由 Server 管理。手动 IP 组直接保存 IP/IP 段列表；自动 IP 组由 Server 定时任务读取请求日志、按单个 IP 聚合指标并执行 Expr 规则；订阅 IP 组由 Server 定时任务同步远程文本或 JSON 源。Agent 心跳会上报本地 IP 组 checksum，Server 只返回不一致的 IP 组；Server 侧 IP 组更新时会通过 Agent WebSocket 广播变更组。OpenResty Lua 只读取 Agent 落地的运行时 JSON，不直接访问 Server 数据库、请求日志或远程订阅源。
+---
 
 ## 核心对象
 
-当前有效实体包括：
+当前系统核心实体包括：
 
-* `proxy_routes`
-* `origins`
-* `config_versions`
-* `pages_projects`
-* `pages_deployments`
-* `pages_deployment_files`
-* `nodes`
-* `tunnels`
-* `auth_sources`
-* `external_accounts`
-* `node_system_profiles`
-* `apply_logs`
-* `tls_certificates`
-* `managed_domains`
-* `node_request_reports`
-* `node_access_logs`
-* `node_metric_snapshots`
-* `traffic_analytics_rollups`
-* `node_health_events`
-* `waf_rule_groups`
-* `waf_ip_groups`
-* `waf_rule_group_bindings`
-* `acme_accounts`
-* `dns_accounts`
-* `geoip_update_configs`
+* **反代与配置**：`proxy_routes` (网站配置), `origins` (源站), `config_versions` (配置版本), `tls_certificates` (证书), `managed_domains` (托管域名).
+* **Pages 静态托管**：`pages_projects` (Pages项目), `pages_deployments` (不可变部署), `pages_deployment_files` (部署文件清单).
+* **节点与穿透**：`nodes` (节点), `tunnels` (隧道客户端), `node_system_profiles` (系统概况), `apply_logs` (应用日志).
+* **WAF 与安全**：`waf_rule_groups` (WAF规则组), `waf_ip_groups` (WAF IP组), `waf_rule_group_bindings` (网站WAF绑定).
+* **系统与账号**：`acme_accounts` (ACME账户), `dns_accounts` (DNS账户), `geoip_update_configs` (GeoIP更新配置).
+
+---
 
 ## 关键设计决策
 
 | 决策                           | 原因                                                                        |
 | ------------------------------ | --------------------------------------------------------------------------- |
-| 完整配置版本，而不是在线 patch | 让预览、激活、历史和回滚有稳定边界                                          |
-| Agent 主动拉取                 | Server 不需要 SSH 权限，也不暴露远程命令入口；支持 HTTP 与 WebSocket 双协议 |
-| 全局单激活版本                 | 降低 MVP 复杂度，保证所有节点默认一致；支持版本预览、历史查询与一键回滚     |
-| 网站配置聚合多域名             | 支持一个业务站点共享站点级策略，同时允许按域名绑定证书                      |
-| 观测数据服务端聚合             | 避免前端临时统计造成口径不一致                                              |
-| 内网穿透基于 frp 整合          | 复用成熟隧道协议，避免自研隧道的稳定性风险；frps HTTP Vhost 路由天然适配    |
-| Relay/Client 独立二进制         | 职责分离，Relay 管理 frps，Client 管理 frpc，各自独立升级和部署             |
-| Tunnel 与 Node 体系分离         | Tunnel 客户端在内网运行，与公网节点概念不同，使用独立的注册和认证体系       |
+| 完整配置版本，而不是在线 patch | 让预览、激活、历史和回滚有稳定边界，保证节点状态一致                        |
+| Agent 主动拉取                 | Server 不需要 SSH 权限，降低安全风险；支持 HTTP 与 WebSocket 双协议灵活切换 |
+| 全局单激活版本                 | 降低控制面复杂度，保证所有节点默认一致；提供一键秒级回滚的稳定机制           |
+| 网站配置聚合多域名             | 支持单个业务站点共享站点级策略，同时支持按域名灵活绑定不同的 TLS 证书        |
+| 内网穿透基于 frp 整合          | 复用成熟隧道协议，避免自研隧道引起稳定性风险；其 Vhost 机制天然适配反代路由 |
+| 运行时配置与控制库解耦         | 如 WAF 运行时只读取本地 JSON 规则包，配置变更通过差分广播或快速重载热生效    |
+
+---
 
 ## 贡献者阅读建议
 
-如果要修改架构相关代码，先阅读：
+修改系统架构或开发新功能前，请按以下顺序阅读：
 
-1. [产品边界](./index.md)
-2. [Agent 与发布模型](./agent-design.md)
-3. [开发约束](../guildline/development-constraints.md)
-4. [仓库结构](./repository.md)
+1. **[产品边界](./index.md)**：了解 OpenFlare 核心定位与不允许逾越的设计边界。
+2. **[开发约束](../guideline/development-constraints.md)**：掌握数据模型、API 约定、数据库迁移（Goose）与前端规范。
+3. **[Agent 与发布模型](./agent-design.md)**：理解版本快照同步及失败回滚的安全兜底逻辑。
+4. **细分领域设计**：
+   * 穿透相关开发：阅读 [内网穿透隧道设计](./tunnel-design.md)。
+   * WAF 相关开发：阅读 [WAF 设计](./waf-design.md)。
+   * Pages 托管开发：阅读 [Pages 静态托管设计](./pages-design.md)。
+   * 监控同步开发：阅读 [Uptime Kuma 监控同步设计](./kuma-design.md)。
+5. **[仓库结构](./index.md#仓库结构)**：明确各个物理目录分层职责，避免堆砌和重复开发。

@@ -1,222 +1,169 @@
 # 产品边界
 
-你会学到：OpenFlare 是什么、解决什么问题、目标用户是谁、当前稳定能力有哪些，以及哪些设计边界在实现时不能被绕过。
+你会学到：OpenFlare 是什么、当前稳定能力，以及开发时应遵守的核心产品边界与仓库结构目录分工。
 
-OpenFlare 是一套自托管的 OpenResty 控制面，面向单团队或单组织内部运维场景。它解决反向代理配置、节点同步、证书托管、配置发布回滚与基础观测分散管理的问题。
+OpenFlare 是一套自托管的 OpenResty 控制面，面向单团队或单组织内部运维场景。
+
+---
 
 ## 项目定位
 
-OpenFlare 适合需要统一管理多台 OpenResty 代理节点的团队：
+OpenFlare 适合需要统一管理多台 OpenResty 代理节点的团队，具备以下定位：
+* **控制与落地分离**：Server 控制面不直接 SSH 到代理节点，而是通过 Agent 主动拉取版本并应用。
+* **不可变配置发布**：采用完整的配置版本进行预览、发布、激活和一键回滚。
+* **一体化网关托管**：在同一个控制面内集成网站反代、TLS 证书自动续期申请、WAF 防护拦截、内网穿透（Tunnel）以及 Pages 静态网站托管。
 
-* 希望用管理端维护反向代理网站配置。
-* 希望每次配置变更都有完整版本、预览、激活与回滚。
-* 希望节点主动同步配置，而不是由控制面 SSH 到节点执行命令。
-* 希望在同一系统中管理 TLS 证书、域名资产、节点状态和基础访问分析。
+**非本产品定位**：多租户云平台、Kubernetes Ingress Controller、服务网格或通用日志平台。
 
-OpenFlare 当前不定位为通用日志平台、服务网格、Kubernetes Ingress Controller 或多租户云平台。
+---
 
 ## 当前能力
 
-| 能力 | 说明 |
-| --- | --- |
-| 反代规则管理 | 以网站配置为聚合边界，支持多域名与源站配置 |
-| 网站级配置 | 一条规则对应一个网站，可绑定一个或多个域名，并共享站点级配置 |
-| 源站管理 | 维护轻量源站目录，并允许网站保存可渲染的源站快照 |
-| 配置版本 | 支持预览、发布、激活、不可变历史与回滚 |
-| Agent 同步 | 支持注册、心跳、同步、应用结果上报与自更新 |
-| OpenResty 托管 | 管理主配置模板、性能参数、缓存参数与 Lua 资源 |
-| HTTPS/TLS | 托管证书与域名资产，并按域名绑定证书 |
-| WAF | 以全局规则组与网站自定义规则组维护 IP/IP 段、IP 组、国家级地域黑白名单 |
-| 基础观测 | 聚合节点请求、资源快照、健康事件和访问分析 |
-| 节点管理 | 节点状态、令牌体系、部署与更新链路 |
-| 管理端前端 | 基于 Next.js 的正式管理端 |
-| 认证源登录 | 支持以认证源形式配置 GitHub 与标准 OIDC 登录入口，并允许第三方账号绑定已有本地用户 |
-| 内网穿透 | 通过 TunnelRelay 节点与 OpenFlared 客户端，将内网 HTTP 服务安全暴露到公网，复用 Agent 的 HTTPS/WAF 能力 |
-| Pages 静态托管 | 以 Pages 项目管理静态站点部署包，发布后由边缘 Agent 拉取并在本地 OpenResty 静态服务 |
+| 能力 | 说明 | 详细设计/使用指南 |
+| --- | --- | --- |
+| **反代配置管理** | 以网站规则（Proxy Route）为聚合边界，支持多域名与多上游负载均衡 | [新建反代配置](../guide/proxy-config.md) |
+| **配置版本控制** | 支持全局单一激活版本的预览、发布、不可变快照历史与秒级一键回滚 | [Agent 与发布模型](./agent-design.md) |
+| **WAF 安全防护** | 全局与自定义规则组，支持手动/自动/订阅型 IP 组，GeoIP 准入与 PoW CC 防护 | [WAF 设计](./waf-design.md) / [WAF 使用指南](../guide/waf-usage.md) |
+| **内网穿透** | 通过中继节点（Relay）与内网客户端（OpenFlared），反向穿透暴露内网 Web 服务 | [内网穿透设计](./tunnel-design.md) / [穿透使用指南](../guide/tunnel-usage.md) |
+| **Pages 静态托管** | 直接上传前端 zip 包，由边缘节点拉取并由 OpenResty 本地服务，支持 API 反代与 SPA Fallback | [Pages 静态托管设计](./pages-design.md) |
+| **TLS 证书自动续期** | 绑定 managed_domains 并通过 ACME 协议向 Let's Encrypt 申请/续期证书 | [新建反代配置](../guide/proxy-config.md) |
+| **多节点监控与观测** | 收集节点资源快照、健康事件，聚合请求指标与访问日志明细 | [系统架构](./architecture.md) |
 
-默认工作方式：
+---
 
-* 所有节点消费同一份全局激活版本。
-* Server 保存配置与状态，不直接 SSH 管理节点。
-* Agent 是节点侧唯一受控落地入口。
-* TunnelRelay 节点同时运行 Agent（OpenResty）和 Relay（frps），提供内网穿透中继。
-* OpenFlared 客户端在内网运行，管理 frpc 进程连接 Relay，将流量转发到内网服务。
+## 核心产品边界与约束
 
-## 典型使用场景
+在开发与贡献代码时，**必须严格遵守**以下业务边界与技术约束，禁止为了临时需求而绕过限制：
 
-| 场景 | 说明 |
-| --- | --- |
-| 内部服务统一入口 | 把多个内部 HTTP 服务通过统一域名和证书暴露 |
-| 多节点反代配置同步 | 多台 OpenResty 节点消费同一份激活配置 |
-| 配置变更审查 | 发布前查看预览或 diff，发布后保留不可变历史 |
-| 快速回滚 | 重新激活旧版本，让 Agent 拉取并应用 |
-| 证书托管 | 为不同域名绑定 TLS 证书 |
-| 基础观测 | 查看节点状态、请求聚合、访问分析和健康事件 |
-| 内网穿透 | 通过 Tunnel 将无法直接公网访问的内网 HTTP 服务暴露到互联网，享有 HTTPS、WAF 等全部防护能力 |
-| 静态站点托管 | 上传已构建的静态资源包，将网站规则上游绑定到 Pages 项目，在边缘节点本地服务静态文件 |
+### 1. 网站配置与上游约束
+* **单站点域名共享策略**：一条路由规则对应一个网站，该站点下的多域名共享限流、缓存与反代上游等配置，不支持在同一规则内为不同域名做差异化服务配置。
+* **上游类型互斥**：上游必须是直连地址（`direct`）、内网穿透（`tunnel`）或 Pages 静态托管（`pages`）三者之一，不允许在同一规则中混用。
+* **直连类型限制**：直连上游可以是纯 `http://` 或 `https://` 的单个或多个地址（多地址仅支持纯 `scheme://host[:port]`），不支持非 HTTP 协议（如 TCP/UDP）上游。
 
+### 2. WAF 安全边界
+* **白名单优先原则**：白名单拥有绝对匹配权。若未命中白名单规则，才依次触发全局和自定义黑名单过滤。
+* **GeoIP 弱依赖性**：地域准入解析完全依赖节点本地 MaxMind 库。当 GeoIP 异常或解析失败时，系统必须自动忽略地域规则，**绝对不能**破坏 IP 组过滤和反代主链路的可用性。
+* **运行时数据解耦**：OpenResty 拦截时仅读取 Agent 同步至本地的 JSON，不与 Server 数据库通信。IP 组成员同步与版本发布解耦，通过 Chestsum 差分拉取以实现零重载平滑生效。
 
-## 网站配置约束
+### 3. 内网穿透边界
+* **仅限 HTTP 流量**：穿透组件仅支持 HTTP/HTTPS 协议（底层依靠 frp 虚拟主机 Vhost 机制实现单端口域名路由复用），暂不支持单独的 TCP/UDP 端口分配。
+* **中继配置静态化**：中继节点（Relay）配置相对静态，通过心跳被动获取，不纳入控制面的配置版本化管理体系。
+* **Tunnel 与 Node 体系隔离**：Tunnel 客户端在内网发起出向建连，与控制面托管的边缘 Node（公网节点）是独立的实体，使用专属的 `tunnel_token` 进行鉴权。
 
-`proxy_routes` 是“网站配置”的聚合对象。一条记录对应一个网站，可绑定一个或多个域名，并共享一组站点级配置。
+### 4. Pages 静态托管边界
+* **Direct Upload 托管模式**：仅支持直接上传预构建的 ZIP 静态资源包。不支持外部 Git 仓库自动构建、边缘 Serverless 函数、动态 SSR 服务或生成的二级预览域名。
+* **包体硬上限限制**：为了保障边缘节点安全，ZIP 压缩包体最大 25 MiB，解压文件树不超过 1,000 个且总体积不超过 100 MiB。禁止上传含有任何软链接或目录跨越（Zip-Slip）的安全高危压缩包。
 
-约束：
+### 5. 系统与版本边界
+* **全局单一激活版本**：所有节点拉取并消费同一份全局激活配置。不进行按节点分组的差异化配置发布。
+* **单租户架构**：OpenFlare 仅供单团队在受信任的内部网络部署使用。采用单租户设计，不支持细粒度的多用户角色或多租户资源隔离。
 
-* `proxy_routes.site_name` 是网站的业务唯一标识。
-* `proxy_routes.domains` 至少包含一个域名，且 `domains[0]` 作为主域名。
-* 任一域名全局只能属于一个 `proxy_routes`。
-* 网站级流量限制、反向代理与缓存配置均按站点共享，不在同一网站内做域名级差异化配置。
-* HTTPS 允许在同一站点内按域名绑定证书。
+---
 
-## 源站与上游约束
+## 仓库结构
 
-`origins` 服务于源站目录复用，仅保存源站地址、展示名与备注，不承载协议、端口、路径、权重或健康检查策略。`proxy_routes` 可选关联一个 `origins`，但规则内部仍保存完整上游快照以参与渲染。
+在贡献代码时，请严格遵守以下物理分层与目录分工，保持代码结构清晰：
 
-上游约束：
+| 路径                   | 职责                                                 |
+| ---------------------- | ---------------------------------------------------- |
+| `openflare_server`     | Gin + GORM + SQLite/PostgreSQL 单体控制面            |
+| `openflare_server/web` | Next.js 15 App Router 管理端前端，由 Go Server 托管  |
+| `openflare_agent`      | Go 单体 Agent，运行在节点侧                          |
+| `openflare_relay`      | Tunnel 中继代理，运行在公网边缘管理 frps 进程        |
+| `openflared`           | Tunnel 客户端，运行在内网服务器侧管理 frpc 进程      |
+| `scripts`              | 安装、自更新等系统辅助脚本                           |
+| `docs`                 | VitePress 文档站、设计基线、开发规范、部署与配置文档 |
+| `docs/en`              | 英文版文档                                           |
 
-* `proxy_routes` 至少包含一个上游地址（直连类型 `direct`），或关联一个 Tunnel（内网穿透类型 `tunnel`），或关联一个 Pages 项目（静态托管类型 `pages`）。
-* 多上游负载均衡统一渲染为带 keepalive 的 named `upstream`。
-* 单上游允许附带 base path 或 query，并在 `proxy_pass` 中追加。多上游限定为纯 `scheme://host[:port]` 结构，且同一规则内的协议必须一致。
-* `proxy_routes.origin_host` 为可选字段，用于回源时覆盖 `Host` 请求头。
-* 所有直连类型上游地址都必须为合法的 `http://` 或 `https://`。
-* 内网穿透类型上游必须关联有效 `tunnel_id`，并指定内网目标地址与协议。
-* Pages 类型上游必须关联有效 Pages 项目，且项目必须存在已激活部署。Pages 站点不执行服务端构建、边缘函数或动态运行时代码，仅托管预构建静态资源。
+### 1. Server 分层 (`openflare_server/`)
 
-## Pages 静态托管约束
+| 目录          | 职责                                             |
+| ------------- | ------------------------------------------------ |
+| `controller/`  | 参数解析、调用 service、返回响应                                 |
+| `service/`     | 业务逻辑、校验、事务编排、配置渲染                               |
+| `model/`       | 纯净实体模型类定义、旧迁移框架兼容与上下文注入                   |
+| `model/goose/` | goose 迁移提供者、桥接逻辑、注册入口与具体迁移文件               |
+| `router/`      | 路由注册                                                         |
+| `middleware/`  | 认证、鉴权、限流、CORS、Turnstile 验证等横切逻辑                 |
+| `common/`      | 配置、全局状态与初始化入口                                       |
+| `utils/`       | 纯工具函数与通用 helper                                          |
+| `job/`         | 定时任务（各业务定时逻辑在独立文件中定义，cron.go 仅用于初始化调度） |
+| `upload/`      | 运行时本地临时文件上传目录（在 .gitignore 中忽略）               |
+| `logs/`        | 运行时本地日志输出目录（在 .gitignore 中忽略）                   |
+| `docs/`        | API 文档（Swagger）                                              |
+| `data/`        | 静态数据（如 GeoIP 数据库）                                      |
 
-OpenFlare Pages 面向边缘节点静态站点托管，采用“项目 + 不可变部署 + 网站规则绑定”的模型。
+### 2. Agent 模块 (`openflare_agent/`)
 
-约束：
+| 目录/模块                     | 职责                                         |
+| ----------------------------- | -------------------------------------------- |
+| `cmd/agent/`                  | Agent 命令行启动入口及主函数                 |
+| `internal/config/`            | 配置读取与默认值                             |
+| `internal/heartbeat/`         | 心跳与版本摘要判断                           |
+| `internal/sync/`              | 配置拉取与应用编排                           |
+| `internal/nginx/`             | OpenResty 文件写入、校验、reload、启动与回滚 |
+| `internal/state/`             | 本地状态与观测补报缓冲                       |
+| `internal/httpclient/`        | Server 通信                                  |
+| `internal/wsclient/`          | WebSocket 客户端通信                         |
+| `internal/protocol/`          | Agent API 协议类型                           |
+| `internal/updater/`           | Agent 自更新逻辑                             |
+| `internal/logging/`           | 日志处理                                     |
+| `internal/observability/`     | 可观测性（指标、链路等）                     |
+| `internal/geoipdata/`         | GeoIP 数据处理                               |
+| `internal/geoipupdate/`       | GeoIP 数据更新                               |
+| `internal/agent/`             | 核心 Agent 逻辑与生命周期                    |
 
-* Pages 项目保存名称、标识、启用状态、SPA fallback 启用状态、自定义回退路径和当前激活部署。
-* Pages 部署由管理端上传预构建 zip 包生成；部署包保存在 Server 本地 Pages 存储目录，数据库只保存部署元数据和文件清单，不保存大体积文件内容。
-* 只有项目存在激活部署后，`proxy_routes.upstream_type = 'pages'` 的网站规则才能绑定该项目。
-* Pages 网站继续复用网站规则的域名、HTTPS、WAF、PoW、Basic Auth、限流、缓存配置和配置版本发布机制。
-* 发布快照保存 Pages 项目、部署 ID、部署 checksum、入口文件、SPA fallback 启用状态和回退路径。Agent 拉取激活配置时按部署 checksum 下载并校验部署包，解压到本地 `pages_dir` 后再应用 OpenResty 配置。
-* V1 不支持 Git 自动构建、预览域名、边缘函数、动态 SSR、外部对象存储或多租户隔离。
+### 3. Frontend 分层 (`openflare_server/web/`)
 
-## 内网穿透约束
+| 目录          | 职责                                         |
+| ------------- | -------------------------------------------- |
+| `app/`        | Next.js App Router 路由、布局、页面组装      |
+| `features/`   | 按业务域组织的功能模块                       |
+| `components/` | 跨 feature 复用的 UI 组件                    |
+| `lib/`        | 请求客户端、环境变量、工具函数、常量         |
+| `store/`      | 少量跨页面 UI 状态管理                       |
+| `types/`      | 共享类型定义                                 |
+| `styles/`     | 全局样式                                     |
+| `tests/`      | 前端单元测试与集成测试（Vitest、Playwright） |
+| `scripts/`    | 构建和部署相关脚本                           |
+| `public/`     | 静态资源                                     |
 
-OpenFlare 通过 TunnelRelay 节点与 OpenFlared 客户端实现内网穿透，底层基于 frp（快速反向代理）构建。
+### 4. Relay 模块 (`openflare_relay/`)
 
-### 节点与组件模型
+| 模块             | 职责                                             |
+| ---------------- | ------------------------------------------------ |
+| `cmd/`           | Relay 命令行启动入口及初始化主函数               |
+| `internal/config/`| 本地配置文件解析与默认参数初始化                 |
+| `internal/frps/` | 管理 frps 进程生命周期、端口与 Token 并监控运行   |
+| `internal/heartbeat/`| 周期性 HTTP 心跳通信、上报状态并获取更新请求  |
+| `internal/httpclient/`| Server 的通用 API 客户端调用工具类              |
+| `internal/observability/`| 采集本地宿主机、frps 的基础运行指标并进行预聚合 |
+| `internal/relay/` | 协调中继的核心生命周期、初始化与清理             |
+| `internal/state/` | 本地运行时状态、错误记录与持久化缓存             |
+| `internal/updater/`| Relay 升级检查、下载安装与重启机制               |
+| `internal/wsclient/`| 与 Server 保持的长连接 WebSocket 双向通信管道     |
 
-**节点类型**：
+### 5. OpenFlared (Client) 模块 (`openflared/`)
 
-* `nodes.node_type` 区分节点类型：`edge_node`（边缘节点，默认）和 `tunnel_relay`（隧道中继）。
-* TunnelRelay 节点同时运行 Agent（OpenResty）和 Relay（frps 管理器），共享同一个 `agent_token`。
-  - Agent 负责 HTTPS 终结、WAF 防护、缓存与流量限制等。
-  - Relay 管理 frps 进程，为内网客户端提供隧道中继服务。
-* TunnelRelay 节点新增字段：`node_type`、`relay_bind_port`（frpc 连接端口，默认 7000）、`relay_vhost_http_port`（HTTP Vhost 端口，默认 8080）、`relay_auth_token`（自动生成）、`relay_status` 等。
+| 模块             | 职责                                             |
+| ---------------- | ------------------------------------------------ |
+| `cmd/`           | Client 命令行启动入口及初始化主函数              |
+| `internal/config/`| 本地客户端配置加载与解析                         |
+| `internal/flared/`| 内网穿透客户端的核心调度与状态管理机制           |
+| `internal/frpc/` | 热重载/动态生成多 Relay 的 `frpc.toml` 并监控 frpc |
+| `internal/heartbeat/`| 与控制面进行的心跳通信，包含 Token 校验机制       |
+| `internal/httpclient/`| 客户端通用 API 通信客户端                       |
+| `internal/sync/`  | 增量拉取最新 Tunnel 路由绑定关系、生成快照并应用  |
+| `internal/updater/`| 客户端自更新、新版检查与更新落地逻辑             |
+| `internal/wsclient/`| 用于实时监听 Server 端隧道配置变更推送的 WS 信道  |
 
-**Tunnel 客户端**：
-
-* `tunnels` 表独立存储内网穿透客户端注册信息，与 `nodes` 体系无关。
-* 每个 Tunnel 拥有唯一的 `tunnel_id`（格式 `tun-<32hex>`）和 `tunnel_token`（客户端认证凭据）。
-* OpenFlared 客户端运行在内网，不对外暴露，使用 `tunnel_token` 认证，通过 `/api/flared/*` 端点与 Server 通信。
-* 一个 OpenFlared 客户端可同时连接多个 Relay（为高可用）。
-
-### 上游类型扩展
-
-`proxy_routes` 的上游配置分为两种类型，通过 `upstream_type` 字段区分：
-
-* **直连上游（`direct`，默认）**：直接将流量转发到源站地址，行为与现有完全一致。
-* **内网穿透上游（`tunnel`）**：通过 TunnelRelay 节点将流量转发到内网服务。
-  - 必须指定 `tunnel_id`（关联 `tunnels` 表）。
-  - 必须指定 `tunnel_target_addr`（内网目标地址，如 `192.168.1.100:8080`）和 `tunnel_target_protocol`（`http` 或 `https`）。
-  - 发布时，Server 自动将上游地址替换为 `http://127.0.0.1:{relay_vhost_http_port}`。
-
-### 流量路径与协议
-
-**完整数据面流量路径**：
-
-```
-浏览器 → OpenResty (Agent, TLS/WAF)         [TunnelRelay 节点]
-       ↓
-     frps (Relay, HTTP Vhost 路由)          [TunnelRelay 节点, 127.0.0.1:{vhost_port}]
-       ↓
-   frp 隧道协议 (Host 头路由)
-       ↓
-     frpc (Client, 多进程)                  [内网服务器]
-       ↓
-   内网服务 (192.168.x.x:port)
-```
-
-**关键特性**：
-
-* frps 使用 HTTP Vhost 单端口复用机制，所有 HTTP 隧道共享一个 `vhost_port`，通过 Host 头自动路由到对应 frpc。
-* Agent 保留原始 `Host` 请求头，frps 依据此头进行虚拟主机匹配。
-* 每个隧道对应一条 `proxy_routes`，可绑定多个域名。
-* OpenFlared 客户端为每个连接的 Relay 管理一个独立的 frpc 进程，通过单一 frp 隧道传输多个 HTTP 代理定义。
-
-### 配置同步模型
-
-发布流程同时生成两类配置版本数据，统一使用 `config_version` 版本号关联：
-
-* **Agent 侧配置**：OpenResty 主配置 + 路由配置 + WAF 规则。包含 tunnel 上游时，自动渲染为 `http://127.0.0.1:{vhost_port}` 上游。
-* **Tunnel 侧配置**：Relay 列表 + frpc 代理定义。随发布流程版本化，变更时优先使用 `frpc reload` 热重载。
-* **Relay 配置**：通过心跳响应下发，相对静态，不纳入版本化流程。
-
-### 隧道设计约束
-
-* 仅支持 HTTP 协议隧道流量（保留 TCP/UDP 隧道的可扩展性），暂不支持单独的 TCP/UDP 端口分配。
-* Tunnel 类型上游的域名 DNS 应当解析到指定的 TunnelRelay 中继节点。
-* frp 二进制（v0.61+）由系统部署脚本或容器镜像统一打包提供。
-
-
-## HTTPS 约束
-
-`proxy_routes.domain_cert_ids` 用于记录与 `domains` 平行的域名证书绑定；值为 `0` 表示该域名不启用 HTTPS，仅保留 HTTP。
-
-发布渲染时：
-
-* 带证书的域名按证书分组输出独立 `443 ssl` `server` 块。
-* 未绑定证书的域名不得被自动带入 HTTPS。
-* 必须将 `proxy_routes.domains` 中的全部域名一并纳入同一站点配置，避免同站点在版本快照中被拆散。
-
-## WAF 约束
-
-WAF 以规则组为核心配置边界。系统提供唯一的全局规则组（默认应用至所有站点），网站可在此基础上叠加多个自定义规则组。
-
-核心能力：
-
-* 支持单个 IP / CIDR 网段黑白名单。
-* 支持 IP 组引用（包括手动、自动Expr计算、URL订阅三类 IP 组）。
-* 支持基于 GeoIP 的国家/地区级地域准入过滤。
-* 支持规则组自定义拦截响应（支持自定义状态码与拦截 HTML 页面，默认返回 `418`）。
-
-IP 组与判定约束：
-
-* **运行时解耦**：WAF 运行时只读取本地 JSON，不访问 Server 数据库；配置版本仅保存引用的 IP 组 ID。IP 组成员通过哈希 Checksum 差分心跳及 WebSocket 异步推送，实现无需平滑重载 Nginx 的热生效。
-* **内置预设 Expr 规则**：
-  * 高频 404 扫描封禁：`request_count > 100 && status_404_ratio >= 0.8`
-  * 恶意 IP 直连探测：`ip_host_count > 50 && ip_host_ratio > 0.5`
-* **判决优先级**：白名单拥有绝对优先权。若未命中白名单，则触发黑名单漏斗匹配（全局规则组优先，自定义组按 ID 升序匹配）。
-* 地域解析依赖节点本地 MaxMind 库；当 GeoIP 异常时自动忽略地域规则，不得破坏 IP 规则与反代主链路的可用性。
-
-## 认证源约束
-
-`auth_sources` 统一支持 `github` 与 `oidc` 登录配置入口。`external_accounts` 存储第三方与本地用户的绑定关系。第三方账号首次接入逻辑：
-
-* 已绑定时直接授权登录；若已有本地会话则自动建立绑定。
-* 未绑定且允许注册时自动创建本地账号；若关闭注册，则要求用户提供已有本地账号密码以建立关联。
-
-## 版本与观测约束
-
-* `config_versions` 必须保存完整快照、渲染结果与 `checksum`。
-* 全局同时只能有一个激活版本。
-* 回滚通过重新激活旧版本实现。
-* `nodes` 只承载控制面状态与低频摘要，不承载高频观测事实。
-* 指标、趋势和访问分析优先使用服务端聚合结果，而不是前端临时统计。
-* 访问明细只保留受控时间窗口，不演变成通用日志平台。
+---
 
 ## 文档维护原则
 
-* 产品范围或系统边界变化时更新本文档。
-* 系统结构或模块职责变化时更新 [系统架构](./architecture.md)。
-* 发布、同步、回滚与 Agent 模型变化时更新 [Agent 与发布模型](./agent-design.md)。
-* 开发约束、代码规范、接口约定变化时更新 [开发约束](../guildline/development-constraints.md)。
-* 部署方式变化时更新 [部署说明](../deployment/deployment.md) 与 README.
-* 配置项变化时更新 [配置项参考](../reference/configuration.md)。
-* 已完成阶段不再以“版本计划”形式回填。
-* 新阶段开始前，先补设计，再进入实现。
+* 产品范围或系统边界变化：更新本文档（[产品边界](./index.md)）。
+* 系统结构、组件分工变化：更新 [系统架构](./architecture.md)。
+* 发布、同步、回滚与 Agent 模型变化：更新 [Agent 与发布模型](./agent-design.md)。
+* 开发约束、代码规范、接口约定变化：更新 [开发约束](../guideline/development-constraints.md)。
+* 部署方式变化：更新 [部署说明](../deployment/deployment.md) 与 README。
+* 配置项变化：更新 [配置项参考](../reference/configuration.md)。
