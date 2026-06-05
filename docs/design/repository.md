@@ -15,38 +15,39 @@
 
 ## Server 分层
 
-| 目录          | 职责                                             |
-| ------------- | ------------------------------------------------ |
-| `controller/` | 参数解析、调用 service、返回响应                 |
-| `service/`    | 业务逻辑、校验、事务编排、配置渲染               |
-| `model/`      | 模型定义、数据库版本与迁移                       |
-| `router/`     | 路由注册                                         |
-| `middleware/` | 认证、鉴权、限流、CORS、Turnstile 验证等横切逻辑 |
-| `common/`     | 配置、全局状态与初始化入口                       |
-| `utils/`      | 纯工具函数与通用 helper                          |
-| `job/`        | 定时任务（如 SSL 证书续期）                      |
-| `upload/`     | 文件上传处理                                     |
-| `docs/`       | API 文档（Swagger）                              |
-| `data/`       | 静态数据（如 GeoIP 数据库）                      |
+| `controller/`  | 参数解析、调用 service、返回响应                                 |
+| `service/`     | 业务逻辑、校验、事务编排、配置渲染                               |
+| `model/`       | 纯净实体模型类定义、旧迁移框架兼容与上下文注入                   |
+| `model/goose/` | goose 迁移提供者、桥接逻辑、注册入口与具体迁移文件               |
+| `router/`      | 路由注册                                                         |
+| `middleware/`  | 认证、鉴权、限流、CORS、Turnstile 验证等横切逻辑                 |
+| `common/`      | 配置、全局状态与初始化入口                                       |
+| `utils/`       | 纯工具函数与通用 helper                                          |
+| `job/`         | 定时任务（如 SSL 证书续期）                                      |
+| `upload/`      | 运行时本地临时文件上传目录（在 .gitignore 中忽略）               |
+| `logs/`        | 运行时本地日志输出目录（在 .gitignore 中忽略）                   |
+| `docs/`        | API 文档（Swagger）                                              |
+| `data/`        | 静态数据（如 GeoIP 数据库）                                      |
 
 ## Agent 模块
 
-| 模块             | 职责                                         |
-| ---------------- | -------------------------------------------- |
-| `config/`        | 配置读取与默认值                             |
-| `heartbeat/`     | 心跳与版本摘要判断                           |
-| `sync/`          | 配置拉取与应用编排                           |
-| `nginx/`         | OpenResty 文件写入、校验、reload、启动与回滚 |
-| `state/`         | 本地状态与观测补报缓冲                       |
-| `httpclient/`    | Server 通信                                  |
-| `wsclient/`      | WebSocket 客户端通信                         |
-| `protocol/`      | Agent API 协议类型                           |
-| `updater/`       | Agent 自更新逻辑                             |
-| `logging/`       | 日志处理                                     |
-| `observability/` | 可观测性（指标、链路等）                     |
-| `geoipdata/`     | GeoIP 数据处理                               |
-| `geoipupdate/`   | GeoIP 数据更新                               |
-| `agent/`         | 核心 Agent 逻辑与生命周期                    |
+| 目录/模块                     | 职责                                         |
+| ----------------------------- | -------------------------------------------- |
+| `cmd/agent/`                  | Agent 命令行启动入口及主函数                 |
+| `internal/config/`            | 配置读取与默认值                             |
+| `internal/heartbeat/`         | 心跳与版本摘要判断                           |
+| `internal/sync/`              | 配置拉取与应用编排                           |
+| `internal/nginx/`             | OpenResty 文件写入、校验、reload、启动与回滚 |
+| `internal/state/`             | 本地状态与观测补报缓冲                       |
+| `internal/httpclient/`        | Server 通信                                  |
+| `internal/wsclient/`          | WebSocket 客户端通信                         |
+| `internal/protocol/`          | Agent API 协议类型                           |
+| `internal/updater/`           | Agent 自更新逻辑                             |
+| `internal/logging/`           | 日志处理                                     |
+| `internal/observability/`     | 可观测性（指标、链路等）                     |
+| `internal/geoipdata/`         | GeoIP 数据处理                               |
+| `internal/geoipupdate/`       | GeoIP 数据更新                               |
+| `internal/agent/`             | 核心 Agent 逻辑与生命周期                    |
 
 ## Frontend 分层
 

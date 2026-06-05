@@ -17,8 +17,6 @@
   *作用：系统启动时支持的所有环境变量、命令行参数、运行时 Option 选项和 Agent 配置文件字段。*
 * **[docs/reference/cli.md](./docs/reference/cli.md)**
   *作用：Server 与 Agent 可用的命令行参数、安装/卸载脚本参数等参考。*
-* **[docs/reference/api.md](./docs/reference/api.md)**
-  *作用：管理端 API 与 Agent API 的响应结构、路径和详细鉴权约定。*
 
 ### 面向开发者的文档 按需查阅
 * **[docs/design/index.md](./docs/design/index.md)**

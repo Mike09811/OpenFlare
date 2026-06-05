@@ -23,6 +23,8 @@ sidebar: false
 ### 变更
 
 - WAF 白名单调整为准入名单语义：存在白名单规则时，未命中白名单的请求会被拦截
+- 更新仓库结构设计文档，使 `openflare_agent` 和 `openflare_server` 的目录结构描述与实际物理结构保持一致
+- 新增 `pages-design.md` 设计文档，详细说明 Pages 静态托管功能在 Server 与 Agent 侧的架构设计和渲染逻辑
 
 ---
 
