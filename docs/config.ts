@@ -10,6 +10,7 @@ export default defineAdditionalConfig({
     sidebar: {
       '/guide/': { base: '/guide/', items: sidebarGuide() },
       '/reference/': { base: '/reference/', items: sidebarReference() },
+      '/deployment/': { base: '/deployment/', items: sidebarDeployment() },
       '/design/': { base: '/design/', items: sidebarDesign() },
       '/changelog/': { base: '/changelog/', items: [] }
     },
@@ -57,6 +58,7 @@ export default defineAdditionalConfig({
 function nav(): DefaultTheme.NavItem[] {
   return [
     { text: '指南', link: '/guide/', activeMatch: '/guide/' },
+    { text: '部署', link: '/deployment/', activeMatch: '/deployment/' },
     { text: '参考', link: '/reference/', activeMatch: '/reference/' },
     { text: '设计', link: '/design/', activeMatch: '/design/' },
     { text: '更新日志', link: '/changelog/', activeMatch: '/changelog/' }
@@ -91,16 +93,26 @@ function sidebarReference(): DefaultTheme.SidebarItem[] {
       text: '参考',
       items: [
         { text: '概览', link: '' },
-        { text: '系统架构', link: '../design/architecture' },
-        { text: '启动 Server', link: '../deployment/server' },
-        { text: '接入 Agent', link: '../deployment/agent' },
-        { text: '部署说明', link: '../deployment/deployment' },
-        { text: '部署 Relay (Tunnel)', link: '../deployment/relay' },
-        { text: '部署 OpenFlared', link: '../deployment/openflared' },
-        { text: '升级与维护', link: '../deployment/upgrade' },
         { text: '配置项', link: 'configuration' },
         { text: '命令与脚本', link: 'cli' },
         { text: 'API 约定', link: 'api' }
+      ]
+    }
+  ]
+}
+
+function sidebarDeployment(): DefaultTheme.SidebarItem[] {
+  return [
+    {
+      text: '部署',
+      items: [
+        { text: '概览', link: '' },
+        { text: '部署说明', link: 'deployment' },
+        { text: '启动 Server', link: 'server' },
+        { text: '接入 Agent', link: 'agent' },
+        { text: '部署 Relay (Tunnel)', link: 'relay' },
+        { text: '部署 OpenFlared', link: 'openflared' },
+        { text: '升级与维护', link: 'upgrade' }
       ]
     }
   ]

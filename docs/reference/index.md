@@ -9,4 +9,3 @@
 | [配置项](./configuration.md) | Server 环境变量、命令行参数、运行时 Option 与 Agent 配置字段 |
 | [命令与脚本](./cli.md) | 常用启动、构建、测试、安装和卸载命令 |
 | [仓库结构](../design/index.md#仓库结构) | `openflare_server`、`openflare_agent`、`openflare_relay`、`openflared` 模块的职责与分层目录说明 |
-| [部署与升级](../deployment/) | Server 与 Agent 的部署、配置与升级指南（见专属分区） |
