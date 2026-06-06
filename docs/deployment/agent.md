@@ -20,7 +20,19 @@ OpenFlare Agent 运行在代理节点侧。它不会接收远程 shell 指令，
 
 ## 一键安装
 
-使用 `discovery_token`：
+### 交互式安装 (推荐)
+
+如果在不传递任何参数的情况下运行安装脚本，脚本将进入交互模式。您将可以通过向导选择安装方式（本地运行 / Docker 容器运行），并配置 Server 地址与认证 Token（若选择 Docker 方式且本地没有 Docker，脚本还会询问并智能安装 Docker）：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/install-agent.sh | bash
+```
+
+### 自动化 (非交互式) 安装
+
+如果在执行脚本时附加了任何参数，脚本将进入自动化安装模式，不需要任何交互。
+
+使用 `discovery_token` 进行本地安装：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/install-agent.sh | bash -s -- \
@@ -28,7 +40,7 @@ curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/inst
   --discovery-token YOUR_DISCOVERY_TOKEN
 ```
 
-使用节点专属 `agent_token`：
+使用节点专属 `agent_token` 进行本地安装：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/install-agent.sh | bash -s -- \
@@ -36,19 +48,30 @@ curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/inst
   --agent-token YOUR_AGENT_TOKEN
 ```
 
-安装脚本会下载最新 Agent，默认写入 `/opt/openflare-agent`，生成 `agent.json`，并在 Linux + systemd 环境创建 `openflare-agent.service`。
+使用 Docker 容器自动化安装：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/install-agent.sh | bash -s -- \
+  --server-url http://your-server:3000 \
+  --discovery-token YOUR_DISCOVERY_TOKEN \
+  --docker
+```
+
+安装脚本在本地安装模式下会下载最新 Agent，默认写入 `/opt/openflare-agent`，生成 `agent.json`，并在 Linux + systemd 环境创建 `openflare-agent.service`。
 
 支持参数：
 
 | 参数 | 说明 |
 | --- | --- |
-| `--server-url` | Server 地址，必填 |
+| `--server-url` | Server 地址 |
 | `--discovery-token` | 首次自动注册 Token |
 | `--agent-token` | 节点专属 Token |
-| `--install-dir` | 安装目录，默认 `/opt/openflare-agent` |
-| `--openresty-path` | OpenResty 二进制路径，未传时自动查找 `openresty` |
+| `--install-dir` | 安装目录，默认 `/opt/openflare-agent`（仅本地安装生效） |
+| `--openresty-path` | OpenResty 二进制路径，未传时自动查找 `openresty`（仅本地安装生效） |
 | `--repo` | 下载 Agent 的 GitHub 仓库，默认 `Rain-kl/OpenFlare` |
-| `--no-service` | 不创建 systemd 服务 |
+| `--no-service` | 不创建 systemd 服务（仅本地安装生效） |
+| `--docker` | 使用 Docker 容器方式安装 |
+| `--method` | 安装方式，可选 `local` 或 `docker`（默认 `local`） |
 
 ## 配置文件
 
@@ -150,20 +173,40 @@ export LOG_LEVEL='info'
 
 ## 卸载
 
-如需彻底卸载 Agent 并清空本地数据：
+### 交互式卸载 (推荐)
+
+如果在不传递任何参数的情况下运行卸载脚本，脚本将进入交互模式。您可以通过提示菜单选择卸载方式（本地卸载 / Docker 容器卸载）：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/uninstall-agent.sh | bash
+```
+
+### 自动化 (非交互式) 卸载
+
+使用命令行传参进行无人值守卸载。
+
+本地卸载（默认）：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/uninstall-agent.sh | bash -s -- --install-dir /opt/openflare-agent
+```
+
+Docker 容器卸载：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/uninstall-agent.sh | bash -s -- --docker
 ```
 
 支持参数：
 
 | 参数 | 说明 |
 | --- | --- |
-| `--install-dir` | 安装目录，默认 `/opt/openflare-agent` |
-| `--service-name` | systemd 服务名，默认 `openflare-agent` |
+| `--install-dir` | 安装目录，默认 `/opt/openflare-agent`（仅本地卸载生效） |
+| `--service-name` | systemd 服务名，默认 `openflare-agent`（仅本地卸载生效） |
+| `--docker` | 使用 Docker 容器方式卸载 |
+| `--method` | 卸载方式，可选 `local` 或 `docker`（默认 `local`） |
 
-卸载脚本只移除 Agent 服务、进程和安装目录，不会删除本机 OpenResty。
+本地卸载只会移除 Agent 服务、进程和安装目录，不会删除本机 OpenResty。Docker 卸载会停止并删除 `openflare-agent` 容器，交互模式下还可以选择是否清理对应的 Docker 镜像。
 
 ## 常见问题
 

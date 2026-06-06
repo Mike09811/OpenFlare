@@ -20,12 +20,16 @@ sidebar: false
 
 ### 新增
 
+- 新增 Agent 交互式安装向导，支持选择本地安装和 Docker 运行模式；未传参数时自动进入交互菜单
+- 新增 Docker 运行模式的智能环境检查，检测到未安装 Docker 时支持一键在线安装，中国大陆环境支持多镜像源自动测速优选与加速器配置
+- 新增 Agent 交互式卸载向导，支持选择本地卸载和 Docker 容器卸载模式；未传参数时自动进入交互菜单
 - 新增 Pages 静态托管使用指南（`pages-usage.md`），讲解 ZIP 上传、SPA Fallback 与 API 代理配置
 - 新增 Uptime Kuma 监控同步集成指南（`uptime-kuma.md`），说明同步参数与专属标签隔离机制
 - 完善 WAF IP 组订阅模式使用指南（`waf-usage.md`），补充 JSON 路径提取映射规则与同步参数说明
 
 ### 变更
 
+- 重构 `install-agent.sh` 安装脚本与 `uninstall-agent.sh` 卸载脚本以兼容交互式导引、非交互式命令行参数及 Docker 部署/卸载参数（`--docker`/`--method docker`）
 - 重构 Go 包依赖结构为统一模块（Monorepo），模块命名为 `github.com/rain-kl/openflare`
 - 移除各子目录下独立的 `go.mod`/`go.sum` 文件，统一由根目录 `go.mod` 进行全局依赖管理与依赖版本锁定
 - 替换全仓库 Go 源文件中的内部引用路径，由本地相对路径迁移为标准 GitHub 绝对导入路径
