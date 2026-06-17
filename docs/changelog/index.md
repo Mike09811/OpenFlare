@@ -16,6 +16,8 @@ sidebar: false
 
 ## [Unreleased]
 
+## [v2.3.4] - 2026-06-17
+
 ### 变更
 
 - 访问日志列表查询将分页与计数下推到数据库执行，避免百万级数据全量加载到内存。
@@ -24,8 +26,6 @@ sidebar: false
 - 标准化 Server Go 目录结构，引入 `cmd/server`、`openflare-server/internal` 与根级 `pkg` 分层，并拆分原 `utils` 公共能力包。
 
 ## [v2.3.3] - 2026-06-06
-
-### 说明
 
 ### 新增
 
