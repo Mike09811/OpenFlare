@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Rain-kl/Wavelet/internal/apps/openflare/agent"
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/relay"
 	"github.com/Rain-kl/Wavelet/internal/db"
 	"github.com/Rain-kl/Wavelet/internal/model"
@@ -143,6 +144,8 @@ func Heartbeat(ctx context.Context, node *model.OpenFlareNode, payload Heartbeat
 	if err := db.DB(ctx).Model(node).Updates(changes).Error; err != nil {
 		return nil, fmt.Errorf("update flared heartbeat: %w", err)
 	}
+	agent.RefreshAccessTokenCache(ctx, node)
+	persistFlaredObservability(ctx, node.NodeID, payload, now)
 
 	activeConfig, err := getActiveConfigMeta(ctx)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {

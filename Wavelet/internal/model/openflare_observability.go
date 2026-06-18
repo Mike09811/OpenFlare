@@ -141,6 +141,21 @@ func (OpenFlareNodeObservationOpenresty) TableName() string {
 	return "of_node_obs_openresty"
 }
 
+// OpenFlareNodeObservationFrpc stores tunnel client frpc observations.
+type OpenFlareNodeObservationFrpc struct {
+	ID                   uint      `json:"id" gorm:"primaryKey;autoIncrement"`
+	NodeID               string    `json:"node_id" gorm:"index;size:64;not null"`
+	CapturedAt           time.Time `json:"captured_at" gorm:"index"`
+	TunnelStatus         string    `json:"tunnel_status" gorm:"size:16"`
+	ConnectedRelaysCount int       `json:"connected_relays_count"`
+	CreatedAt            time.Time `json:"created_at" gorm:"autoCreateTime"`
+}
+
+// TableName returns the GORM table name.
+func (OpenFlareNodeObservationFrpc) TableName() string {
+	return "of_node_obs_frpc"
+}
+
 // OpenFlareNodeObservationFrps stores tunnel relay frps observations.
 type OpenFlareNodeObservationFrps struct {
 	ID              uint      `json:"id" gorm:"primaryKey;autoIncrement"`
@@ -321,11 +336,6 @@ func ListOpenFlareRequestReportsSince(ctx context.Context, nodeID string, since 
 	return rows, nil
 }
 
-// ListOpenFlareAccessLogRegionCounts returns region counts for access logs (v1 stub).
-func ListOpenFlareAccessLogRegionCounts(_ context.Context, _ string, _ time.Time, _ int) ([]*OpenFlareAccessLogRegionCount, error) {
-	return []*OpenFlareAccessLogRegionCount{}, nil
-}
-
 // ListOpenFlareActiveHealthEvents returns active health events across all nodes.
 func ListOpenFlareActiveHealthEvents(ctx context.Context) ([]*OpenFlareHealthEvent, error) {
 	conn := db.DB(ctx)
@@ -423,6 +433,32 @@ func ListOpenFlareNodeObservationOpenresty(ctx context.Context, nodeID string, s
 	return rows, nil
 }
 
+// ListOpenFlareNodeObservationFrpc returns frpc observations.
+func ListOpenFlareNodeObservationFrpc(ctx context.Context, nodeID string, since time.Time, limit int) ([]*OpenFlareNodeObservationFrpc, error) {
+	conn := db.DB(ctx)
+	if conn == nil {
+		return nil, errors.New(errDatabaseNotInitialized)
+	}
+	query := conn.Model(&OpenFlareNodeObservationFrpc{}).Order("captured_at desc, id desc")
+	if nodeID != "" {
+		query = query.Where("node_id = ?", nodeID)
+	}
+	if !since.IsZero() {
+		query = query.Where("captured_at >= ?", since)
+	}
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+	var rows []*OpenFlareNodeObservationFrpc
+	if err := query.Find(&rows).Error; err != nil {
+		if isMissingTableError(err) {
+			return []*OpenFlareNodeObservationFrpc{}, nil
+		}
+		return nil, err
+	}
+	return rows, nil
+}
+
 // ListOpenFlareNodeObservationFrps returns frps observations.
 func ListOpenFlareNodeObservationFrps(ctx context.Context, nodeID string, since time.Time, limit int) ([]*OpenFlareNodeObservationFrps, error) {
 	conn := db.DB(ctx)
@@ -447,54 +483,4 @@ func ListOpenFlareNodeObservationFrps(ctx context.Context, nodeID string, since 
 		return nil, err
 	}
 	return rows, nil
-}
-
-// ListOpenFlareAccessLogs lists access logs (v1 stub returns empty until table is migrated).
-func ListOpenFlareAccessLogs(_ context.Context, _ OpenFlareAccessLogQuery) ([]*OpenFlareAccessLog, error) {
-	return []*OpenFlareAccessLog{}, nil
-}
-
-// CountOpenFlareAccessLogs counts access logs (v1 stub).
-func CountOpenFlareAccessLogs(_ context.Context, _ OpenFlareAccessLogQuery) (int64, int64, error) {
-	return 0, 0, nil
-}
-
-// ListOpenFlareAccessLogBuckets lists folded access log buckets (v1 stub).
-func ListOpenFlareAccessLogBuckets(_ context.Context, _ OpenFlareAccessLogBucketQuery) ([]*OpenFlareAccessLogBucketRow, error) {
-	return []*OpenFlareAccessLogBucketRow{}, nil
-}
-
-// CountOpenFlareAccessLogBuckets counts folded access log buckets (v1 stub).
-func CountOpenFlareAccessLogBuckets(_ context.Context, _ OpenFlareAccessLogBucketQuery) (int64, error) {
-	return 0, nil
-}
-
-// ListOpenFlareAccessLogBucketIPs lists folded IP rows (v1 stub).
-func ListOpenFlareAccessLogBucketIPs(_ context.Context, _ OpenFlareAccessLogBucketIPQuery) ([]*OpenFlareAccessLogBucketIPRow, error) {
-	return []*OpenFlareAccessLogBucketIPRow{}, nil
-}
-
-// CountOpenFlareAccessLogBucketIPs counts folded IP rows (v1 stub).
-func CountOpenFlareAccessLogBucketIPs(_ context.Context, _ OpenFlareAccessLogBucketIPQuery) (int64, error) {
-	return 0, nil
-}
-
-// ListOpenFlareAccessLogIPSummaries lists IP summaries (v1 stub).
-func ListOpenFlareAccessLogIPSummaries(_ context.Context, _ OpenFlareAccessLogIPSummaryQuery, _ time.Time) ([]*OpenFlareAccessLogIPSummaryRow, error) {
-	return []*OpenFlareAccessLogIPSummaryRow{}, nil
-}
-
-// CountOpenFlareAccessLogIPSummaries counts IP summaries (v1 stub).
-func CountOpenFlareAccessLogIPSummaries(_ context.Context, _ OpenFlareAccessLogIPSummaryQuery) (int64, error) {
-	return 0, nil
-}
-
-// ListOpenFlareAccessLogIPTrend lists IP trend points (v1 stub).
-func ListOpenFlareAccessLogIPTrend(_ context.Context, _ OpenFlareAccessLogIPTrendQuery) ([]*OpenFlareAccessLogIPTrendRow, error) {
-	return []*OpenFlareAccessLogIPTrendRow{}, nil
-}
-
-// DeleteOpenFlareAccessLogsBefore deletes access logs before cutoff (v1 stub).
-func DeleteOpenFlareAccessLogsBefore(_ context.Context, _ time.Time) (int64, error) {
-	return 0, nil
 }

@@ -4,7 +4,13 @@
 package pages
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
+	"fmt"
+	"mime/multipart"
+	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/Rain-kl/Wavelet/internal/db"
@@ -26,6 +32,7 @@ func setupPagesTestDB(t *testing.T) func() {
 		&model.PagesProject{},
 		&model.PagesDeployment{},
 		&model.PagesDeploymentFile{},
+		&model.ConfigVersion{},
 	))
 
 	db.SetDB(sqliteDB)
@@ -81,4 +88,81 @@ func TestCreateProjectRejectsUnsafeFallbackPath(t *testing.T) {
 	})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "回退路径")
+}
+
+func TestGetDeploymentPackagePathRequiresActiveConfigSnapshot(t *testing.T) {
+	cleanup := setupPagesTestDB(t)
+	defer cleanup()
+	ctx := context.Background()
+
+	project, err := CreateProject(ctx, Input{
+		Name:    "Published Site",
+		Slug:    "published-site",
+		Enabled: true,
+	})
+	require.NoError(t, err)
+
+	deployment, err := UploadDeployment(ctx, project.ID, testPagesMultipartFile(t, "site.zip", testPagesZip(t, map[string]string{
+		"index.html": "ok",
+	})), "root")
+	require.NoError(t, err)
+
+	_, err = ActivateDeployment(ctx, project.ID, deployment.ID)
+	require.NoError(t, err)
+
+	_, _, err = GetDeploymentPackagePath(ctx, deployment.ID)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "激活配置")
+
+	require.NoError(t, db.DB(ctx).Create(&model.ConfigVersion{
+		Version:          "v2026-001",
+		SnapshotJSON:     fmt.Sprintf(`{"routes":[{"upstream_type":"pages","pages_deployment":{"deployment_id":%d}}]}`, deployment.ID),
+		MainConfig:       "",
+		RenderedConfig:   "",
+		SupportFilesJSON: "[]",
+		Checksum:         "test-checksum",
+		IsActive:         true,
+		CreatedBy:        "test",
+	}).Error)
+
+	filePath, fileName, err := GetDeploymentPackagePath(ctx, deployment.ID)
+	require.NoError(t, err)
+	assert.NotEmpty(t, filePath)
+	assert.Equal(t, "pages-deployment-"+strconv.FormatUint(uint64(deployment.ID), 10)+".zip", fileName)
+}
+
+func testPagesZip(t *testing.T, files map[string]string) []byte {
+	t.Helper()
+
+	var buffer bytes.Buffer
+	writer := zip.NewWriter(&buffer)
+	for name, content := range files {
+		file, err := writer.Create(name)
+		require.NoError(t, err)
+		_, err = file.Write([]byte(content))
+		require.NoError(t, err)
+	}
+	require.NoError(t, writer.Close())
+	return buffer.Bytes()
+}
+
+func testPagesMultipartFile(t *testing.T, fileName string, content []byte) *multipart.FileHeader {
+	t.Helper()
+
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
+	part, err := writer.CreateFormFile("package", fileName)
+	require.NoError(t, err)
+	_, err = part.Write(content)
+	require.NoError(t, err)
+	require.NoError(t, writer.Close())
+
+	req := httptest.NewRequest("POST", "/", &body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	require.NoError(t, req.ParseMultipartForm(int64(len(content))+1024))
+
+	file, header, err := req.FormFile("package")
+	require.NoError(t, err)
+	file.Close()
+	return header
 }

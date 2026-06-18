@@ -184,6 +184,21 @@ func TestGETOptionRequiresRootAuth(t *testing.T) {
 	})
 }
 
+func TestGETNodesWithOpenFlareToken(t *testing.T) {
+	dbConn, r := setupAuthOptionIntegration(t)
+	require.NoError(t, dbConn.AutoMigrate(&model.OpenFlareNode{}))
+	seedUser(t, dbConn, "admin", "password123", true)
+	rootToken := loginAndGetToken(t, r, "admin", "password123")
+
+	w := performJSONRequest(t, r, http.MethodGet, "/api/nodes/", nil, map[string]string{
+		compat.OpenFlareTokenHeader(): rootToken,
+	})
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	env := decodeEnvelope(t, w)
+	assert.True(t, env.Success, "message=%s", env.Message)
+}
+
 func TestOptionHotReloadAfterUpdate(t *testing.T) {
 	dbConn, r := setupAuthOptionIntegration(t)
 	seedUser(t, dbConn, "admin", "password123", true)

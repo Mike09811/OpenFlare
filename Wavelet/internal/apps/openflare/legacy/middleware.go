@@ -9,11 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// bridgeOpenFlareToken maps OpenFlare-Token to X-Access-Token for compat auth middleware.
-func bridgeOpenFlareToken() gin.HandlerFunc {
-	return compat.BridgeOpenFlareToken()
-}
-
 // legacyCapAuth verifies PoW CAPTCHA for legacy login using OpenFlare response format.
 func legacyCapAuth(scope string) gin.HandlerFunc {
 	mgr := cap.GetDefaultManager()

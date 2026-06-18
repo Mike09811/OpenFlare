@@ -5,6 +5,7 @@ package pages
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"mime/multipart"
@@ -339,6 +340,77 @@ func ActivateDeployment(ctx context.Context, projectID uint, deploymentID uint) 
 		return nil, err
 	}
 	return GetProject(ctx, project.ID)
+}
+
+// GetDeploymentPackagePath returns the on-disk artifact path and download filename for an agent package request.
+func GetDeploymentPackagePath(ctx context.Context, deploymentID uint) (string, string, error) {
+	deployment, err := model.GetPagesDeploymentByID(ctx, deploymentID)
+	if err != nil {
+		return "", "", err
+	}
+	if err = ensureDeploymentInActiveSnapshot(ctx, deployment.ID); err != nil {
+		return "", "", err
+	}
+	if strings.TrimSpace(deployment.ArtifactPath) == "" {
+		return "", "", errors.New(errPagesPackagePathEmpty)
+	}
+	if _, err = os.Stat(deployment.ArtifactPath); err != nil {
+		return "", "", fmt.Errorf("Pages 部署包不存在: %w", err)
+	}
+	return deployment.ArtifactPath, fmt.Sprintf("pages-deployment-%d.zip", deployment.ID), nil
+}
+
+func ensureDeploymentInActiveSnapshot(ctx context.Context, deploymentID uint) error {
+	version, err := model.GetActiveConfigVersion(ctx)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New(errPagesPackageNotInActiveConfig)
+		}
+		return err
+	}
+	routes, err := parseSnapshotRoutes(version.SnapshotJSON)
+	if err != nil {
+		return err
+	}
+	for _, route := range routes {
+		if route.UpstreamType != "pages" || route.PagesDeployment == nil {
+			continue
+		}
+		if route.PagesDeployment.DeploymentID == deploymentID {
+			return nil
+		}
+	}
+	return errors.New(errPagesPackageNotInActiveConfig)
+}
+
+type snapshotPagesDeployment struct {
+	DeploymentID uint `json:"deployment_id"`
+}
+
+type snapshotRouteRef struct {
+	UpstreamType    string                   `json:"upstream_type"`
+	PagesDeployment *snapshotPagesDeployment `json:"pages_deployment"`
+}
+
+func parseSnapshotRoutes(snapshotJSON string) ([]snapshotRouteRef, error) {
+	text := strings.TrimSpace(snapshotJSON)
+	if text == "" {
+		return []snapshotRouteRef{}, nil
+	}
+	if strings.HasPrefix(text, "[") {
+		var routes []snapshotRouteRef
+		if err := json.Unmarshal([]byte(text), &routes); err != nil {
+			return nil, errors.New(errPagesInvalidSnapshotFormat)
+		}
+		return routes, nil
+	}
+	var snapshot struct {
+		Routes []snapshotRouteRef `json:"routes"`
+	}
+	if err := json.Unmarshal([]byte(text), &snapshot); err != nil {
+		return nil, errors.New(errPagesInvalidSnapshotFormat)
+	}
+	return snapshot.Routes, nil
 }
 
 // DeleteDeployment 删除 Pages 部署。

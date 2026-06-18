@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Rain-kl/Wavelet/internal/db"
+	openrestyrender "github.com/rain-kl/openflare/pkg/render/openresty"
 	"gorm.io/gorm"
 )
 
@@ -89,8 +90,12 @@ func sourceSupportFiles(files []SupportFile) []SupportFile {
 }
 
 func isRuntimeGeneratedSupportFile(path string) bool {
-	path = strings.TrimSpace(path)
-	return strings.HasPrefix(path, "runtime/")
+	switch strings.TrimSpace(path) {
+	case "pow_config.json", "waf_config.json", openrestyrender.SourceConfigFileName:
+		return true
+	default:
+		return false
+	}
 }
 
 func isActiveConfigNotFound(err error) bool {

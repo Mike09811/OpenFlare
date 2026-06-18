@@ -34,6 +34,11 @@ func IsValidProvider(provider string) bool {
 	return pkggeoip.IsValidProvider(provider)
 }
 
+// GeoInfoFromIP resolves geographic information using the configured default provider.
+func GeoInfoFromIP(ip net.IP) (*pkggeoip.GeoInfo, error) {
+	return pkggeoip.GetGeoInfo(ip)
+}
+
 // Lookup resolves geographic information for rawIP using the given provider.
 func Lookup(provider, rawIP string) (*LookupView, error) {
 	trimmedProvider := strings.TrimSpace(provider)

@@ -5,8 +5,10 @@ package agent
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/compat"
+	"github.com/Rain-kl/Wavelet/internal/apps/openflare/pages"
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/websocket"
 	"github.com/gin-gonic/gin"
 )
@@ -98,7 +100,7 @@ func GetActiveConfigHandler(c *gin.Context) {
 	compat.OK(c, config)
 }
 
-// SyncWAFIPGroupsHandler syncs WAF IP groups for an agent (stub).
+// SyncWAFIPGroupsHandler syncs WAF IP groups for an agent.
 func SyncWAFIPGroupsHandler(c *gin.Context) {
 	var input WAFIPGroupSyncInput
 	if !compat.BindJSON(c, &input) {
@@ -129,13 +131,33 @@ func ReportApplyLogHandler(c *gin.Context) {
 	compat.OK(c, log)
 }
 
-// DownloadPagesPackageHandler is a stub until Pages agent packaging is migrated.
+// DownloadPagesPackageHandler streams the Pages deployment artifact to an authenticated agent.
 func DownloadPagesPackageHandler(c *gin.Context) {
-	c.JSON(http.StatusNotFound, compat.Envelope{
-		Success: false,
-		Message: errPagesPackageNotFound,
-		Data:    nil,
-	})
+	deploymentID, ok := pagesDeploymentIDParam(c)
+	if !ok {
+		return
+	}
+	filePath, fileName, err := pages.GetDeploymentPackagePath(c.Request.Context(), deploymentID)
+	if err != nil {
+		compat.Fail(c, err.Error())
+		return
+	}
+	c.Header("Content-Disposition", "attachment; filename="+fileName)
+	c.File(filePath)
+}
+
+func pagesDeploymentIDParam(c *gin.Context) (uint, bool) {
+	raw := c.Param("deployment_id")
+	if raw == "" {
+		compat.Fail(c, "无效的 ID")
+		return 0, false
+	}
+	id64, err := strconv.ParseUint(raw, 10, 64)
+	if err != nil || id64 == 0 {
+		compat.Fail(c, "无效的 ID")
+		return 0, false
+	}
+	return uint(id64), true
 }
 
 // AgentWebSocketHandler upgrades an authenticated agent websocket connection.

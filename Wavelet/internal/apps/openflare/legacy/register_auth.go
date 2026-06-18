@@ -16,12 +16,16 @@ func registerAuthRoutes(apiGroup *gin.RouterGroup) {
 
 	oauthGroup := apiGroup.Group("/oauth")
 	{
+		oauthGroup.GET("/github", GitHubOAuth)
+		oauthGroup.GET("/wechat", WeChatOAuth)
+		oauthGroup.GET("/wechat/bind", compat.BridgeOpenFlareToken(), compat.UserAuth(), WeChatBind)
+		oauthGroup.GET("/email/bind", compat.BridgeOpenFlareToken(), compat.UserAuth(), EmailBind)
 		oauthGroup.GET("/:source/authorize", OAuthAuthorize)
 		oauthGroup.GET("/:source/callback", OAuthCallback)
 		oauthGroup.POST("/link-existing", LinkExistingOAuthAccount)
 
 		externalAccounts := oauthGroup.Group("/external-accounts")
-		externalAccounts.Use(bridgeOpenFlareToken(), compat.UserAuth())
+		externalAccounts.Use(compat.UserAuth())
 		{
 			externalAccounts.GET("/", ListExternalAccounts)
 			externalAccounts.POST("/:id/delete", DeleteExternalAccount)
@@ -41,7 +45,7 @@ func registerAuthRoutes(apiGroup *gin.RouterGroup) {
 		userGroup.GET("/logout", Logout)
 
 		selfGroup := userGroup.Group("/")
-		selfGroup.Use(bridgeOpenFlareToken(), compat.UserAuth())
+		selfGroup.Use(compat.UserAuth())
 		{
 			selfGroup.GET("/self", GetSelf)
 			selfGroup.POST("/self/update", UpdateSelf)
@@ -50,7 +54,7 @@ func registerAuthRoutes(apiGroup *gin.RouterGroup) {
 		}
 
 		adminGroup := userGroup.Group("/")
-		adminGroup.Use(bridgeOpenFlareToken(), compat.AdminAuth())
+		adminGroup.Use(compat.AdminAuth())
 		{
 			adminGroup.GET("/", GetAllUsers)
 			adminGroup.GET("/search", SearchUsers)
@@ -63,7 +67,7 @@ func registerAuthRoutes(apiGroup *gin.RouterGroup) {
 	}
 
 	authSourceGroup := apiGroup.Group("/auth-sources")
-	authSourceGroup.Use(bridgeOpenFlareToken(), compat.RootAuth())
+	authSourceGroup.Use(compat.RootAuth())
 	{
 		authSourceGroup.GET("/", ListAuthSources)
 		authSourceGroup.POST("/", CreateAuthSource)

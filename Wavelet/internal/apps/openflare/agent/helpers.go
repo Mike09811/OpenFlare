@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	ofgeoip "github.com/Rain-kl/Wavelet/internal/apps/openflare/geoip"
 	"github.com/Rain-kl/Wavelet/internal/model"
 )
 
@@ -97,6 +98,41 @@ func applyNodeRuntime(node *model.OpenFlareNode, payload NodePayload, preserveNa
 	now := time.Now()
 	node.LastSeenAt = &now
 	node.LastError = truncateForDatabase(payload.LastError, 16000)
+	if !node.GeoManualOverride {
+		applyGeoInfoFromIP(node, node.IP)
+	}
+}
+
+func applyGeoInfoFromIP(node *model.OpenFlareNode, rawIP string) {
+	if node == nil {
+		return
+	}
+	node.GeoName = ""
+	node.GeoLatitude = nil
+	node.GeoLongitude = nil
+	ip := net.ParseIP(strings.TrimSpace(rawIP))
+	if ip == nil {
+		return
+	}
+	info, err := ofgeoip.GeoInfoFromIP(ip)
+	if err != nil || info == nil {
+		return
+	}
+	if strings.TrimSpace(info.Name) != "" {
+		node.GeoName = strings.TrimSpace(info.Name)
+	}
+	if info.Latitude != nil && info.Longitude != nil {
+		node.GeoLatitude = cloneCoordinate(info.Latitude)
+		node.GeoLongitude = cloneCoordinate(info.Longitude)
+	}
+}
+
+func cloneCoordinate(value *float64) *float64 {
+	if value == nil {
+		return nil
+	}
+	cloned := *value
+	return &cloned
 }
 
 func truncateForDatabase(value string, max int) string {
@@ -199,6 +235,7 @@ func collectHeartbeatChanges(previous *model.OpenFlareNode, current *model.OpenF
 	}
 	appendIfChanged("name", previous.Name, current.Name)
 	appendIfChanged("ip", previous.IP, current.IP)
+	appendIfChanged("geo_name", previous.GeoName, current.GeoName)
 	appendIfChanged("version", previous.Version, current.Version)
 	appendIfChanged("ext_version", previous.ExtVersion, current.ExtVersion)
 	appendIfChanged("openresty_status", previous.OpenrestyStatus, current.OpenrestyStatus)
@@ -210,10 +247,23 @@ func collectHeartbeatChanges(previous *model.OpenFlareNode, current *model.OpenF
 	appendIfChanged("update_channel", previous.UpdateChannel, current.UpdateChannel)
 	appendIfChanged("update_tag", previous.UpdateTag, current.UpdateTag)
 	appendIfChanged("restart_openresty_requested", previous.RestartOpenrestyRequested, current.RestartOpenrestyRequested)
+	if !coordinatesEqual(previous.GeoLatitude, current.GeoLatitude) {
+		changes["geo_latitude"] = current.GeoLatitude
+	}
+	if !coordinatesEqual(previous.GeoLongitude, current.GeoLongitude) {
+		changes["geo_longitude"] = current.GeoLongitude
+	}
 	if !lastSeenAtEqual(previous.LastSeenAt, current.LastSeenAt) {
 		changes["last_seen_at"] = current.LastSeenAt
 	}
 	return changes
+}
+
+func coordinatesEqual(before *float64, after *float64) bool {
+	if before == nil || after == nil {
+		return before == after
+	}
+	return *before == *after
 }
 
 func lastSeenAtEqual(before *time.Time, after *time.Time) bool {
@@ -241,7 +291,8 @@ func isUniqueConstraintError(err error) bool {
 	return strings.Contains(strings.ToLower(err.Error()), "unique")
 }
 
-func refreshAccessTokenCache(ctx context.Context, node *model.OpenFlareNode) {
+// RefreshAccessTokenCache updates the in-memory node cache after heartbeat mutations.
+func RefreshAccessTokenCache(ctx context.Context, node *model.OpenFlareNode) {
 	if node == nil {
 		return
 	}

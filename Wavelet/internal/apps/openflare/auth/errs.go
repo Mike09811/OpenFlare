@@ -5,6 +5,7 @@ package auth
 
 const (
 	errInvalidParams           = "无效的参数"
+	errUnauthorized            = "无权进行此操作，未登录或 token 无效"
 	errPasswordLoginDisabled   = "管理员关闭了密码登录"
 	errUsernameOrPasswordWrong = "用户名或密码错误"
 	errBannedAccount           = "用户已被封禁"

@@ -20,7 +20,7 @@ func RegisterRoutes(apiGroup *gin.RouterGroup) {
 	apiGroup.GET("/about", getAboutHandler)
 
 	optionRoute := apiGroup.Group("/option")
-	optionRoute.Use(compat.BridgeOpenFlareToken(), compat.RootAuth())
+	optionRoute.Use(compat.RootAuth())
 	{
 		optionRoute.GET("/", listOptionsHandler)
 		optionRoute.POST("/update", updateOptionHandler)
@@ -30,7 +30,7 @@ func RegisterRoutes(apiGroup *gin.RouterGroup) {
 	}
 
 	uptimeKumaRoute := apiGroup.Group("/uptimekuma")
-	uptimeKumaRoute.Use(compat.BridgeOpenFlareToken(), compat.RootAuth())
+	uptimeKumaRoute.Use(compat.RootAuth())
 	{
 		uptimeKumaRoute.POST("/sync", syncUptimeKumaHandler)
 	}

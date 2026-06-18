@@ -184,6 +184,22 @@ func ListOpenFlareWAFIPGroups(ctx context.Context) ([]*OpenFlareWAFIPGroup, erro
 	return groups, nil
 }
 
+// ListOpenFlareWAFIPGroupsByIDs returns IP groups for the given ids.
+func ListOpenFlareWAFIPGroupsByIDs(ctx context.Context, ids []uint) ([]*OpenFlareWAFIPGroup, error) {
+	if len(ids) == 0 {
+		return []*OpenFlareWAFIPGroup{}, nil
+	}
+	conn, err := wafDB(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var groups []*OpenFlareWAFIPGroup
+	if err = conn.Where("id IN ?", ids).Find(&groups).Error; err != nil {
+		return nil, err
+	}
+	return groups, nil
+}
+
 // GetOpenFlareWAFIPGroupByID returns an IP group by id.
 func GetOpenFlareWAFIPGroupByID(ctx context.Context, id uint) (*OpenFlareWAFIPGroup, error) {
 	conn, err := wafDB(ctx)

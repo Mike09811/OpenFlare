@@ -28,7 +28,7 @@ func RegisterWithAccessToken(ctx context.Context, authNode *model.OpenFlareNode,
 	if err := model.SaveOpenFlareNode(ctx, authNode); err != nil {
 		return nil, err
 	}
-	refreshAccessTokenCache(ctx, authNode)
+	RefreshAccessTokenCache(ctx, authNode)
 	return &RegistrationResponse{
 		NodeID:      authNode.NodeID,
 		AccessToken: authNode.AccessToken,
@@ -74,7 +74,7 @@ func RegisterWithDiscovery(ctx context.Context, payload NodePayload) (*Registrat
 		}
 		return nil, err
 	}
-	refreshAccessTokenCache(ctx, record)
+	RefreshAccessTokenCache(ctx, record)
 	return &RegistrationResponse{
 		NodeID:      record.NodeID,
 		AccessToken: record.AccessToken,
@@ -116,16 +116,21 @@ func HeartbeatNode(ctx context.Context, authNode *model.OpenFlareNode, payload N
 		}
 	}
 
-	refreshAccessTokenCache(ctx, authNode)
+	RefreshAccessTokenCache(ctx, authNode)
 
 	reportedAt := time.Now()
 	if authNode.LastSeenAt != nil {
 		reportedAt = *authNode.LastSeenAt
 	}
-	persistHeartbeatObservability(ctx, authNode.NodeID, payload, reportedAt)
+	PersistHeartbeatObservability(ctx, authNode.NodeID, payload, reportedAt)
 
 	activeConfig, err := getActiveConfigMeta(ctx)
 	if err != nil && !isActiveConfigNotFound(err) {
+		return nil, err
+	}
+
+	wafIPGroups, err := ChangedWAFIPGroupsForAgent(ctx, nil, payload.WAFIPGroupChecksums)
+	if err != nil {
 		return nil, err
 	}
 
@@ -133,7 +138,7 @@ func HeartbeatNode(ctx context.Context, authNode *model.OpenFlareNode, payload N
 		Node:          authNode,
 		AgentSettings: buildAgentSettings(authNode, updateNow, updateChannel, updateTag, restartOpenrestyNow),
 		ActiveConfig:  activeConfig,
-		WAFIPGroups:   nil,
+		WAFIPGroups:   wafIPGroups,
 	}, nil
 }
 
@@ -149,9 +154,13 @@ func GetActiveConfig(ctx context.Context) (*ConfigResponse, error) {
 	return config, nil
 }
 
-// SyncWAFIPGroups is a stub until full WAF agent sync is migrated.
-func SyncWAFIPGroups(_ context.Context, _ WAFIPGroupSyncInput) (*WAFIPGroupSyncResult, error) {
-	return &WAFIPGroupSyncResult{Groups: []WAFIPGroup{}}, nil
+// SyncWAFIPGroups returns WAF IP groups whose checksums differ from the agent state.
+func SyncWAFIPGroups(ctx context.Context, input WAFIPGroupSyncInput) (*WAFIPGroupSyncResult, error) {
+	groups, err := ChangedWAFIPGroupsForAgent(ctx, input.IDs, input.Checksums)
+	if err != nil {
+		return nil, err
+	}
+	return &WAFIPGroupSyncResult{Groups: groups}, nil
 }
 
 // ReportApplyLog records an agent apply result.

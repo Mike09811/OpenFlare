@@ -46,6 +46,11 @@ func setupProtocolTestEnv(t *testing.T) (*gin.Engine, func()) {
 		&model.OpenFlareNode{},
 		&model.OpenFlareOption{},
 		&model.OpenFlareApplyLog{},
+		&model.OpenFlareNodeSystemProfile{},
+		&model.OpenFlareMetricSnapshot{},
+		&model.OpenFlareHealthEvent{},
+		&model.OpenFlareNodeObservationFrps{},
+		&model.OpenFlareNodeObservationFrpc{},
 		&configVersionRecord{},
 	))
 

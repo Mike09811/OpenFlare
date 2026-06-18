@@ -27,6 +27,13 @@ sidebar: false
 - Agent heartbeat 恢复可观测性数据持久化（系统画像、指标快照、流量报表、健康事件等）。
 - Wavelet 默认数据库名由 `wavelet` 调整为 `openflare`（PostgreSQL、ClickHouse、SQLite 后备路径同步更新）。
 - Wavelet 默认 PostgreSQL `application_name` 由 `wavelet-server` 调整为 `openflare-server`，Redis 键前缀由 `wavelet:` 调整为 `openflare:`。
+- 实装 Agent WAF IP 组同步（heartbeat `waf_ip_groups` 增量下发与 `/api/agent/waf/ip-groups/sync`）。
+- 实装 Pages Agent 部署包下载（`/api/agent/pages/deployments/:deployment_id/package` 二进制响应）。
+- 全局 `OpenFlare-Token` 桥接至 legacy `/api/*` 管理端路由。
+- 实装访问日志单表查询层（列表、折叠、IP 汇总/趋势、地域统计）及 `(node_id, logged_at)` 复合索引。
+- 扩展 Relay/Flared heartbeat 载荷与可观测性持久化（frps 观测、健康事件）；新增 `of_node_obs_frpc` 单表。
+- Agent heartbeat 恢复 Geo 自动更新、访问日志地域解析与 90 天保留清理；对齐 config `support_files` 过滤规则。
+- 补全 OAuth 快捷路由（`/api/oauth/github`、`/api/oauth/wechat`、`/api/oauth/wechat/bind`、`/api/oauth/email/bind`）。
 
 ## [v2.3.4] - 2026-06-17
 

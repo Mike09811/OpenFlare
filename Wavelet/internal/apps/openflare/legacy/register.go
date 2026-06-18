@@ -4,10 +4,14 @@
 // Package legacy registers OpenFlare /api/* compatibility routes for the old frontend.
 package legacy
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/Rain-kl/Wavelet/internal/apps/openflare/compat"
+	"github.com/gin-gonic/gin"
+)
 
 // RegisterRoutes mounts all OpenFlare legacy API routes under the /api group.
 func RegisterRoutes(apiGroup *gin.RouterGroup) {
+	apiGroup.Use(compat.BridgeOpenFlareToken())
 	registerAuthRoutes(apiGroup)
 	registerOptionRoutes(apiGroup)
 	registerOriginRoutes(apiGroup)

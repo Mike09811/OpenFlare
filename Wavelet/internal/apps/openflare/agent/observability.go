@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -18,12 +19,14 @@ import (
 )
 
 const (
-	healthEventStatusActive   = "active"
-	healthEventStatusResolved = "resolved"
-	healthSeverityInfo        = "info"
-	healthSeverityWarning     = "warning"
-	healthSeverityCritical    = "critical"
-	accessLogPathMaxLength    = 100
+	healthEventStatusActive      = "active"
+	healthEventStatusResolved    = "resolved"
+	healthSeverityInfo           = "info"
+	healthSeverityWarning        = "warning"
+	healthSeverityCritical       = "critical"
+	nodeAccessLogRetentionDays   = 90
+	nodeAccessLogRetentionWindow = nodeAccessLogRetentionDays * 24 * time.Hour
+	accessLogPathMaxLength       = 100
 )
 
 // NodeSystemProfile is the agent-reported system profile.
@@ -102,7 +105,8 @@ type NodeHealthEvent struct {
 	Metadata        map[string]string `json:"metadata"`
 }
 
-func persistHeartbeatObservability(ctx context.Context, nodeID string, payload NodePayload, reportedAt time.Time) {
+// PersistHeartbeatObservability stores profile, snapshots, traffic, access logs, and health events.
+func PersistHeartbeatObservability(ctx context.Context, nodeID string, payload NodePayload, reportedAt time.Time) {
 	if strings.TrimSpace(nodeID) == "" {
 		return
 	}
@@ -275,14 +279,28 @@ func persistNodeTrafficReport(tx *gorm.DB, nodeID string, report *NodeTrafficRep
 }
 
 func persistNodeAccessLogs(tx *gorm.DB, nodeID string, logs []NodeAccessLog, reportedAt time.Time) error {
+	if len(logs) == 0 {
+		return nil
+	}
+	resolver, err := newAccessLogRegionResolver()
+	if err != nil {
+		slog.Warn("initialize access log geo resolver failed", "node_id", nodeID, "error", err)
+	}
+	if resolver != nil {
+		defer resolver.Close()
+	}
 	for _, item := range logs {
 		record := &model.OpenFlareAccessLog{
 			NodeID:     nodeID,
 			LoggedAt:   timeFromUnix(item.LoggedAtUnix, reportedAt),
 			RemoteAddr: strings.TrimSpace(item.RemoteAddr),
+			Region:     "",
 			Host:       strings.TrimSpace(item.Host),
 			Path:       truncateForDatabase(strings.TrimSpace(item.Path), accessLogPathMaxLength),
 			StatusCode: item.StatusCode,
+		}
+		if resolver != nil {
+			record.Region = resolver.Resolve(record.RemoteAddr)
 		}
 		exists, err := accessLogExists(tx, record)
 		if err != nil {
@@ -295,15 +313,26 @@ func persistNodeAccessLogs(tx *gorm.DB, nodeID string, logs []NodeAccessLog, rep
 			return err
 		}
 	}
-	return nil
+	_, err = deleteAccessLogsByNodeBefore(tx, nodeID, reportedAt.Add(-nodeAccessLogRetentionWindow))
+	return err
 }
 
 func reconcileNodeHealthEvents(tx *gorm.DB, nodeID string, events []NodeHealthEvent, reportedAt time.Time) error {
+	return ReconcileScopedNodeHealthEvents(tx, nodeID, events, reportedAt, nil)
+}
+
+// ReconcileScopedNodeHealthEvents reconciles health events, optionally scoped to managed event types.
+func ReconcileScopedNodeHealthEvents(tx *gorm.DB, nodeID string, events []NodeHealthEvent, reportedAt time.Time, managedEventTypes map[string]struct{}) error {
 	activeTypes := make(map[string]NodeHealthEvent, len(events))
 	for _, event := range events {
 		eventType := normalizeHealthEventType(event.EventType)
 		if eventType == "" {
 			continue
+		}
+		if len(managedEventTypes) > 0 {
+			if _, ok := managedEventTypes[eventType]; !ok {
+				continue
+			}
 		}
 		event.EventType = eventType
 		event.Severity = normalizeHealthSeverity(event.Severity)
@@ -314,7 +343,21 @@ func reconcileNodeHealthEvents(tx *gorm.DB, nodeID string, events []NodeHealthEv
 	}
 
 	var activeEvents []*model.OpenFlareHealthEvent
-	if err := tx.Where("node_id = ? AND status = ?", nodeID, healthEventStatusActive).Find(&activeEvents).Error; err != nil {
+	query := tx.Where("node_id = ? AND status = ?", nodeID, healthEventStatusActive)
+	if len(managedEventTypes) > 0 {
+		scopedTypes := make([]string, 0, len(managedEventTypes))
+		for eventType := range managedEventTypes {
+			eventType = normalizeHealthEventType(eventType)
+			if eventType != "" {
+				scopedTypes = append(scopedTypes, eventType)
+			}
+		}
+		if len(scopedTypes) == 0 {
+			return nil
+		}
+		query = query.Where("event_type IN ?", scopedTypes)
+	}
+	if err := query.Find(&activeEvents).Error; err != nil {
 		return err
 	}
 
@@ -391,6 +434,11 @@ func requestReportExists(tx *gorm.DB, nodeID string, windowStartedAt, windowEnde
 	return count > 0, nil
 }
 
+func deleteAccessLogsByNodeBefore(tx *gorm.DB, nodeID string, before time.Time) (int64, error) {
+	result := tx.Where("node_id = ? AND logged_at < ?", nodeID, before).Delete(&model.OpenFlareAccessLog{})
+	return result.RowsAffected, result.Error
+}
+
 func accessLogExists(tx *gorm.DB, record *model.OpenFlareAccessLog) (bool, error) {
 	var count int64
 	if err := tx.Model(&model.OpenFlareAccessLog{}).
@@ -436,6 +484,11 @@ func timeFromUnix(unixSeconds int64, fallback time.Time) time.Time {
 		return fallback
 	}
 	return time.Unix(unixSeconds, 0).UTC()
+}
+
+// MarshalJSON serializes a value for database JSON columns.
+func MarshalJSON(value any) string {
+	return marshalJSON(value)
 }
 
 func marshalJSON(value any) string {

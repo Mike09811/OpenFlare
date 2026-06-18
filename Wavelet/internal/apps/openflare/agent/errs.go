@@ -17,5 +17,4 @@ const (
 	errIPInvalid              = "ip 格式无效"
 	errAgentVersionRequired   = "version 不能为空"
 	errNodeIDConflict         = "节点标识生成冲突，请重试"
-	errPagesPackageNotFound   = "Pages 部署包尚未实现"
 )
