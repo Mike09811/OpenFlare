@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/Rain-kl/Wavelet/internal/model"
-	"github.com/Rain-kl/Wavelet/pkg/logger"
 )
 
 const (
@@ -27,10 +26,6 @@ var databaseCleanupTargets = map[string]string{
 	DatabaseCleanupTargetAccessLogs:      "访问日志",
 	DatabaseCleanupTargetMetricSnapshots: "性能快照",
 	DatabaseCleanupTargetRequestReports:  "请求聚合",
-}
-
-func init() {
-	registerJob("database_auto_cleanup", "0 3 * * *", runDatabaseAutoCleanupJob)
 }
 
 // DatabaseCleanupInput describes a manual observability cleanup request.
@@ -126,28 +121,6 @@ func RunDatabaseAutoCleanupOnce(now time.Time) (*DatabaseAutoCleanupSummary, err
 		ExecutedAt:    now.UTC(),
 		Results:       results,
 	}, nil
-}
-
-func runDatabaseAutoCleanupJob(ctx context.Context) {
-	summary, err := RunDatabaseAutoCleanupOnce(time.Now())
-	if err != nil {
-		logger.ErrorF(ctx, "[OpenFlareTasks] database auto cleanup failed: %v", err)
-		return
-	}
-	if summary == nil {
-		return
-	}
-
-	totalDeleted := int64(0)
-	for _, item := range summary.Results {
-		totalDeleted += item.DeletedCount
-	}
-	logger.InfoF(
-		ctx,
-		"[OpenFlareTasks] database auto cleanup completed retention_days=%d deleted_count=%d",
-		summary.RetentionDays,
-		totalDeleted,
-	)
 }
 
 func deleteAllObservabilityRows(ctx context.Context, target string) (int64, error) {

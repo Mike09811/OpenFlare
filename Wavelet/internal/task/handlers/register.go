@@ -7,6 +7,7 @@ package handlers
 
 import (
 	"github.com/Rain-kl/Wavelet/internal/apps/admin/push"
+	"github.com/Rain-kl/Wavelet/internal/apps/openflare"
 	"github.com/Rain-kl/Wavelet/internal/apps/upload"
 	"github.com/Rain-kl/Wavelet/internal/apps/user"
 	"github.com/Rain-kl/Wavelet/internal/task"
@@ -35,4 +36,17 @@ func Register() {
 	// push
 	task.RegisterHandler(push.SendNotificationTask, &push.PushHandler{})
 	task.RegisterTaskMeta(push.SendNotificationMeta)
+
+	// openflare
+	task.RegisterHandler(openflare.SSLRenewTask, &openflare.SSLRenewHandler{})
+	task.RegisterTaskMeta(openflare.SSLRenewMeta)
+
+	task.RegisterHandler(openflare.DatabaseAutoCleanupTask, &openflare.DatabaseAutoCleanupHandler{})
+	task.RegisterTaskMeta(openflare.DatabaseAutoCleanupMeta)
+
+	task.RegisterHandler(openflare.WAFIPGroupSyncTask, &openflare.WAFIPGroupSyncHandler{})
+	task.RegisterTaskMeta(openflare.WAFIPGroupSyncMeta)
+
+	task.RegisterHandler(openflare.UptimeKumaSyncTask, &openflare.UptimeKumaSyncHandler{})
+	task.RegisterTaskMeta(openflare.UptimeKumaSyncMeta)
 }

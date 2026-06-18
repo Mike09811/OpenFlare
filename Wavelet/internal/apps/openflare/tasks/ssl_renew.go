@@ -12,15 +12,8 @@ import (
 	"github.com/Rain-kl/Wavelet/pkg/logger"
 )
 
-func init() {
-	registerJob("ssl_renew", "0 0 * * *", func(ctx context.Context) {
-		if err := runSSLRenewJob(ctx); err != nil {
-			LogJobError(ctx, "ssl_renew", err)
-		}
-	})
-}
-
-func runSSLRenewJob(ctx context.Context) error {
+// RunSSLRenewJob renews all TLS certificates that are due for renewal.
+func RunSSLRenewJob(ctx context.Context) error {
 	logger.InfoF(ctx, "[OpenFlareTasks] SSL renew job started")
 
 	certificates, err := model.ListTLSCertificates(ctx)

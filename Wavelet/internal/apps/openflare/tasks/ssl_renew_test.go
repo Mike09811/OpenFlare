@@ -64,7 +64,7 @@ func TestRunSSLRenewJobTriggersDueCertificates(t *testing.T) {
 	require.NoError(t, model.CreateTLSCertificateRecord(ctx, due))
 	require.NoError(t, model.CreateTLSCertificateRecord(ctx, fresh))
 
-	require.NoError(t, runSSLRenewJob(ctx))
+	require.NoError(t, RunSSLRenewJob(ctx))
 
 	renewed, err := model.GetTLSCertificateByID(ctx, due.ID)
 	require.NoError(t, err)
