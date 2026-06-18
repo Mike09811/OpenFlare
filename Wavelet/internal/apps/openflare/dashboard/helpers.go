@@ -4,8 +4,10 @@
 package dashboard
 
 import (
+	"strings"
 	"time"
 
+	ofws "github.com/Rain-kl/Wavelet/internal/apps/openflare/websocket"
 	"github.com/Rain-kl/Wavelet/internal/model"
 )
 
@@ -29,7 +31,23 @@ func computeNodeStatus(node *model.OpenFlareNode) string {
 }
 
 func nodeViewLastSeenAt(node *model.OpenFlareNode) any {
-	if node == nil || node.LastSeenAt == nil {
+	if node == nil {
+		return time.Time{}
+	}
+	nodeType := strings.TrimSpace(node.NodeType)
+	if nodeType == "" {
+		nodeType = "edge_node"
+	}
+	if nodeType == "tunnel_relay" && ofws.IsRelayConnected(node.NodeID) {
+		return ofws.RelayWSConnectedLastSeenValue
+	}
+	if nodeType == "tunnel_client" && ofws.IsFlaredConnected(node.NodeID) {
+		return ofws.FlaredWSConnectedLastSeenValue
+	}
+	if ofws.IsAgentConnected(node.NodeID) {
+		return ofws.AgentWSConnectedLastSeenValue
+	}
+	if node.LastSeenAt == nil {
 		return time.Time{}
 	}
 	return *node.LastSeenAt

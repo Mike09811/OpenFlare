@@ -36,6 +36,7 @@ sidebar: false
 - 补全 OAuth 快捷路由（`/api/oauth/github`、`/api/oauth/wechat`、`/api/oauth/wechat/bind`、`/api/oauth/email/bind`）。
 - 新增 `internal/apps/openflare/tasks/` 集中承载 OpenFlare 定时/后台任务（主进程 cron，非 Asynq），含数据库可观测性自动清理、WAF IP 组周期同步、UptimeKuma 同步、ACME 证书自动续期。
 - 实装数据库可观测性手动/自动清理、WAF IP 组订阅/自动同步与测试接口、UptimeKuma 监控同步、TLS ACME 申请/续期（lego DNS-01）。
+- 修复 Wavelet Agent WebSocket 未处理 `status` 消息导致 WS 模式下 `last_seen_at` 停止更新、节点超时显示离线的问题；列表「最近心跳」恢复显示「WS 已连接」。
 
 ## [v2.3.4] - 2026-06-17
 

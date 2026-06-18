@@ -4,6 +4,8 @@
 
 OpenFlare Server 是 Gin + GORM 单体控制面，负责管理端 UI、管理 API、Agent API、配置渲染、版本发布、数据存储与聚合查询。
 
+> **迁移说明**：后端业务域正在迁入 [Wavelet](../plan/20260618-openflare-wavelet-backend-migration.md)。阶段一通过 Wavelet 的 `/api/*` legacy 兼容层联调旧前端；下文「Wavelet 后端」一节描述新后端的启动方式。
+
 ## 前置条件
 
 | 项目 | 要求 |
@@ -170,3 +172,63 @@ go run . --port 3000 --log-dir ./logs
 | `root` | `123456` |
 
 首次登录后请立即修改默认密码。
+
+## Wavelet 后端（迁移中）
+
+阶段一将 OpenFlare 业务 API 运行在 Wavelet 框架内（`Wavelet/internal/apps/openflare/`），默认监听 `:3000`，与旧 Server 端口一致。旧前端仍使用 `openflare-server/web/build` 静态产物；API 请求指向 Wavelet 的 `/api/*` 兼容路由。
+
+### 配置要点
+
+复制 `Wavelet/config.example.yaml` 为 `config.yaml`，或使用 `Wavelet/.env.example` 中的环境变量。关键默认值：
+
+| 项 | 值 |
+| --- | --- |
+| 监听地址 | `:3000` |
+| PostgreSQL 库名 | `openflare` |
+| SQLite 后备 | `openflare.db` |
+| `application_name` | `openflare-server` |
+| Redis 键前缀 | `openflare:` |
+
+生产环境需启用 PostgreSQL（`database.enabled: true` 或 `DB_ENABLED=true`），并配置 Redis。
+
+### 启动命令
+
+```bash
+cd Wavelet
+
+# 开发：API + Worker + Scheduler 合一
+go run . all
+
+# 生产：分进程部署
+go run . api       # HTTP API + OpenFlare 定时任务
+go run . worker    # Wavelet Asynq 异步任务
+go run . scheduler # Wavelet Asynq 定时触发
+```
+
+也可使用 `docker compose up`（见 `Wavelet/docker-compose.yml`）拉起 PostgreSQL、Redis 与 Wavelet 服务。
+
+### OpenFlare 定时任务
+
+OpenFlare 业务定时任务集中在 `internal/apps/openflare/tasks/`，通过 `robfig/cron` 在 **API 进程**内运行（非 Asynq）：
+
+| 任务 | 调度 | 说明 |
+| --- | --- | --- |
+| 可观测数据自动清理 | 每日 03:00 | 受 Option `DatabaseAutoCleanupEnabled` 控制 |
+| WAF IP 组同步 | 每 5 分钟 | 向在线 Agent 下发 IP 组变更 |
+| UptimeKuma 同步 | 每分钟检查间隔 | 按 Option 配置的间隔触发 |
+| SSL 自动续期 | 每日 00:00 | ACME 证书续期 |
+
+API 启动后日志中应出现 `[OpenFlareTasks] registered cron job` 行。`worker` 与 `scheduler` 进程不运行上述 cron。
+
+### 验证
+
+```bash
+cd Wavelet
+go build ./...
+go test ./internal/apps/openflare/... -count=1
+
+# 健康检查
+curl http://127.0.0.1:3000/api/status
+```
+
+更多迁移进度与接手说明见 [AI 接手文档](../plan/handover-openflare-backend-migration.md)。

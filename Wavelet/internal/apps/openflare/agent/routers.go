@@ -167,7 +167,7 @@ func AgentWebSocketHandler(c *gin.Context) {
 		compat.Unauthorized(c, errInvalidAgentToken)
 		return
 	}
-	websocket.ServeAgent(c, authNode.NodeID)
+	websocket.ServeAgent(c, authNode.NodeID, HandleWSStatus)
 }
 
 func okWithExtras(c *gin.Context, data any, extras gin.H) {

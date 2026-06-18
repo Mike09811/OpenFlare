@@ -2,7 +2,7 @@
 
 > **文档类型**：实现计划（Implementation Plan）  
 > **创建日期**：2026-06-18  
-> **状态**：规划中  
+> **状态**：实施中（阶段一旧前端联调，核心 API 与后台任务已落地）
 > **前置阅读**：[`Wavelet/AGENTS.md`](../../Wavelet/AGENTS.md)、[`docs/guideline/Constraints.md`](../guideline/Constraints.md)、[`docs/design/architecture.md`](../design/architecture.md)
 
 ---
@@ -25,7 +25,7 @@ OpenFlare 当前控制面基于 `openflare-server`（Gin + GORM 单体），与 
 | 重叠模块复用 Wavelet 内置能力 + 兼容适配层 | 多租户、细粒度 RBAC（超出 OpenFlare 单租户边界） |
 | 数据模型与 goose SQL 迁移（PG + SQLite 双份） | 英文文档同步 |
 | 旧路径 `/api/*` 兼容注册 | 阶段二新前端路径改造（见前端迁移计划） |
-| Cron/异步任务迁移至 Asynq + Scheduler | Wavelet 框架核心文件修改（`v1/user.go` 等禁止改动） |
+| OpenFlare 定时任务（**过渡**：API 主进程内 cron；**目标**：后续迁入统一任务框架） | Wavelet 框架核心文件修改（`v1/user.go` 等禁止改动） |
 | `pkg/geoip`、`pkg/render/openresty`、`pkg/protocol` 复用 | 微信登录长期维护（评估后降级或适配） |
 
 ### 1.3 迁移总原则
@@ -89,7 +89,8 @@ Wavelet/
 │   │       ├── managed_domain/
 │   │       ├── pages/         # Pages 静态托管
 │   │       ├── dashboard/     # 仪表盘聚合
-│   │       ├── observability/ # 可观测性 + 分片
+│   │       ├── observability/ # 可观测性查询（v1 单表）
+│   │       ├── tasks/         # 🆕 定时/后台任务集中目录（主进程 cron）
 │   │       ├── apply_log/
 │   │       ├── option/        # OpenFlare 专有 Option（非框架 SystemConfig）
 │   │       ├── update/        # 服务自更新
@@ -109,7 +110,7 @@ Wavelet/
 │   ├── geoip/                  # 复用 OpenFlare pkg/geoip
 │   ├── render/openresty/       # 复用配置渲染引擎
 │   └── protocol/               # 复用节点协议
-└── internal/bootstrap/         # 注册 OpenFlare 任务/监听器
+└── internal/bootstrap/         # API 启动时注册并运行 openflare/tasks
 ```
 
 ### 2.2 关键架构决策
@@ -122,10 +123,10 @@ Wavelet/
 | 认证 Token 桥接 | 阶段一同时支持 `OpenFlare-Token`（JWT）与 Wavelet Session/AccessToken；登录后 legacy 层签发兼容 JWT 或映射到 AccessToken | 旧前端依赖 Header Token |
 | 角色模型 | OpenFlare `role(1/10/100)` 映射为 Wavelet `is_admin` + 扩展字段 `of_role`（SystemConfig 或用户扩展表） | Wavelet 仅 bool admin；Root 权限需扩展 |
 | 系统配置 | OpenFlare `options` 表保留（70+ 热加载项）；框架 `system_configs` 仅放 Wavelet 平台项 | 业务配置语义不同，避免强行合并 |
-| 定时任务 | UptimeKuma、WAF IP 同步、SSL 续期、DB 清理 → Asynq Periodic Task | 符合 Wavelet 多进程模型 |
-| 数据库迁移 | Wavelet goose SQL（postgres + sqlite 双份）；提供 SQLite→PG 一次性迁移脚本 | 与框架迁移机制一致 |
-| 可观测分片 | 保留 10 分片策略；评估 ClickHouse 或继续 PG/SQLite 分片 | 访问量大时可用 Wavelet ClickHouse |
-| 进程部署 | 生产必须 `api` + `worker` + `scheduler` 三进程 | Wavelet 架构要求 |
+| 定时任务（OpenFlare） | **当前**：`openflare/tasks` + `robfig/cron`，随 `wavelet api` / `wavelet all` 在 API 进程内运行；**后续**：迁入统一任务框架（文件按 job 拆分，便于替换 registry） | 阶段一优先功能完备；与 Wavelet Asynq Worker/Scheduler 解耦 |
+| 数据库迁移 | Wavelet goose SQL（postgres + sqlite 双份）；默认库名 `openflare`；SQLite→PG 一次性迁移脚本待补 | 与框架迁移机制一致 |
+| 可观测存储 | **v1 单表**（`of_node_*` 无 `_00`~`_09` 分片）；历史分片数据需 ETL；后续可评估 ClickHouse 或恢复分片 | 降低迁移复杂度，满足当前联调与中小规模部署 |
+| 进程部署 | Wavelet 生产仍建议 `api` + `worker` + `scheduler` 三进程；**OpenFlare 业务 cron 仅需 API 进程** | 框架任务与 OpenFlare cron 职责分离 |
 | 前端嵌入 | 阶段一继续托管 `openflare-server/web/build`；阶段二切换 `Wavelet/frontend` embed | 分阶段降低风险 |
 
 ### 2.3 鉴权兼容设计
@@ -170,7 +171,7 @@ sequenceDiagram
 | **A. 直接复用 Wavelet** | 不迁移代码，仅适配路径/响应 | 12 |
 | **B. 兼容适配层** | 薄 Handler 包装 Wavelet Logic | 8 |
 | **C. 完整迁移 OpenFlare 业务** | 重写为 Wavelet 规范（Handler+Logic+errs） | 15 |
-| **D. 基础设施迁移** | Cron→Asynq、WS Hub、分片表 | 6 |
+| **D. 基础设施迁移** | 定时任务（主进程 cron）、WS Hub、可观测单表 | 6 |
 
 ---
 
@@ -316,7 +317,7 @@ sequenceDiagram
 |---|---|---|---|
 | C39 | IP 组列表 | `GET /api/waf/ip-groups` | `openflare/waf/ip_group.go` |
 | C40 | IP 组 CRUD | `POST /api/waf/ip-groups/*` | 同上 |
-| C41 | IP 组同步 | `POST /api/waf/ip-groups/:id/sync` | 同上 + Asynq 任务 |
+| C41 | IP 组同步 | `POST /api/waf/ip-groups/:id/sync` | 同上 + `tasks/waf_ip_group_sync` cron |
 | C42 | IP 组测试 | `POST /api/waf/ip-groups/test` | 同上 |
 | C43 | 规则组列表 | `GET /api/waf/rule-groups` | `openflare/waf/rule_group.go` |
 | C44 | 规则组 CRUD | `POST /api/waf/rule-groups/*` | 同上 |
@@ -371,18 +372,20 @@ sequenceDiagram
 | C68 | 应用日志 | `GET /api/apply-logs/` | `openflare/apply_log/logics.go` |
 | C69 | 应用日志清理 | `POST /api/apply-logs/cleanup` | 同上 |
 | C70 | GeoIP 查询 | `POST /api/option/geoip/lookup` | `openflare/geoip/logics.go` |
-| C71 | 数据库清理 | `POST /api/option/database/cleanup` | `openflare/observability/cleanup.go` |
+| C71 | 数据库清理 | `POST /api/option/database/cleanup` | `openflare/tasks/database_cleanup.go` |
 
-**分片表迁移**：保留 10 分片（`_00`~`_09`），迁移至 goose SQL；评估后续接入 ClickHouse。
+**可观测存储（v1）**：goose 单表 `of_node_system_profiles`、`of_node_metric_snapshots`、`of_node_request_reports`、`of_node_health_events`、`of_node_obs_openresty`、`of_node_obs_frps`、`of_node_obs_frpc`、`of_node_access_logs`（迁移 `202606190010`~`012`）。访问日志查询/聚合已实装于 `model/openflare_access_log.go`。
 
-### 6.9 运维集成
+### 6.9 运维集成与定时任务
 
-| # | 功能 | 旧路径 | 目标 Logic | 任务类型 |
+| # | 功能 | 旧路径 / 调度 | 实现位置 | 调度（当前） |
 |---|---|---|---|---|
-| C72 | UptimeKuma 同步 | `POST /api/uptimekuma/sync` | `openflare/uptimekuma/logics.go` | Asynq periodic |
-| C73 | SSL 自动续期 | Cron 每日 | `openflare/tls/renew_task.go` | Asynq periodic |
-| C74 | WAF IP 订阅同步 | Cron 5min | `openflare/waf/sync_task.go` | Asynq periodic |
-| C75 | 可观测数据自动清理 | Cron | `openflare/observability/cleanup_task.go` | Asynq periodic |
+| C72 | UptimeKuma 同步 | `POST /api/uptimekuma/sync`；Cron 每分钟检查间隔 | `openflare/uptimekuma/sync.go` | `tasks/uptimekuma_sync.go` `* * * * *` |
+| C73 | SSL 自动续期 | Cron 每日 00:00 | `openflare/tls/obtain.go` + `tasks/ssl_renew.go` | `0 0 * * *` |
+| C74 | WAF IP 组同步 | Cron 每 5 分钟；`POST .../ip-groups/:id/sync` | `openflare/waf/ip_group_sync.go` | `@every 5m` |
+| C75 | 可观测数据自动清理 | Cron 每日 03:00（`DatabaseAutoCleanupEnabled`） | `openflare/tasks/database_cleanup.go` | `0 3 * * *` |
+
+**任务注册**：各 job 在 `init()` 中 `registerJob`；`bootstrap.Init(API)` 调用 `tasks.Start`。WAF job 经 `waf/register_tasks.go` 注册以避免 import cycle。
 
 ---
 
@@ -420,12 +423,12 @@ sequenceDiagram
 | `apply_logs` | `of_apply_logs` | P1 | `openflare_apply_log.go` |
 | `node_system_profiles` | `of_node_system_profiles` | P1 | `openflare_node_profile.go` |
 | `node_health_events` | `of_node_health_events` | P2 | `openflare_health_event.go` |
-| `node_metric_snapshots_XX` | `of_node_metric_snapshots_XX` | P3 | `openflare_metric_snapshot.go` |
-| `node_request_reports_XX` | `of_node_request_reports_XX` | P3 | `openflare_request_report.go` |
-| `node_access_logs_XX` | `of_node_access_logs_XX` | P3 | `openflare_access_log.go` |
-| `node_observation_openresties_XX` | `of_node_obs_openresty_XX` | P3 | `openflare_obs_openresty.go` |
-| `node_observation_frps_XX` | `of_node_obs_frps_XX` | P3 | `openflare_obs_frps.go` |
-| `node_observation_frpcs_XX` | `of_node_obs_frpc_XX` | P3 | `openflare_obs_frpc.go` |
+| `node_metric_snapshots_XX` | `of_node_metric_snapshots`（v1 单表） | ✅ | `openflare_observability.go` |
+| `node_request_reports_XX` | `of_node_request_reports`（v1 单表） | ✅ | 同上 |
+| `node_access_logs_XX` | `of_node_access_logs`（v1 单表 + 复合索引） | ✅ | `openflare_access_log.go` |
+| `node_observation_openresties_XX` | `of_node_obs_openresty`（v1 单表） | ✅ | `openflare_observability.go` |
+| `node_observation_frps_XX` | `of_node_obs_frps`（v1 单表） | ✅ | 同上 |
+| `node_observation_frpcs_XX` | `of_node_obs_frpc`（v1 单表） | ✅ | 同上 |
 
 ### 7.3 数据迁移脚本
 
@@ -439,19 +442,19 @@ sequenceDiagram
 
 ## 8. 分阶段实施计划
 
-### 阶段 0：基建准备（1–2 周）
+### 阶段 0：基建准备（1–2 周）— ✅ 已完成
 
 | 任务 ID | 任务 | 产出 | 验收标准 |
 |---|---|---|---|
 | B0-1 | 在 `Wavelet/go.mod` 添加 `pkg/geoip`、`pkg/render`、`pkg/protocol` 引用 | go.mod replace | `go build ./...` 通过 |
 | B0-2 | 创建 `internal/apps/openflare/` 骨架 | 包结构 | 符合 AGENTS.md |
-| B0-3 | 实现 `compat/auth.go`、`compat/response.go` | 鉴权/响应适配 | 单元测试覆盖 JWT 校验 |
-| B0-4 | 注册 legacy 路由组 `RegisterLegacyRoutes(apiGroup)` | `router/legacy.go` | `/api/status` 可访问 |
-| B0-5 | bootstrap 注册 OpenFlare 模块 | `bootstrap/openflare.go` | worker/scheduler 可启动 |
+| B0-3 | 实现 `compat/auth.go`、`compat/response.go` | 鉴权/响应适配 | 单元测试覆盖 |
+| B0-4 | 注册 legacy 路由组 | `legacy/register*.go` | `/api/status` 可访问 |
+| B0-5 | bootstrap 注册 OpenFlare 后台任务 | `bootstrap.go` + `openflare/tasks` | API 启动后 cron 注册日志可见 |
 | B0-6 | 同步 Wavelet Skills 到开发环境 | `.claude/skills/` | AI 开发可用 |
-| B0-7 | 编写 OpenFlare 业务设计补充文档 | `docs/design/openflare-wavelet-integration.md` | 评审通过 |
+| B0-7 | 编写 OpenFlare 业务设计补充文档 | `docs/design/openflare-wavelet-integration.md` | 待评审（可选） |
 
-### 阶段 1：认证与用户联调（1 周）
+### 阶段 1：认证与用户联调（1 周）— ✅ 已完成
 
 | 任务 ID | 任务 | 依赖 |
 |---|---|---|
@@ -465,7 +468,7 @@ sequenceDiagram
 
 **验收**：旧前端 `/login` 可登录，`OpenFlare-Token` 可访问 `/api/user/self`。
 
-### 阶段 2：核心链路（2–3 周）
+### 阶段 2：核心链路（2–3 周）— ✅ 已完成
 
 | 任务 ID | 模块 | API 数 |
 |---|---|---|
@@ -479,37 +482,37 @@ sequenceDiagram
 
 **验收**：创建节点 → 创建规则 → 发布配置 → Agent 拉取并回报 apply-log。
 
-### 阶段 3：安全与证书（2 周）
+### 阶段 3：安全与证书（2 周）— ✅ 已完成
 
-| 任务 ID | 模块 |
-|---|---|
-| B3-1 | WAF 规则组 + IP 组 + 站点绑定 |
-| B3-2 | Agent WAF 同步 |
-| B3-3 | TLS 证书 + ACME + DNS |
-| B3-4 | ManagedDomain |
-| B3-5 | SSL 续期 Asynq 任务 |
+| 任务 ID | 模块 | 状态 |
+|---|---|---|
+| B3-1 | WAF 规则组 + IP 组 + 站点绑定 | ✅ |
+| B3-2 | Agent WAF 同步（heartbeat + `/waf/ip-groups/sync`） | ✅ |
+| B3-3 | TLS 证书 + ACME（lego DNS-01）+ DNS | ✅ |
+| B3-4 | ManagedDomain | ✅ |
+| B3-5 | SSL 续期定时任务 | ✅ `tasks/ssl_renew.go` |
 
-### 阶段 4：扩展能力（2–3 周）
+### 阶段 4：扩展能力（2–3 周）— ✅ 已完成（v1 单表）
 
-| 任务 ID | 模块 |
-|---|---|
-| B4-1 | Pages 托管 + Agent 包下载 |
-| B4-2 | Relay + Flared API + WS |
-| B4-3 | Dashboard 聚合 |
-| B4-4 | 可观测性 + 分片表 |
-| B4-5 | 访问日志查询/清理 |
-| B4-6 | UptimeKuma 集成 |
+| 任务 ID | 模块 | 状态 |
+|---|---|---|
+| B4-1 | Pages 托管 + Agent 包下载 | ✅ |
+| B4-2 | Relay + Flared API + WS + 观测持久化 | ✅ |
+| B4-3 | Dashboard 聚合 | ✅ |
+| B4-4 | 可观测性单表 + Agent heartbeat 写入 | ✅ |
+| B4-5 | 访问日志查询/清理 | ✅ |
+| B4-6 | UptimeKuma 集成（API + cron） | ✅ |
 
-### 阶段 5：运维与收尾（1 周）
+### 阶段 5：运维与收尾（1 周）— 进行中
 
-| 任务 ID | 任务 |
-|---|---|
-| B5-1 | 服务自更新兼容 |
-| B5-2 | GeoIP 查询 |
-| B5-3 | 数据迁移脚本与文档 |
-| B5-4 | `make swagger` + `make code-check` 全绿 |
-| B5-5 | 全量 API 回归（对照旧后端 120+ 端点） |
-| B5-6 | 编写 Handover 文档 |
+| 任务 ID | 任务 | 状态 |
+|---|---|---|
+| B5-1 | 服务自更新兼容 | ✅ |
+| B5-2 | GeoIP 查询 + Agent Geo 自动更新 | ✅ |
+| B5-3 | 数据迁移脚本与文档 | ⏳ 待实现 `support-files/migration/` |
+| B5-4 | `make swagger` + `make code-check` 全绿 | ⏳ |
+| B5-5 | 全量 API 回归（对照旧后端 120+ 端点） | ⏳ |
+| B5-6 | Handover 文档 | ✅ 见 `handover-openflare-backend-migration.md` |
 
 ---
 
@@ -539,13 +542,14 @@ Wavelet/internal/apps/openflare/
 ├── update/
 ├── uptimekuma/
 ├── geoip/
+├── tasks/          # 定时/后台任务（主进程 cron，后续可迁框架）
 └── websocket/
 
-Wavelet/internal/model/openflare_*.go     # 约 20 个实体
-Wavelet/internal/db/migrator/goose/       # postgres/ + sqlite/ 双份 SQL
-Wavelet/internal/router/legacy.go         # RegisterLegacyRoutes
-Wavelet/internal/bootstrap/openflare.go   # 任务/事件注册
-Wavelet/support-files/migration/          # 数据迁移工具
+Wavelet/internal/model/openflare_*.go     # 业务实体 + access_log 查询
+Wavelet/internal/db/migrator/goose/       # postgres/ + sqlite/；of_* 至 202606190012
+Wavelet/internal/apps/openflare/legacy/   # RegisterRoutes 委派
+Wavelet/internal/bootstrap/bootstrap.go   # RegisterOpenFlareBackgroundTasks + tasks.Start
+Wavelet/support-files/migration/          # 数据迁移工具（待建）
 ```
 
 ### 9.2 修改文件（仅允许范围内）
@@ -607,11 +611,11 @@ go test ./internal/apps/openflare/compat/... -v
 
 ```bash
 # Agent 心跳
-curl -X POST http://localhost:8000/api/agent/nodes/heartbeat \
+curl -X POST http://127.0.0.1:3000/api/agent/nodes/heartbeat \
   -H "X-Agent-Token: <token>" -d '{...}'
 
 # 拉取配置
-curl http://localhost:8000/api/agent/config-versions/active \
+curl http://127.0.0.1:3000/api/agent/config-versions/active \
   -H "X-Agent-Token: <token>"
 ```
 
@@ -624,7 +628,7 @@ curl http://localhost:8000/api/agent/config-versions/active \
 | JWT vs Session 双轨 | 旧前端鉴权失败 | compat 层统一；充分测试 |
 | 角色三级 vs is_admin | Root 权限丢失 | `of_role` 扩展字段 |
 | 70+ Option 热加载 | 配置行为不一致 | 保留 OptionMap 机制 |
-| 10 分片表迁移复杂 | 观测数据丢失 | 分阶段迁移；先 schema 后历史数据 |
+| 旧环境 10 分片观测数据 | 无法直接挂载单表 schema | v1 采用单表；提供 ETL 脚本（待 B5-3）；新部署无影响 |
 | 微信登录无 Wavelet 原生 | 部分用户无法登录 | 评估废弃或独立 legacy |
 | 三进程部署运维复杂度 | 部署失败 | 提供 docker-compose 与 `wavelet all` 开发模式 |
 | WebSocket Hub 迁移 | 节点掉线 | 保持 Hub 接口不变，充分压测 |
