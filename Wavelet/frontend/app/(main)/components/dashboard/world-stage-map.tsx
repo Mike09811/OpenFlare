@@ -368,9 +368,9 @@ export function WorldStageMap({
       return 1;
     }
 
-    const widthScale = Math.min(Math.max(width / 960, 0.52), 1.08);
-    const heightScale = Math.min(Math.max(height / 520, 0.72), 1.1);
-    const compactViewportScale = width < 640 ? 0.9 : 1;
+    const widthScale = Math.min(Math.max(width / 720, 0.48), 1.02);
+    const heightScale = Math.min(Math.max(height / 260, 0.65), 1.05);
+    const compactViewportScale = width < 640 ? 0.88 : 1;
 
     return Number(
       (Math.min(widthScale, heightScale) * compactViewportScale).toFixed(3),
