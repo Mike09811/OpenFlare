@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
-import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {useState} from 'react';
-import {ArrowLeft, FileText, Loader2, RefreshCw, RotateCcw, Trash2, Upload,} from 'lucide-react';
+import {ArrowLeft, FileText, RefreshCw, RotateCcw, Trash2, Upload,} from 'lucide-react';
 import {toast} from 'sonner';
 
 import {
@@ -25,6 +25,7 @@ import {NodeService} from '@/lib/services/openflare';
 
 import {AgentUpdateDialog} from './agent-update-dialog';
 import {NodeEditorDialog} from './node-editor-dialog';
+import {NodeObservability} from './node-observability';
 import {NodeStatusBadge} from './node-status-badge';
 import {
   formatRelativeTime,
@@ -46,12 +47,6 @@ export function EdgeNodeDetail({ node }: { node: NodeItem }) {
   const [editorOpen, setEditorOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-
-  const observabilityQuery = useQuery({
-    queryKey: ['openflare', 'node-observability', node.id],
-    queryFn: () => NodeService.getObservability(node.id, { hours: 24, limit: 48 }),
-    refetchInterval: 10000,
-  });
 
   const saveMutation = useMutation({
     mutationFn: (payload: Parameters<typeof NodeService.updateNode>[1]) =>
@@ -114,19 +109,12 @@ export function EdgeNodeDetail({ node }: { node: NodeItem }) {
     onError: (error) => toast.error(getErrorMessage(error)),
   });
 
-  const profile = observabilityQuery.data?.profile ?? null;
-  const latestMetric = observabilityQuery.data?.metric_snapshots?.[0] ?? null;
-  const activeHealthEvents =
-    observabilityQuery.data?.health_events.filter((event) => event.status === 'active') ?? [];
-
   const handleRefresh = () => {
     void Promise.all([
       queryClient.invalidateQueries({ queryKey: nodesQueryKey }),
       queryClient.invalidateQueries({ queryKey: ['openflare', 'node-observability', node.id] }),
     ]);
   };
-
-  const isRefreshing = observabilityQuery.isFetching;
 
   return (
     <div className="py-6 px-1 space-y-6">
@@ -153,13 +141,9 @@ export function EdgeNodeDetail({ node }: { node: NodeItem }) {
             size="sm"
             className="h-7 text-xs"
             onClick={handleRefresh}
-            disabled={isRefreshing}
+            disabled={false}
           >
-            {isRefreshing ? (
-              <Loader2 className="size-3.5 mr-1 animate-spin" />
-            ) : (
-              <RefreshCw className="size-3.5 mr-1" />
-            )}
+            <RefreshCw className="size-3.5 mr-1" />
             刷新
           </Button>
           <Button
@@ -233,121 +217,80 @@ export function EdgeNodeDetail({ node }: { node: NodeItem }) {
         </Card>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Card className="border-dashed shadow-none">
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">基本信息</CardTitle>
+      <Card className="border-dashed shadow-none">
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="text-base font-semibold">节点信息</CardTitle>
             <CardDescription>边缘代理节点 (edge_node)</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-muted-foreground">运行状态</span>
-              <NodeStatusBadge
-                label={getNodeStatusLabel(node.status)}
-                tone={getNodeStatusTone(node.status)}
-              />
+          </div>
+          <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
+            <Link href={`/apply-logs?node_id=${encodeURIComponent(node.node_id)}`}>
+              <FileText className="size-3.5 mr-1" />
+              应用记录
+            </Link>
+          </Button>
+        </CardHeader>
+        <CardContent className="grid gap-3 text-sm md:grid-cols-2 xl:grid-cols-3">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground">运行状态</span>
+            <NodeStatusBadge
+              label={getNodeStatusLabel(node.status)}
+              tone={getNodeStatusTone(node.status)}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground">OpenResty 健康</span>
+            <NodeStatusBadge
+              label={getOpenrestyStatusLabel(node.openresty_status)}
+              tone={getOpenrestyStatusTone(node.openresty_status)}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground">最近应用</span>
+            <NodeStatusBadge
+              label={getApplyLabel(node.latest_apply_result)}
+              tone={getApplyTone(node.latest_apply_result)}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground">IP 地址</span>
+            <span>
+              {node.ip || '—'}
+              {node.ip_manual_override ? '（已锁定）' : ''}
+            </span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground">地图点位</span>
+            <span>{node.geo_name || '未配置'}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground">OpenResty 状态消息</span>
+            <span className="text-right max-w-[60%] break-words">
+              {node.openresty_message || '无'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground">创建时间</span>
+            <span>{formatDateTime(node.created_at)}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground">更新时间</span>
+            <span>{formatDateTime(node.updated_at)}</span>
+          </div>
+          {node.last_error ? (
+            <div className="md:col-span-2 xl:col-span-3 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-destructive">
+              {node.last_error}
             </div>
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-muted-foreground">OpenResty 健康</span>
-              <NodeStatusBadge
-                label={getOpenrestyStatusLabel(node.openresty_status)}
-                tone={getOpenrestyStatusTone(node.openresty_status)}
-              />
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-muted-foreground">最近应用</span>
-              <NodeStatusBadge
-                label={getApplyLabel(node.latest_apply_result)}
-                tone={getApplyTone(node.latest_apply_result)}
-              />
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-muted-foreground">IP 地址</span>
-              <span>
-                {node.ip || '—'}
-                {node.ip_manual_override ? '（已锁定）' : ''}
-              </span>
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-muted-foreground">地图点位</span>
-              <span>{node.geo_name || '未配置'}</span>
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-muted-foreground">创建时间</span>
-              <span>{formatDateTime(node.created_at)}</span>
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-muted-foreground">更新时间</span>
-              <span>{formatDateTime(node.updated_at)}</span>
-            </div>
-            {node.last_error ? (
-              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-destructive">
-                {node.last_error}
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
+          ) : null}
+        </CardContent>
+      </Card>
 
-        <Card className="border-dashed shadow-none">
-          <CardHeader className="flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle className="text-base font-semibold">运行快照</CardTitle>
-              <CardDescription>来自 observability 接口的最近上报</CardDescription>
-            </div>
-            <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
-              <Link href={`/apply-logs?node_id=${encodeURIComponent(node.node_id)}`}>
-                <FileText className="size-3.5 mr-1" />
-                应用记录
-              </Link>
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            {observabilityQuery.isLoading ? (
-              <div className="flex items-center text-muted-foreground py-6 justify-center">
-                <Loader2 className="size-4 mr-2 animate-spin" />
-                加载运行快照中...
-              </div>
-            ) : observabilityQuery.isError ? (
-              <p className="text-destructive">{getErrorMessage(observabilityQuery.error)}</p>
-            ) : (
-              <>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">活动健康事件</span>
-                  <span>{activeHealthEvents.length}</span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">主机名</span>
-                  <span>{profile?.hostname || '—'}</span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">操作系统</span>
-                  <span>
-                    {profile
-                      ? `${profile.os_name || 'unknown'} ${profile.os_version || ''}`.trim()
-                      : '—'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">CPU 使用率</span>
-                  <span>
-                    {latestMetric ? `${latestMetric.cpu_usage_percent.toFixed(1)}%` : '—'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">OpenResty 连接数</span>
-                  <span>{latestMetric?.openresty_connections ?? '—'}</span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">OpenResty 状态消息</span>
-                  <span className="text-right max-w-[60%] break-words">
-                    {node.openresty_message || '无'}
-                  </span>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <NodeObservability
+        nodeId={node.id}
+        node={node}
+        variant="edge"
+        connectionHint="OpenResty 当前连接"
+      />
 
       <NodeEditorDialog
         open={editorOpen}

@@ -2,7 +2,7 @@
 
 import {Area, AreaChart, CartesianGrid, Line, XAxis, YAxis} from 'recharts';
 
-import {Card, CardContent, CardDescription, CardHeader, CardTitle,} from '@/components/ui/card';
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card';
 import {
   ChartConfig,
   ChartContainer,
@@ -11,34 +11,35 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import type {TrafficTrendPoint} from '@/lib/services/openflare';
+import type {NetworkTrendPoint} from '@/lib/services/openflare';
 
-import {formatCompactNumber, formatTrendHour} from './dashboard-utils';
+import {formatTrendHour} from '../../components/dashboard/dashboard-utils';
+import {formatBytesPerSecond} from './node-utils';
 
 const chartConfig = {
-  requests: {
-    label: '请求量',
-    color: 'hsl(var(--chart-1))',
+  openrestyRx: {
+    label: 'OpenResty 入站',
+    color: 'hsl(var(--chart-2))',
   },
-  errors: {
-    label: '错误量',
-    color: 'hsl(var(--chart-5))',
+  openrestyTx: {
+    label: 'OpenResty 出站',
+    color: 'hsl(var(--chart-4))',
   },
 } satisfies ChartConfig;
 
-export function TrafficTrendChart({
+export function NetworkTrendChart({
   points,
-  title = '24 小时请求趋势',
-  description = '观察整体请求量和错误量是否出现异常抬升。',
+  title = '24 小时网络趋势',
+  description = '观察 OpenResty 入站/出站吞吐的变化，辅助识别回源压力、突发流量或出口异常。',
 }: {
-  points: TrafficTrendPoint[];
+  points: NetworkTrendPoint[];
   title?: string;
   description?: string;
 }) {
   const data = points.map((point) => ({
     hour: formatTrendHour(point.bucket_started_at),
-    requests: point.request_count,
-    errors: point.error_count,
+    openrestyRx: point.openresty_rx_bytes,
+    openrestyTx: point.openresty_tx_bytes,
   }));
 
   if (data.length === 0) {
@@ -68,9 +69,9 @@ export function TrafficTrendChart({
           <ChartContainer config={chartConfig} className="h-full w-full">
             <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="trafficRequestsFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--color-requests)" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="var(--color-requests)" stopOpacity={0.02} />
+                <linearGradient id="nodeOpenrestyRxFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--color-openrestyRx)" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="var(--color-openrestyRx)" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -85,7 +86,7 @@ export function TrafficTrendChart({
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-                tickFormatter={(value) => formatCompactNumber(Number(value))}
+                tickFormatter={(value) => formatBytesPerSecond(Number(value), 3600)}
               />
               <ChartTooltip
                 cursor={false}
@@ -93,9 +94,9 @@ export function TrafficTrendChart({
                   <ChartTooltipContent
                     formatter={(value, name) => (
                       <span className="font-mono tabular-nums">
-                        {formatCompactNumber(Number(value))}
+                        {formatBytesPerSecond(Number(value), 3600)}
                         <span className="ml-1 text-muted-foreground">
-                          {name === 'requests' ? '请求' : '错误'}
+                          {name === 'openrestyRx' ? '入站' : '出站'}
                         </span>
                       </span>
                     )}
@@ -104,15 +105,15 @@ export function TrafficTrendChart({
               />
               <Area
                 type="monotone"
-                dataKey="requests"
-                stroke="var(--color-requests)"
-                fill="url(#trafficRequestsFill)"
+                dataKey="openrestyRx"
+                stroke="var(--color-openrestyRx)"
+                fill="url(#nodeOpenrestyRxFill)"
                 strokeWidth={2}
               />
               <Line
                 type="monotone"
-                dataKey="errors"
-                stroke="var(--color-errors)"
+                dataKey="openrestyTx"
+                stroke="var(--color-openrestyTx)"
                 strokeWidth={2}
                 dot={false}
               />

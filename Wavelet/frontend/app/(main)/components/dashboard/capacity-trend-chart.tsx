@@ -32,7 +32,15 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function CapacityTrendChart({ points }: { points: CapacityTrendPoint[] }) {
+export function CapacityTrendChart({
+  points,
+  title = '24 小时容量趋势',
+  description = '按小时聚合 CPU 与内存使用率，判断整体容量是否持续紧张。',
+}: {
+  points: CapacityTrendPoint[];
+  title?: string;
+  description?: string;
+}) {
   const data = points.map((point) => ({
     hour: formatTrendHour(point.bucket_started_at),
     cpu: point.average_cpu_usage_percent,
@@ -43,10 +51,8 @@ export function CapacityTrendChart({ points }: { points: CapacityTrendPoint[] })
     return (
       <Card className="border-dashed shadow-none">
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">24 小时容量趋势</CardTitle>
-          <CardDescription className="text-xs">
-            按小时聚合 CPU 与内存使用率，判断整体容量是否持续紧张。
-          </CardDescription>
+          <CardTitle className="text-sm font-semibold">{title}</CardTitle>
+          <CardDescription className="text-xs">{description}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex h-[280px] items-center justify-center text-xs text-muted-foreground">
@@ -60,10 +66,8 @@ export function CapacityTrendChart({ points }: { points: CapacityTrendPoint[] })
   return (
     <Card className="border-dashed shadow-none">
       <CardHeader>
-        <CardTitle className="text-sm font-semibold">24 小时容量趋势</CardTitle>
-        <CardDescription className="text-xs">
-          按小时聚合 CPU 与内存使用率，判断整体容量是否持续紧张。
-        </CardDescription>
+        <CardTitle className="text-sm font-semibold">{title}</CardTitle>
+        <CardDescription className="text-xs">{description}</CardDescription>
       </CardHeader>
       <CardContent className="pl-2 pr-4">
         <div className="h-[280px] w-full">

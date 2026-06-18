@@ -147,11 +147,65 @@ export interface NodeHealthEvent {
   resolved_at?: string | null;
 }
 
+export interface NodeTrafficReport {
+  window_started_at: string;
+  window_ended_at: string;
+  request_count: number;
+  error_count: number;
+  unique_visitor_count: number;
+  status_codes_json: string;
+  top_domains_json: string;
+  source_countries_json: string;
+}
+
+export interface NodeTrafficSummary {
+  window_started_at: string;
+  window_ended_at: string;
+  request_count: number;
+  unique_visitor_count: number;
+  error_count: number;
+  estimated_qps: number;
+  error_rate_percent: number;
+}
+
+export interface NodeHealthSummary {
+  active_alerts: number;
+  critical_alerts: number;
+  warning_alerts: number;
+  info_alerts: number;
+  resolved_alerts: number;
+  has_capacity_risk: boolean;
+  has_traffic_risk: boolean;
+  has_runtime_risk: boolean;
+}
+
+export interface NodeTrafficDistributions {
+  status_codes: DistributionItem[];
+  top_domains: DistributionItem[];
+  source_countries: DistributionItem[];
+}
+
+export interface NodeObservabilityAnalytics {
+  traffic: NodeTrafficSummary | null;
+  distributions: NodeTrafficDistributions;
+  health: NodeHealthSummary | null;
+}
+
+export interface NodeObservabilityTrends {
+  traffic_24h: TrafficTrendPoint[];
+  capacity_24h: CapacityTrendPoint[];
+  network_24h: NetworkTrendPoint[];
+  disk_io_24h: DiskIOTrendPoint[];
+}
+
 export interface NodeObservability {
   node_id: string;
   profile: NodeSystemProfile | null;
   metric_snapshots: NodeMetricSnapshot[];
+  traffic_reports?: NodeTrafficReport[];
   health_events: NodeHealthEvent[];
+  analytics?: NodeObservabilityAnalytics;
+  trends?: NodeObservabilityTrends;
 }
 
 export type ProxyRouteConfigSection =

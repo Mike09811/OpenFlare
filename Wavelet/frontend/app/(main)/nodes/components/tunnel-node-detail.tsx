@@ -322,7 +322,11 @@ export function TunnelNodeDetail({ node }: { node: NodeItem }) {
 
       <InstallCommand node={node} variant="tunnel" />
 
-      <NodeObservability nodeId={node.id} connectionHint="隧道并发连接数" />
+      <NodeObservability
+        nodeId={node.id}
+        variant="compact"
+        connectionHint="隧道并发连接数"
+      />
 
       <NodeEditorDialog
         open={editorOpen}

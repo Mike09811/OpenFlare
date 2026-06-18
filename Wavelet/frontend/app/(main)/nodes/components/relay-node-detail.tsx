@@ -347,7 +347,11 @@ export function RelayNodeDetail({ node }: { node: NodeItem }) {
 
       <InstallCommand node={node} variant="relay" />
 
-      <NodeObservability nodeId={node.id} connectionHint="中继承载活动连接数" />
+      <NodeObservability
+        nodeId={node.id}
+        variant="compact"
+        connectionHint="中继承载活动连接数"
+      />
 
       <NodeEditorDialog
         open={editorOpen}

@@ -2,7 +2,7 @@
 
 import {Area, AreaChart, CartesianGrid, Line, XAxis, YAxis} from 'recharts';
 
-import {Card, CardContent, CardDescription, CardHeader, CardTitle,} from '@/components/ui/card';
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card';
 import {
   ChartConfig,
   ChartContainer,
@@ -11,34 +11,35 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import type {TrafficTrendPoint} from '@/lib/services/openflare';
+import type {DiskIOTrendPoint} from '@/lib/services/openflare';
 
-import {formatCompactNumber, formatTrendHour} from './dashboard-utils';
+import {formatTrendHour} from '../../components/dashboard/dashboard-utils';
+import {formatBytes} from './node-utils';
 
 const chartConfig = {
-  requests: {
-    label: '请求量',
-    color: 'hsl(var(--chart-1))',
+  diskRead: {
+    label: '磁盘读',
+    color: 'hsl(var(--chart-3))',
   },
-  errors: {
-    label: '错误量',
+  diskWrite: {
+    label: '磁盘写',
     color: 'hsl(var(--chart-5))',
   },
 } satisfies ChartConfig;
 
-export function TrafficTrendChart({
+export function DiskIOTrendChart({
   points,
-  title = '24 小时请求趋势',
-  description = '观察整体请求量和错误量是否出现异常抬升。',
+  title = '24 小时磁盘 IO 趋势',
+  description = '观察磁盘读写变化，辅助判断日志放大、缓存抖动或磁盘压力。',
 }: {
-  points: TrafficTrendPoint[];
+  points: DiskIOTrendPoint[];
   title?: string;
   description?: string;
 }) {
   const data = points.map((point) => ({
     hour: formatTrendHour(point.bucket_started_at),
-    requests: point.request_count,
-    errors: point.error_count,
+    diskRead: point.disk_read_bytes,
+    diskWrite: point.disk_write_bytes,
   }));
 
   if (data.length === 0) {
@@ -68,9 +69,9 @@ export function TrafficTrendChart({
           <ChartContainer config={chartConfig} className="h-full w-full">
             <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="trafficRequestsFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--color-requests)" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="var(--color-requests)" stopOpacity={0.02} />
+                <linearGradient id="nodeDiskReadFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--color-diskRead)" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="var(--color-diskRead)" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -85,7 +86,7 @@ export function TrafficTrendChart({
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-                tickFormatter={(value) => formatCompactNumber(Number(value))}
+                tickFormatter={(value) => formatBytes(Number(value))}
               />
               <ChartTooltip
                 cursor={false}
@@ -93,9 +94,9 @@ export function TrafficTrendChart({
                   <ChartTooltipContent
                     formatter={(value, name) => (
                       <span className="font-mono tabular-nums">
-                        {formatCompactNumber(Number(value))}
+                        {formatBytes(Number(value))}
                         <span className="ml-1 text-muted-foreground">
-                          {name === 'requests' ? '请求' : '错误'}
+                          {name === 'diskRead' ? '读' : '写'}
                         </span>
                       </span>
                     )}
@@ -104,15 +105,15 @@ export function TrafficTrendChart({
               />
               <Area
                 type="monotone"
-                dataKey="requests"
-                stroke="var(--color-requests)"
-                fill="url(#trafficRequestsFill)"
+                dataKey="diskRead"
+                stroke="var(--color-diskRead)"
+                fill="url(#nodeDiskReadFill)"
                 strokeWidth={2}
               />
               <Line
                 type="monotone"
-                dataKey="errors"
-                stroke="var(--color-errors)"
+                dataKey="diskWrite"
+                stroke="var(--color-diskWrite)"
                 strokeWidth={2}
                 dot={false}
               />
