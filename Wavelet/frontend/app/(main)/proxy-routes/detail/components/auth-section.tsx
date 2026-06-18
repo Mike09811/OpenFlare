@@ -45,11 +45,11 @@ const authSchema = z
   .superRefine((value, context) => {
     if (value.auth_mode === 'pow') {
       const difficulty = Number(value.pow_difficulty);
-      if (!Number.isFinite(difficulty) || difficulty < 1 || difficulty > 10) {
+      if (!Number.isFinite(difficulty) || difficulty < 1 || difficulty > 16) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['pow_difficulty'],
-          message: '难度需为 1-10 的整数',
+          message: '难度需为 1-16 的整数',
         });
       }
 
@@ -102,18 +102,14 @@ function resolveAuthMode(route: ProxyRouteItem): AuthValues['auth_mode'] {
   return 'none';
 }
 
-function buildPowConfig(
-  values: AuthValues,
-  route: ProxyRouteItem,
-  currentConfig: ProxyRoutePoWConfig,
-): ProxyRoutePoWConfig {
-  return {
-    ...currentConfig,
-    difficulty: Number(values.pow_difficulty),
-    algorithm: values.pow_algorithm,
-    session_ttl: Number(values.pow_session_ttl),
-    challenge_ttl: Number(values.pow_challenge_ttl),
-  };
+function syncPowFormValues(
+  setValue: ReturnType<typeof useForm<AuthValues>>['setValue'],
+  config: ProxyRoutePoWConfig,
+) {
+  setValue('pow_difficulty', String(config.difficulty));
+  setValue('pow_algorithm', config.algorithm);
+  setValue('pow_session_ttl', String(config.session_ttl));
+  setValue('pow_challenge_ttl', String(config.challenge_ttl));
 }
 
 interface AuthSectionProps {
@@ -171,7 +167,8 @@ export function AuthSection({ route, onRouteUpdate, onSavingChange }: AuthSectio
           id={proxyRouteFormIds.auth}
           className="space-y-5"
           onSubmit={form.handleSubmit(async (values) => {
-            const nextPowConfig = buildPowConfig(values, route, powConfig);
+            const nextPowConfig =
+              values.auth_mode === 'pow' ? powConfig : route.pow_config ?? defaultPowConfig;
             const powEnabled = values.auth_mode === 'pow' || values.pow_enabled;
 
             await save(
@@ -247,82 +244,15 @@ export function AuthSection({ route, onRouteUpdate, onSavingChange }: AuthSectio
           ) : null}
 
           {authMode === 'pow' ? (
-            <div className="space-y-4 rounded-lg border border-dashed p-4">
-              <PowConfigPanel
-                enabled={form.watch('pow_enabled')}
-                config={powConfig}
-                onChange={(enabled, config) => {
-                  form.setValue('pow_enabled', enabled);
-                  setPowConfig(config);
-                }}
-              />
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="pow_difficulty"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>难度</FormLabel>
-                      <FormControl>
-                        <Input placeholder="4" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="pow_algorithm"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>算法</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="fast">fast</SelectItem>
-                          <SelectItem value="slow">slow</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="pow_session_ttl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>会话 TTL (秒)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="600" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="pow_challenge_ttl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>挑战 TTL (秒)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="300" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
+            <PowConfigPanel
+              enabled={form.watch('pow_enabled')}
+              config={powConfig}
+              onChange={(enabled, config) => {
+                form.setValue('pow_enabled', enabled);
+                setPowConfig(config);
+                syncPowFormValues(form.setValue, config);
+              }}
+            />
           ) : null}
         </form>
       </Form>

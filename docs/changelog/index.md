@@ -23,7 +23,8 @@ sidebar: false
 - Wavelet 全球态势板视觉对齐系统风格：改用 `Card` / `Badge` / `Progress` 与虚线边框指标卡，地图配色与 tooltip 跟随主题 token。
 - Wavelet 全球态势板布局重构：关键指标前置为摘要栅格，地图与容量诊断并排展示，移动端自动堆叠。
 - 修复 Wavelet 全球态势板 ECharts 地图在紧凑布局下容器尺寸为 0 导致无法渲染的问题。
-- Wavelet 全球态势板地图容器调整为横向看板比例，避免世界地图被压缩成窄竖卡片。
+- Wavelet 全球态势板地图容器调整为约 2:3（宽:高）比例，避免世界地图横向过度拉伸。
+- Wavelet WAF / 代理规则认证实装完整 PoW 配置面板：支持难度、算法、TTL 与路径/IP/UA 黑白名单编辑。
 
 - 将 `openflare-server` 后端业务域迁移至 `Wavelet/internal/apps/openflare/`，通过 `/api/*` legacy 兼容层保持旧前端 API 路径不变。
 - 新增 OpenFlare 业务表 goose 迁移（`of_options`、`of_origins`、`of_proxy_routes`、`of_nodes`、`of_waf_*`、`of_tls_*`、`of_config_versions`、`of_pages_*`、`of_apply_logs` 等）。
