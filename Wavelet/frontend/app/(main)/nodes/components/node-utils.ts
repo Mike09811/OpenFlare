@@ -1,4 +1,10 @@
-import type {ApplyResult, NodeItem, NodeStatus, OpenrestyStatus} from '@/lib/services/openflare';
+import type {
+  ApplyResult,
+  NodeItem,
+  NodeStatus,
+  NodeTrafficReport,
+  OpenrestyStatus,
+} from '@/lib/services/openflare';
 
 export const WS_CONNECTED_LAST_SEEN = '__OPENFLARE_WS_CONNECTED__';
 export const FLARED_WS_CONNECTED_LAST_SEEN = '__OPENFLARE_FLARED_WS_CONNECTED__';
@@ -150,14 +156,76 @@ export function buildTunnelDockerInstallCommand(serverUrl: string, tunnelToken: 
 }
 
 export function formatBytes(bytes?: number | null, decimals = 1) {
-  if (!bytes || !Number.isFinite(bytes) || bytes <= 0) {
+  if (bytes === undefined || bytes === null || !Number.isFinite(bytes)) {
     return '—';
+  }
+  if (bytes <= 0) {
+    return '0 B';
   }
 
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
   const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
   const value = bytes / 1024 ** index;
   return `${value.toFixed(decimals)} ${units[index]}`;
+}
+
+export function formatPercent(value?: number | null) {
+  if (value === undefined || value === null || !Number.isFinite(value)) {
+    return '—';
+  }
+  return `${value.toFixed(1)}%`;
+}
+
+export function formatBytesPerSecond(
+  value?: number | null,
+  windowSeconds = 1,
+) {
+  if (value === undefined || value === null || !Number.isFinite(value)) {
+    return '—';
+  }
+  if (windowSeconds <= 0) {
+    return '—';
+  }
+  return `${formatBytes(value / windowSeconds)}/s`;
+}
+
+export function parseTrafficMap(value?: string | null) {
+  if (!value) {
+    return {} as Record<string, number>;
+  }
+  try {
+    const parsed = JSON.parse(value) as Record<string, number>;
+    return Object.entries(parsed).reduce<Record<string, number>>((result, [key, count]) => {
+      if (typeof count === 'number' && Number.isFinite(count)) {
+        result[key] = count;
+      }
+      return result;
+    }, {});
+  } catch {
+    return {} as Record<string, number>;
+  }
+}
+
+export function aggregateTrafficBreakdown(
+  reports: NodeTrafficReport[] | undefined,
+  field: 'status_codes_json' | 'top_domains_json',
+) {
+  const summary = new Map<string, number>();
+  for (const report of reports ?? []) {
+    const parsed = parseTrafficMap(report[field]);
+    for (const [key, value] of Object.entries(parsed)) {
+      summary.set(key, (summary.get(key) ?? 0) + value);
+    }
+  }
+  return Array.from(summary.entries())
+    .sort((left, right) => {
+      if (right[1] === left[1]) {
+        return left[0].localeCompare(right[0]);
+      }
+      return right[1] - left[1];
+    })
+    .slice(0, 6)
+    .map(([label, value]) => ({ label, value }));
 }
 
 export function formatUsageRatio(used?: number | null, total?: number | null) {

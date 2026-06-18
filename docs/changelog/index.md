@@ -46,6 +46,7 @@ sidebar: false
 - 补全前端迁移收尾：新增 `/openflare/about` 关于页与 `AboutService`；补全 `UpdateService` 升级流程（在线升级、手动上传、WebSocket 日志流）及顶栏版本升级入口。
 - 前端 UI 打磨：节点/WAF/DNS/配置清理等 Dialog 补 RHF+Zod；代理规则详情与访问日志 Tab 补 error 态；`pnpm build:embed` 增至 47 静态页。
 - 修复开发模式下 `/api/*` 尾斜杠引发 Next.js 308 与 Gin 301 循环重定向：前端 Service 与 `api-client` 请求拦截器规范化路径、强制浏览器同源代理、Next `skipTrailingSlashRedirect`、后端 `RegisterCollection` 双路径注册；Access Token 管理员权限校验对齐 `token_admin`。
+- 补全 Wavelet 边缘节点详情数据看板：迁移运行诊断摘要、系统信息、实时资源、网络流量、24 小时请求/容量/网络/磁盘趋势、请求结构分布与健康事件时间线。
 - OpenFlare 前端路由去除 `/openflare` 前缀，业务页面直接挂载于 `/`（如 `/nodes`、`/websites`）；侧栏移除「首页」「我的文件」；旧路径 `/openflare/*`、`/home` 永久重定向至新路径。
 
 ## [v2.3.4] - 2026-06-17
