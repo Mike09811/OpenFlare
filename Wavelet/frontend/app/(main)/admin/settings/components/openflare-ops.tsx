@@ -28,6 +28,8 @@ import {ErrorInline} from "@/components/layout/error"
 import {LoadingStateWithBorder} from "@/components/layout/loading"
 import type {DatabaseCleanupTarget} from "@/lib/services/openflare"
 import {NodeService, OptionService, StatusService, UpdateService, UptimeKumaService,} from "@/lib/services/openflare"
+import {VersionUpgradeDialog} from "@/app/(main)/openflare/components/version-upgrade-dialog"
+import {openflareLatestReleaseQueryKey, openflarePublicStatusQueryKey,} from "@/lib/hooks/use-openflare-server-upgrade"
 
 import {
   agentOptionEntries,
@@ -82,6 +84,7 @@ export function OpenFlareOpsSettings() {
     label: string
   } | null>(null)
   const [cleanupRetentionDays, setCleanupRetentionDays] = useState("")
+  const [versionDialogOpen, setVersionDialogOpen] = useState(false)
 
   const optionsQuery = useQuery({
     queryKey: optionsQueryKey,
@@ -89,7 +92,7 @@ export function OpenFlareOpsSettings() {
   })
 
   const statusQuery = useQuery({
-    queryKey: ["openflare", "public-status"],
+    queryKey: openflarePublicStatusQueryKey,
     queryFn: () => StatusService.getPublicStatus(),
   })
 
@@ -99,7 +102,7 @@ export function OpenFlareOpsSettings() {
   })
 
   const releaseQuery = useQuery({
-    queryKey: ["openflare", "latest-release"],
+    queryKey: openflareLatestReleaseQueryKey("stable"),
     queryFn: () => UpdateService.getLatestRelease("stable"),
   })
 
@@ -602,11 +605,16 @@ export function OpenFlareOpsSettings() {
       </div>
 
       <Card className="border-dashed shadow-none">
-        <CardHeader>
-          <CardTitle className="text-base">版本信息</CardTitle>
-          <CardDescription>
-            可通过 UpdateService 对接顶栏升级入口；完整升级流程可复用 Wavelet admin/updater。
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between gap-4">
+          <div>
+            <CardTitle className="text-base">版本信息</CardTitle>
+            <CardDescription>
+              检查 GitHub Release、在线升级或手动上传服务端二进制包。
+            </CardDescription>
+          </div>
+          <Button type="button" size="sm" onClick={() => setVersionDialogOpen(true)}>
+            管理升级
+          </Button>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <InfoCell label="当前版本" value={statusQuery.data?.version ?? releaseQuery.data?.current_version ?? "—"} />
@@ -634,6 +642,12 @@ export function OpenFlareOpsSettings() {
           />
         </CardContent>
       </Card>
+
+      <VersionUpgradeDialog
+        open={versionDialogOpen}
+        onOpenChange={setVersionDialogOpen}
+        canUpgrade
+      />
 
       <UptimeKumaSiteSelectModal
         open={uptimeKumaModalOpen}

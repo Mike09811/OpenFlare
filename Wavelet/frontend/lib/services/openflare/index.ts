@@ -1,3 +1,4 @@
+export { AboutService } from './about.service';
 export { LegacyOpenFlareBaseService } from './legacy-base.service';
 export type { LegacyApiResponse } from './legacy-base.service';
 
@@ -87,6 +88,9 @@ export type {
   DatabaseCleanupTarget,
   LatestReleaseInfo,
   OpenFlarePublicStatus,
+  UpgradeLogItem,
+  UpgradeStreamSnapshot,
+  UploadedServerBinaryInfo,
   OriginDetail,
   OriginItem,
   OriginMutationPayload,
@@ -108,6 +112,7 @@ export type {
   TlsCertificateMutationPayload,
 } from './types';
 
+import {AboutService} from './about.service';
 import {AccessLogService} from './access-log.service';
 import {ApplyLogService} from './apply-log.service';
 import {ConfigVersionService} from './config-version.service';
@@ -126,6 +131,7 @@ import {WafService} from './waf.service';
 import {WebsiteService} from './website.service';
 
 export const openflareServices = {
+  about: AboutService,
   node: NodeService,
   proxyRoute: ProxyRouteService,
   configVersion: ConfigVersionService,

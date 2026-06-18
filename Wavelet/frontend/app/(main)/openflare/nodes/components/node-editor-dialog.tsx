@@ -1,6 +1,10 @@
 'use client';
 
-import {useEffect, useState} from 'react';
+import {useEffect} from 'react';
+import {zodResolver} from '@hookform/resolvers/zod';
+import {useForm} from 'react-hook-form';
+import {z} from 'zod';
+
 import {Button} from '@/components/ui/button';
 import {
   Dialog,
@@ -16,21 +20,51 @@ import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from '@/
 import {Switch} from '@/components/ui/switch';
 import type {NodeItem, NodeMutationPayload, NodeType} from '@/lib/services/openflare';
 
-type FormState = {
-  node_type: NodeType;
-  name: string;
-  ip: string;
-  ip_manual_override: boolean;
-  auto_update_enabled: boolean;
-  geo_manual_override: boolean;
-  geo_name: string;
-  geo_latitude: string;
-  geo_longitude: string;
-  relay_bind_port: string;
-  relay_vhost_http_port: string;
-};
+const nodeSchema = z
+  .object({
+    node_type: z.enum(['edge_node', 'tunnel_relay', 'tunnel_client']),
+    name: z.string().trim().min(1, '请输入节点名称').max(255),
+    ip: z.string(),
+    ip_manual_override: z.boolean(),
+    auto_update_enabled: z.boolean(),
+    geo_manual_override: z.boolean(),
+    geo_name: z.string(),
+    geo_latitude: z.string(),
+    geo_longitude: z.string(),
+    relay_bind_port: z.string(),
+    relay_vhost_http_port: z.string(),
+  })
+  .superRefine((value, context) => {
+    if (value.ip_manual_override && !value.ip.trim()) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['ip'],
+        message: '锁定 IP 时必须填写节点 IP',
+      });
+    }
+    if (value.node_type === 'tunnel_relay') {
+      const bindPort = Number(value.relay_bind_port);
+      const vhostPort = Number(value.relay_vhost_http_port);
+      if (!Number.isFinite(bindPort) || bindPort <= 0) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['relay_bind_port'],
+          message: '请输入有效的绑定端口',
+        });
+      }
+      if (!Number.isFinite(vhostPort) || vhostPort <= 0) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['relay_vhost_http_port'],
+          message: '请输入有效的 VHost 端口',
+        });
+      }
+    }
+  });
 
-const defaultForm: FormState = {
+type NodeFormValues = z.infer<typeof nodeSchema>;
+
+const defaultForm: NodeFormValues = {
   node_type: 'edge_node',
   name: '',
   ip: '',
@@ -44,7 +78,7 @@ const defaultForm: FormState = {
   relay_vhost_http_port: '8080',
 };
 
-function buildFormState(node?: NodeItem | null): FormState {
+function buildFormValues(node?: NodeItem | null): NodeFormValues {
   if (!node) return defaultForm;
 
   return {
@@ -68,7 +102,7 @@ function buildFormState(node?: NodeItem | null): FormState {
   };
 }
 
-function toPayload(form: FormState): NodeMutationPayload {
+function toPayload(form: NodeFormValues): NodeMutationPayload {
   const base: NodeMutationPayload = {
     node_type: form.node_type,
     name: form.name.trim(),
@@ -110,30 +144,24 @@ export function NodeEditorDialog({
   onClose: () => void;
   onSubmit: (payload: NodeMutationPayload) => Promise<void>;
 }) {
-  const [form, setForm] = useState<FormState>(defaultForm);
-  const [error, setError] = useState('');
+  const form = useForm<NodeFormValues>({
+    resolver: zodResolver(nodeSchema),
+    defaultValues: defaultForm,
+  });
 
   useEffect(() => {
     if (open) {
-      setForm(buildFormState(node));
-      setError('');
+      form.reset(buildFormValues(node));
     }
-  }, [open, node]);
+  }, [form, open, node]);
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!form.name.trim()) {
-      setError('请输入节点名称');
-      return;
-    }
-    if (form.ip_manual_override && !form.ip.trim()) {
-      setError('锁定 IP 时必须填写节点 IP');
-      return;
-    }
+  const nodeType = form.watch('node_type');
+  const ipManualOverride = form.watch('ip_manual_override');
+  const geoManualOverride = form.watch('geo_manual_override');
 
-    setError('');
-    await onSubmit(toPayload(form));
-  };
+  const handleSubmit = form.handleSubmit(async (values) => {
+    await onSubmit(toPayload(values));
+  });
 
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
@@ -149,10 +177,10 @@ export function NodeEditorDialog({
           <div className="space-y-2">
             <Label>节点类型</Label>
             <Select
-              value={form.node_type}
+              value={nodeType}
               disabled={Boolean(node)}
               onValueChange={(value) =>
-                setForm((prev) => ({ ...prev, node_type: value as NodeType }))
+                form.setValue('node_type', value as NodeType)
               }
             >
               <SelectTrigger>
@@ -170,20 +198,28 @@ export function NodeEditorDialog({
             <Label htmlFor="node-name">节点名称</Label>
             <Input
               id="node-name"
-              value={form.name}
-              onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
               placeholder="例如 edge-hk-01"
+              {...form.register('name')}
             />
+            {form.formState.errors.name ? (
+              <p className="text-xs text-destructive">
+                {form.formState.errors.name.message}
+              </p>
+            ) : null}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="node-ip">节点 IP</Label>
             <Input
               id="node-ip"
-              value={form.ip}
-              onChange={(event) => setForm((prev) => ({ ...prev, ip: event.target.value }))}
               placeholder="可选，接入后自动上报"
+              {...form.register('ip')}
             />
+            {form.formState.errors.ip ? (
+              <p className="text-xs text-destructive">
+                {form.formState.errors.ip.message}
+              </p>
+            ) : null}
           </div>
 
           <div className="flex items-center justify-between rounded-lg border px-3 py-2">
@@ -192,9 +228,9 @@ export function NodeEditorDialog({
               <p className="text-xs text-muted-foreground">启用后管理端不再自动覆盖 IP</p>
             </div>
             <Switch
-              checked={form.ip_manual_override}
+              checked={ipManualOverride}
               onCheckedChange={(checked) =>
-                setForm((prev) => ({ ...prev, ip_manual_override: checked }))
+                form.setValue('ip_manual_override', checked)
               }
             />
           </div>
@@ -205,34 +241,38 @@ export function NodeEditorDialog({
               <p className="text-xs text-muted-foreground">启用后节点将自动拉取正式版更新</p>
             </div>
             <Switch
-              checked={form.auto_update_enabled}
+              checked={form.watch('auto_update_enabled')}
               onCheckedChange={(checked) =>
-                setForm((prev) => ({ ...prev, auto_update_enabled: checked }))
+                form.setValue('auto_update_enabled', checked)
               }
             />
           </div>
 
-          {form.node_type === 'tunnel_relay' ? (
+          {nodeType === 'tunnel_relay' ? (
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="relay-bind-port">绑定端口</Label>
                 <Input
                   id="relay-bind-port"
-                  value={form.relay_bind_port}
-                  onChange={(event) =>
-                    setForm((prev) => ({ ...prev, relay_bind_port: event.target.value }))
-                  }
+                  {...form.register('relay_bind_port')}
                 />
+                {form.formState.errors.relay_bind_port ? (
+                  <p className="text-xs text-destructive">
+                    {form.formState.errors.relay_bind_port.message}
+                  </p>
+                ) : null}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="relay-vhost-port">VHost 端口</Label>
                 <Input
                   id="relay-vhost-port"
-                  value={form.relay_vhost_http_port}
-                  onChange={(event) =>
-                    setForm((prev) => ({ ...prev, relay_vhost_http_port: event.target.value }))
-                  }
+                  {...form.register('relay_vhost_http_port')}
                 />
+                {form.formState.errors.relay_vhost_http_port ? (
+                  <p className="text-xs text-destructive">
+                    {form.formState.errors.relay_vhost_http_port.message}
+                  </p>
+                ) : null}
               </div>
             </div>
           ) : null}
@@ -243,49 +283,29 @@ export function NodeEditorDialog({
               <p className="text-xs text-muted-foreground">用于总览地图展示</p>
             </div>
             <Switch
-              checked={form.geo_manual_override}
+              checked={geoManualOverride}
               onCheckedChange={(checked) =>
-                setForm((prev) => ({ ...prev, geo_manual_override: checked }))
+                form.setValue('geo_manual_override', checked)
               }
             />
           </div>
 
-          {form.geo_manual_override ? (
+          {geoManualOverride ? (
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="space-y-2 sm:col-span-3">
                 <Label htmlFor="geo-name">位置名称</Label>
-                <Input
-                  id="geo-name"
-                  value={form.geo_name}
-                  onChange={(event) =>
-                    setForm((prev) => ({ ...prev, geo_name: event.target.value }))
-                  }
-                />
+                <Input id="geo-name" {...form.register('geo_name')} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="geo-lat">纬度</Label>
-                <Input
-                  id="geo-lat"
-                  value={form.geo_latitude}
-                  onChange={(event) =>
-                    setForm((prev) => ({ ...prev, geo_latitude: event.target.value }))
-                  }
-                />
+                <Input id="geo-lat" {...form.register('geo_latitude')} />
               </div>
               <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="geo-lng">经度</Label>
-                <Input
-                  id="geo-lng"
-                  value={form.geo_longitude}
-                  onChange={(event) =>
-                    setForm((prev) => ({ ...prev, geo_longitude: event.target.value }))
-                  }
-                />
+                <Input id="geo-lng" {...form.register('geo_longitude')} />
               </div>
             </div>
           ) : null}
-
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>

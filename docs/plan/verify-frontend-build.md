@@ -10,17 +10,16 @@
 |------|---------|-----------|--------|
 | TypeScript | `pnpm exec tsc --noEmit` | **0** | ✅ Pass |
 | Lint | `pnpm lint` | **0** | ✅ Pass |
-| Production build | `pnpm build:embed` | **1** | ❌ Fail |
-| Standard build | `pnpm build` | **1** | ❌ Fail (same error) |
+| Production build | `pnpm build:embed` | **0** | ✅ Pass |
 
-**Overall:** TypeScript and lint are clean. Both build targets fail during static page generation due to a missing React `Suspense` boundary around `useSearchParams()`.
+**Overall:** All three gates pass. Static export completed with **47/47** pages generated.
 
 ---
 
 ## 1. TypeScript (`pnpm exec tsc --noEmit`)
 
 - **Exit code:** `0`
-- **Duration:** ~6.2s
+- **Duration:** ~16.2s
 - **Errors:** None
 - **Warnings:** None
 
@@ -29,7 +28,7 @@
 ## 2. ESLint (`pnpm lint`)
 
 - **Exit code:** `0`
-- **Duration:** ~5.6s
+- **Duration:** ~24.4s
 - **Command:** `eslint` (no extra args)
 - **Errors:** None
 - **Warnings:** None
@@ -40,112 +39,100 @@
 
 **Production target:** `build:embed` — sets `NEXT_STANDALONE_EXPORT=true`, which enables `output: 'export'` in `next.config.ts` for static export embedded in the Go backend.
 
-- **Exit code:** `1`
-- **Duration:** ~57s (compile ~29.5s, TypeScript check ~23.9s)
+- **Exit code:** `0`
+- **Duration:** ~72s (compile ~44s, TypeScript check ~20.1s, static generation ~2.2s)
 
 ### Build progress
 
 - ✅ Compiled successfully
 - ✅ TypeScript check passed during build
-- ❌ Static page generation failed at **0/46** pages
+- ✅ Static page generation completed at **47/47** pages
 
-### Error
+### Warnings
 
 ```
-⨯ useSearchParams() should be wrapped in a suspense boundary at page "/openflare/nodes".
-  Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
-
-Error occurred prerendering page "/openflare/nodes".
-Export encountered an error on /(main)/openflare/nodes/page: /openflare/nodes, exiting the build.
-⨯ Next.js build worker exited with code: 1 and signal: null
+⚠ Statically exporting a Next.js application via `next export` disables API routes and middleware.
+This command is meant for static-only hosts, and is not necessary to make your application static.
+Pages in your application without server-side data dependencies will be automatically statically exported by `next build`, including pages powered by `getStaticProps`.
+Learn more: https://nextjs.org/docs/messages/api-routes-static-export
 ```
 
-### Affected files
+### Static pages (47 routes)
 
-| File | Issue |
-|------|-------|
-| `app/(main)/openflare/nodes/page.tsx` | `useSearchParams()` at line 36 (page default export) |
-| `app/(main)/openflare/nodes/components/node-type-filter.tsx` | `useSearchParams()` at line 57 (rendered inside nodes page) |
+| Route |
+|-------|
+| `/` |
+| `/_not-found` |
+| `/admin/database` |
+| `/admin/demo` |
+| `/admin/files` |
+| `/admin/logs` |
+| `/admin/push` |
+| `/admin/settings` |
+| `/admin/system` |
+| `/admin/tasks` |
+| `/admin/users` |
+| `/docs/api` |
+| `/docs/how-to-use` |
+| `/docs/privacy-policy` |
+| `/docs/terms-of-service` |
+| `/files` |
+| `/home` |
+| `/icon` |
+| `/login` |
+| `/openflare` |
+| `/openflare/about` |
+| `/openflare/access-logs` |
+| `/openflare/apply-logs` |
+| `/openflare/config-versions` |
+| `/openflare/nodes` |
+| `/openflare/nodes/detail` |
+| `/openflare/origins` |
+| `/openflare/origins/detail` |
+| `/openflare/pages` |
+| `/openflare/pages/detail` |
+| `/openflare/performance` |
+| `/openflare/proxy-routes` |
+| `/openflare/proxy-routes/detail` |
+| `/openflare/waf` |
+| `/openflare/waf/ip-groups` |
+| `/openflare/websites` |
+| `/openflare/websites/certificates` |
+| `/openflare/websites/detail` |
+| `/openflare/websites/dns-accounts` |
+| `/register` |
+| `/settings` |
+| `/settings/access-token` |
+| `/settings/appearance` |
+| `/settings/notifications` |
+| `/settings/profile` |
+| `/settings/security` |
 
-### Build output size
-
-Not available — build aborted before artifact generation completed.
+All routes prerendered as static content (`○`). Middleware proxy is present but not exported in static mode (expected).
 
 ---
 
-## 4. Standard Build (`pnpm build`)
+## Notes
 
-Ran for comparison (uses rewrites instead of static export).
-
-- **Exit code:** `1`
-- **Duration:** ~65s
-- **Error:** Identical `useSearchParams()` / missing `Suspense` failure on `/openflare/nodes`
+- Initial `pnpm build:embed` attempt failed with "Another next build process is already running" due to a stale `.next/lock` from a concurrent build. Lock cleared and build re-run successfully.
+- Previous verification on this date documented a `useSearchParams()` / missing `Suspense` failure on `/openflare/nodes`. That issue is no longer present in the current tree.
 
 ---
 
-## Root Cause
+## CI Gate (recommended)
 
-Next.js 16 requires `useSearchParams()` to be used inside a `<Suspense>` boundary when pages are statically prerendered/exported. The nodes page is a client component that calls `useSearchParams()` directly in both the page and a child component (`NodeTypeFilter`).
-
-Other pages in the codebase already follow the correct pattern:
-
-- `app/(auth)/login/page.tsx` — wraps content in `<Suspense>`
-- `app/(auth)/register/page.tsx` — wraps content in `<Suspense>`
-- `app/(main)/admin/tasks/page.tsx` — wraps content in `<Suspense fallback={...}>`
-- `app/(main)/openflare/proxy-routes/detail/page.tsx` — splits into `page.tsx` + `page-client.tsx` with `<Suspense>`
-
----
-
-## Other `useSearchParams()` Usages (likely to fail after nodes fix)
-
-These files also use `useSearchParams()` without a visible `Suspense` wrapper at the page level. They may fail once `/openflare/nodes` is fixed and generation continues:
-
-| File |
-|------|
-| `app/(main)/openflare/nodes/detail/page.tsx` |
-| `app/(main)/openflare/websites/detail/page.tsx` |
-| `app/(main)/openflare/origins/detail/page.tsx` |
-| `app/(main)/openflare/apply-logs/page.tsx` |
-| `app/(main)/openflare/pages/detail/page.tsx` |
-| `components/auth/login-form.tsx` |
-| `components/auth/login-page.tsx` |
-| `components/auth/register-form.tsx` |
-
-(Auth pages are likely safe because `login/page.tsx` and `register/page.tsx` already wrap them in `<Suspense>`.)
-
----
-
-## Recommendations
-
-### Priority 1 — Fix `/openflare/nodes` build blocker
-
-Refactor using the existing `proxy-routes/detail` pattern:
-
-1. Create `app/(main)/openflare/nodes/page-client.tsx` with the current page logic.
-2. Change `page.tsx` to a server component that wraps the client component in `<Suspense fallback={<LoadingState />}>`.
-
-Alternatively, wrap `<NodeTypeFilter />` and the `useSearchParams()` usage in a single child component inside `<Suspense>`.
-
-### Priority 2 — Audit remaining pages
-
-Apply the same `Suspense` pattern to all detail/list pages using `useSearchParams()` (see table above) to avoid repeated build failures at 1/46, 2/46, etc.
-
-### Priority 3 — Add a CI gate
-
-Run all three checks in CI before merge:
+Run all three checks before merge:
 
 ```bash
+cd Wavelet/frontend
 pnpm exec tsc --noEmit
 pnpm lint
 pnpm build:embed
 ```
 
-### Priority 4 — Optional lint rule
-
-Consider an ESLint rule or codemod to flag `useSearchParams()` usage outside `Suspense` boundaries, since `tsc` and `eslint` pass even when the production build fails.
-
 ---
 
 ## Actions Taken
 
-- No code fixes applied. The failure is a structural Next.js `Suspense` requirement, not a trivial one-line lint fix.
+- Ran all three verification commands on 2026-06-18.
+- No code changes applied; documentation updated with results.

@@ -2,7 +2,7 @@
 
 > **文档类型**：实现计划（Implementation Plan）  
 > **创建日期**：2026-06-18  
-> **状态**：基本完成（FC-1~19 已实装；验证见 `docs/plan/verify-frontend-*.md`）
+> **状态**：✅ 迁移完成（FC-1~20 已实装；验证见 `docs/plan/verify-frontend-*.md`）
 > **前置阅读**：[`Wavelet/AGENTS.md`](../../Wavelet/AGENTS.md)、[`docs/plan/20260618-openflare-wavelet-backend-migration.md`](./20260618-openflare-wavelet-backend-migration.md)  
 > **依赖**：后端阶段一（旧路径 `/api/*` 兼容）完成后启动；阶段二可与后端阶段五并行
 

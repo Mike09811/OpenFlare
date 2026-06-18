@@ -26,18 +26,16 @@ import {
   buildCountryOptions,
   buildRuleGroupDraft,
   countRuleEntries,
-  defaultRuleModalState,
   emptyRuleGroupDraft,
   formatCountryItem,
   getListFieldKey,
   type ListFieldKey,
   normalizeItems,
-  type RuleModalState,
   textToList,
   updateDraftList,
 } from './helpers';
 import {PowConfigPanel} from './pow-config-panel';
-import {RuleEntryDialog} from './rule-entry-dialog';
+import {RuleEntryDialog, type RuleEntryFormValues} from './rule-entry-dialog';
 import {RuleListSection} from './rule-list-section';
 
 const ruleGroupSchema = z.object({
@@ -69,7 +67,7 @@ export function RuleGroupDialog({
   onSubmit,
 }: RuleGroupDialogProps) {
   const [listsDraft, setListsDraft] = useState<WAFRuleGroupPayload>(emptyRuleGroupDraft);
-  const [ruleModal, setRuleModal] = useState<RuleModalState>(defaultRuleModalState);
+  const [ruleEntryOpen, setRuleEntryOpen] = useState(false);
 
   const countryOptions = useMemo(() => buildCountryOptions(), []);
   const countryLabelMap = useMemo(
@@ -101,7 +99,7 @@ export function RuleGroupDialog({
       remark: draft.remark,
       pow_enabled: draft.pow_enabled,
     });
-    setRuleModal(defaultRuleModalState);
+    setRuleEntryOpen(false);
   }, [form, group, open]);
 
   const ipGroupByID = new Map(ipGroups.map((item) => [item.id, item]));
@@ -126,23 +124,21 @@ export function RuleGroupDialog({
     );
   };
 
-  const applyRuleModal = () => {
+  const applyRuleEntry = (entry: RuleEntryFormValues) => {
     const values =
-      ruleModal.dimension === 'ip'
-        ? textToList(ruleModal.ipValue)
-        : ruleModal.dimension === 'ip_group'
-          ? ruleModal.ipGroupIDs.map(String)
-          : normalizeItems(ruleModal.countryValues);
+      entry.dimension === 'ip'
+        ? textToList(entry.ipValue)
+        : entry.dimension === 'ip_group'
+          ? entry.ipGroupIDs.map(String)
+          : normalizeItems(entry.countryValues);
 
-    if (values.length === 0) return;
-
-    const listKey = getListFieldKey(ruleModal.listType, ruleModal.dimension);
+    const listKey = getListFieldKey(entry.listType, entry.dimension);
     setListsDraft((current) =>
       updateDraftList(current, listKey, (items) =>
         normalizeItems([...items, ...values]),
       ),
     );
-    setRuleModal(defaultRuleModalState);
+    setRuleEntryOpen(false);
   };
 
   const handleSubmit = form.handleSubmit(async (values) => {
@@ -244,7 +240,7 @@ export function RuleGroupDialog({
                       type="button"
                       size="sm"
                       onClick={() =>
-                        setRuleModal({ ...defaultRuleModalState, open: true })
+                        setRuleEntryOpen(true)
                       }
                     >
                       <Plus className="size-3.5 mr-1" />
@@ -392,12 +388,11 @@ export function RuleGroupDialog({
       </Dialog>
 
       <RuleEntryDialog
-        state={ruleModal}
+        open={ruleEntryOpen}
         countryOptions={countryOptions}
         ipGroups={ipGroups}
-        onClose={() => setRuleModal(defaultRuleModalState)}
-        onChange={(patch) => setRuleModal((current) => ({ ...current, ...patch, open: true }))}
-        onSubmit={applyRuleModal}
+        onOpenChange={setRuleEntryOpen}
+        onSubmit={applyRuleEntry}
       />
     </>
   );

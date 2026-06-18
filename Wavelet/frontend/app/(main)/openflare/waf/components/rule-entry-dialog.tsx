@@ -1,7 +1,10 @@
 'use client';
 
 import {useEffect, useMemo, useState} from 'react';
+import {zodResolver} from '@hookform/resolvers/zod';
 import {Search} from 'lucide-react';
+import {useForm} from 'react-hook-form';
+import {z} from 'zod';
 
 import {Button} from '@/components/ui/button';
 import {Checkbox} from '@/components/ui/checkbox';
@@ -19,45 +22,101 @@ import {Textarea} from '@/components/ui/textarea';
 import {cn} from '@/lib/utils';
 import type {WAFIPGroup} from '@/lib/services/openflare';
 
-import {
-  type CountryOption,
-  normalizeItems,
-  type RuleDimension,
-  type RuleListType,
-  type RuleModalState,
-} from './helpers';
+import {type CountryOption, normalizeItems, type RuleDimension, type RuleListType, textToList,} from './helpers';
+
+const ruleEntrySchema = z
+  .object({
+    listType: z.enum(['whitelist', 'blacklist']),
+    dimension: z.enum(['ip', 'ip_group', 'country']),
+    ipValue: z.string(),
+    ipGroupIDs: z.array(z.number()),
+    countryValues: z.array(z.string()),
+  })
+  .superRefine((value, context) => {
+    if (value.dimension === 'ip') {
+      if (textToList(value.ipValue).length === 0) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['ipValue'],
+          message: '请输入至少一个 IP 或 IP 段',
+        });
+      }
+      return;
+    }
+    if (value.dimension === 'ip_group') {
+      if (value.ipGroupIDs.length === 0) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['ipGroupIDs'],
+          message: '请选择至少一个 IP 组',
+        });
+      }
+      return;
+    }
+    if (normalizeItems(value.countryValues).length === 0) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['countryValues'],
+        message: '请选择至少一个国家/地区',
+      });
+    }
+  });
+
+export type RuleEntryFormValues = z.infer<typeof ruleEntrySchema>;
+
+const defaultRuleEntryValues: RuleEntryFormValues = {
+  listType: 'blacklist',
+  dimension: 'ip',
+  ipValue: '',
+  ipGroupIDs: [],
+  countryValues: [],
+};
 
 interface RuleEntryDialogProps {
-  state: RuleModalState;
+  open: boolean;
   countryOptions: CountryOption[];
   ipGroups: WAFIPGroup[];
-  onClose: () => void;
-  onChange: (patch: Partial<RuleModalState>) => void;
-  onSubmit: () => void;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (values: RuleEntryFormValues) => void;
 }
 
 export function RuleEntryDialog({
-  state,
+  open,
   countryOptions,
   ipGroups,
-  onClose,
-  onChange,
+  onOpenChange,
   onSubmit,
 }: RuleEntryDialogProps) {
   const [keyword, setKeyword] = useState('');
+  const form = useForm<RuleEntryFormValues>({
+    resolver: zodResolver(ruleEntrySchema),
+    defaultValues: defaultRuleEntryValues,
+  });
+
+  const listType = form.watch('listType');
+  const dimension = form.watch('dimension');
+  const ipValue = form.watch('ipValue');
+  const ipGroupIDs = form.watch('ipGroupIDs');
+  const countryValues = form.watch('countryValues');
 
   useEffect(() => {
-    if (!state.open) return;
+    if (!open) return;
+    form.reset(defaultRuleEntryValues);
     setKeyword('');
-  }, [state.dimension, state.open]);
+  }, [form, open]);
+
+  useEffect(() => {
+    if (!open) return;
+    setKeyword('');
+  }, [dimension, open]);
 
   const selectedCountrySet = useMemo(
-    () => new Set(state.countryValues),
-    [state.countryValues],
+    () => new Set(countryValues),
+    [countryValues],
   );
   const selectedIPGroupSet = useMemo(
-    () => new Set(state.ipGroupIDs),
-    [state.ipGroupIDs],
+    () => new Set(ipGroupIDs),
+    [ipGroupIDs],
   );
 
   const filteredCountries = useMemo(() => {
@@ -73,28 +132,32 @@ export function RuleEntryDialog({
 
   const toggleCountry = (code: string) => {
     const values = selectedCountrySet.has(code)
-      ? state.countryValues.filter((item) => item !== code)
-      : normalizeItems([...state.countryValues, code]);
-    onChange({ countryValues: values });
+      ? countryValues.filter((item) => item !== code)
+      : normalizeItems([...countryValues, code]);
+    form.setValue('countryValues', values, { shouldValidate: true });
   };
 
   const toggleIPGroup = (id: number) => {
     const values = selectedIPGroupSet.has(id)
-      ? state.ipGroupIDs.filter((item) => item !== id)
-      : [...state.ipGroupIDs, id].sort((left, right) => left - right);
-    onChange({ ipGroupIDs: values });
+      ? ipGroupIDs.filter((item) => item !== id)
+      : [...ipGroupIDs, id].sort((left, right) => left - right);
+    form.setValue('ipGroupIDs', values, { shouldValidate: true });
   };
 
-  const typeLabel = state.listType === 'blacklist' ? '黑名单' : '白名单';
+  const typeLabel = listType === 'blacklist' ? '黑名单' : '白名单';
   const dimensionLabel =
-    state.dimension === 'ip'
+    dimension === 'ip'
       ? 'IP'
-      : state.dimension === 'ip_group'
+      : dimension === 'ip_group'
         ? 'IP 组'
         : '地域';
 
+  const handleSubmit = form.handleSubmit((values) => {
+    onSubmit(values);
+  });
+
   return (
-    <Dialog open={state.open} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>添加{typeLabel}规则</DialogTitle>
@@ -115,9 +178,9 @@ export function RuleEntryDialog({
                   <Button
                     key={option.value}
                     type="button"
-                    variant={state.listType === option.value ? 'default' : 'outline'}
+                    variant={listType === option.value ? 'default' : 'outline'}
                     onClick={() =>
-                      onChange({ listType: option.value as RuleListType })
+                      form.setValue('listType', option.value as RuleListType)
                     }
                   >
                     {option.label}
@@ -137,9 +200,9 @@ export function RuleEntryDialog({
                     key={option.value}
                     type="button"
                     size="sm"
-                    variant={state.dimension === option.value ? 'default' : 'outline'}
+                    variant={dimension === option.value ? 'default' : 'outline'}
                     onClick={() =>
-                      onChange({ dimension: option.value as RuleDimension })
+                      form.setValue('dimension', option.value as RuleDimension)
                     }
                   >
                     {option.label}
@@ -149,21 +212,28 @@ export function RuleEntryDialog({
             </div>
           </div>
 
-          {state.dimension === 'ip' ? (
+          {dimension === 'ip' ? (
             <div className="space-y-2">
               <Label>IP / IP 段</Label>
               <Textarea
-                value={state.ipValue}
+                value={ipValue}
                 placeholder="例如 1.1.1.1 或 192.168.0.0/24"
-                onChange={(event) => onChange({ ipValue: event.target.value })}
+                onChange={(event) =>
+                  form.setValue('ipValue', event.target.value, { shouldValidate: true })
+                }
               />
               <p className="text-xs text-muted-foreground">
                 支持单个 IP、CIDR，或使用换行/逗号一次添加多个。
               </p>
+              {form.formState.errors.ipValue ? (
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.ipValue.message}
+                </p>
+              ) : null}
             </div>
           ) : null}
 
-          {state.dimension === 'ip_group' ? (
+          {dimension === 'ip_group' ? (
             <div className="space-y-3 rounded-lg border border-dashed p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -173,7 +243,7 @@ export function RuleEntryDialog({
                   </p>
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  已选 {state.ipGroupIDs.length}
+                  已选 {ipGroupIDs.length}
                 </span>
               </div>
               <div className="max-h-64 space-y-2 overflow-y-auto">
@@ -208,10 +278,15 @@ export function RuleEntryDialog({
                   <p className="text-sm text-muted-foreground">暂无 IP 组，请先创建。</p>
                 )}
               </div>
+              {form.formState.errors.ipGroupIDs ? (
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.ipGroupIDs.message}
+                </p>
+              ) : null}
             </div>
           ) : null}
 
-          {state.dimension === 'country' ? (
+          {dimension === 'country' ? (
             <div className="space-y-3">
               <div className="flex items-center gap-2 rounded-md border px-3 py-2">
                 <Search className="size-4 text-muted-foreground" />
@@ -226,12 +301,14 @@ export function RuleEntryDialog({
                   variant="ghost"
                   size="sm"
                   onClick={() =>
-                    onChange({
-                      countryValues: normalizeItems([
-                        ...state.countryValues,
+                    form.setValue(
+                      'countryValues',
+                      normalizeItems([
+                        ...countryValues,
                         ...filteredCountries.map((option) => option.code),
                       ]),
-                    })
+                      { shouldValidate: true },
+                    )
                   }
                 >
                   全选当前
@@ -240,7 +317,9 @@ export function RuleEntryDialog({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => onChange({ countryValues: [] })}
+                  onClick={() =>
+                    form.setValue('countryValues', [], { shouldValidate: true })
+                  }
                 >
                   清空
                 </Button>
@@ -265,15 +344,20 @@ export function RuleEntryDialog({
                   );
                 })}
               </div>
+              {form.formState.errors.countryValues ? (
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.countryValues.message}
+                </p>
+              ) : null}
             </div>
           ) : null}
         </div>
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             取消
           </Button>
-          <Button type="button" onClick={onSubmit}>
+          <Button type="button" onClick={() => void handleSubmit()}>
             添加
           </Button>
         </DialogFooter>

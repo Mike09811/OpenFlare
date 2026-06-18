@@ -394,7 +394,18 @@ export default function AccessLogsPage() {
                 </SelectContent>
               </Select>
             </div>
-            {foldsQuery.isLoading ? (
+            {foldsQuery.isError ? (
+              <div className="p-4">
+                <ErrorInline
+                  message={
+                    foldsQuery.error instanceof Error
+                      ? foldsQuery.error.message
+                      : "加载失败"
+                  }
+                  onRetry={() => void foldsQuery.refetch()}
+                />
+              </div>
+            ) : foldsQuery.isLoading ? (
               <LoadingStateWithBorder />
             ) : (foldsQuery.data?.items ?? []).length === 0 ? (
               <EmptyStateWithBorder title="暂无折叠数据" />
@@ -455,7 +466,18 @@ export default function AccessLogsPage() {
                 </SelectContent>
               </Select>
             </div>
-            {ipSummaryQuery.isLoading ? (
+            {ipSummaryQuery.isError ? (
+              <div className="p-4">
+                <ErrorInline
+                  message={
+                    ipSummaryQuery.error instanceof Error
+                      ? ipSummaryQuery.error.message
+                      : "加载失败"
+                  }
+                  onRetry={() => void ipSummaryQuery.refetch()}
+                />
+              </div>
+            ) : ipSummaryQuery.isLoading ? (
               <LoadingStateWithBorder />
             ) : (ipSummaryQuery.data?.items ?? []).length === 0 ? (
               <EmptyStateWithBorder title="暂无 IP 汇总数据" />

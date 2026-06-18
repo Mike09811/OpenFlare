@@ -1,9 +1,11 @@
 'use client';
 
 import {useMutation, useQueryClient} from '@tanstack/react-query';
+import {zodResolver} from '@hookform/resolvers/zod';
 import {useState} from 'react';
 import {useForm} from 'react-hook-form';
 import {Loader2} from 'lucide-react';
+import {z} from 'zod';
 
 import {Button} from '@/components/ui/button';
 import {
@@ -23,11 +25,13 @@ import {getErrorMessage} from './website-utils';
 
 const dnsAccountsQueryKey = ['openflare', 'dns-accounts'];
 
-type DnsAccountFormValues = {
-  name: string;
-  type: string;
-  authorization: string;
-};
+const dnsAccountSchema = z.object({
+  name: z.string().trim().min(1, '请输入名称').max(255),
+  type: z.string().min(1),
+  authorization: z.string().trim().min(1, '请输入 Token'),
+});
+
+type DnsAccountFormValues = z.infer<typeof dnsAccountSchema>;
 
 interface DnsAccountCreateDialogProps {
   open: boolean;
@@ -42,16 +46,16 @@ export function DnsAccountCreateDialog({
 }: DnsAccountCreateDialogProps) {
   const queryClient = useQueryClient();
   const [error, setError] = useState('');
-  const {register, handleSubmit, setValue, watch, formState, reset} =
-    useForm<DnsAccountFormValues>({
-      defaultValues: {name: '', type: 'cloudflare', authorization: ''},
-    });
+  const form = useForm<DnsAccountFormValues>({
+    resolver: zodResolver(dnsAccountSchema),
+    defaultValues: {name: '', type: 'cloudflare', authorization: ''},
+  });
 
   const createMutation = useMutation({
     mutationFn: DnsAccountService.create,
     onSuccess: async () => {
       await queryClient.invalidateQueries({queryKey: dnsAccountsQueryKey});
-      reset();
+      form.reset();
       setError('');
       onCreated?.();
       onOpenChange(false);
@@ -59,7 +63,7 @@ export function DnsAccountCreateDialog({
     onError: (err) => setError(getErrorMessage(err)),
   });
 
-  const onSubmit = handleSubmit((values) => {
+  const onSubmit = form.handleSubmit((values) => {
     setError('');
     let auth = values.authorization.trim();
     if (!auth.startsWith('{')) {
@@ -69,7 +73,7 @@ export function DnsAccountCreateDialog({
   });
 
   const handleClose = () => {
-    reset();
+    form.reset();
     setError('');
     onOpenChange(false);
   };
@@ -91,18 +95,18 @@ export function DnsAccountCreateDialog({
             <Label>账号名称</Label>
             <Input
               placeholder="Cloudflare 邮箱账号"
-              {...register('name', {required: '请输入名称'})}
+              {...form.register('name')}
             />
-            {formState.errors.name ? (
-              <p className="text-xs text-destructive">{formState.errors.name.message}</p>
+            {form.formState.errors.name ? (
+              <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
             ) : null}
           </div>
 
           <div className="space-y-2">
             <Label>DNS 服务商</Label>
             <Select
-              value={watch('type')}
-              onValueChange={(value) => setValue('type', value)}
+              value={form.watch('type')}
+              onValueChange={(value) => form.setValue('type', value)}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -116,12 +120,12 @@ export function DnsAccountCreateDialog({
           <div className="space-y-2">
             <Label>API Token</Label>
             <Input
-              {...register('authorization', {required: '请输入 Token'})}
+              {...form.register('authorization')}
               placeholder="请勿使用 Global API Key"
             />
-            {formState.errors.authorization ? (
+            {form.formState.errors.authorization ? (
               <p className="text-xs text-destructive">
-                {formState.errors.authorization.message}
+                {form.formState.errors.authorization.message}
               </p>
             ) : null}
           </div>

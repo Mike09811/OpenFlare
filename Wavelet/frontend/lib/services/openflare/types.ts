@@ -669,8 +669,26 @@ export interface LatestReleaseInfo {
   has_update: boolean;
   upgrade_supported: boolean;
   in_progress: boolean;
-  upgrade_status: string;
+  upgrade_status: 'idle' | 'running' | 'succeeded' | 'failed' | string;
   upgrade_logs: UpgradeLogItem[];
+}
+
+export interface UpgradeStreamSnapshot {
+  in_progress: boolean;
+  upgrade_status: 'idle' | 'running' | 'succeeded' | 'failed' | string;
+  upgrade_logs: UpgradeLogItem[];
+}
+
+export interface UploadedServerBinaryInfo {
+  upload_token: string;
+  file_name: string;
+  detected_version: string;
+  current_version: string;
+  has_update: boolean;
+  upgrade_supported: boolean;
+  ready_to_upgrade: boolean;
+  comparison_message: string;
+  uploaded_at: string;
 }
 
 export interface WAFRuleGroup {

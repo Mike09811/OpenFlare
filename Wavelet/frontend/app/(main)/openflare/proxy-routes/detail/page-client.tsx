@@ -2,8 +2,9 @@
 
 import {useCallback, useEffect, useState} from 'react';
 import {useRouter, useSearchParams} from 'next/navigation';
-import {toast} from 'sonner';
 
+import {EmptyStateWithBorder} from '@/components/layout/empty';
+import {ErrorInline} from '@/components/layout/error';
 import {Skeleton} from '@/components/ui/skeleton';
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import type {ProxyRouteConfigSection, ProxyRouteItem} from '@/lib/services/openflare';
@@ -23,9 +24,11 @@ export function ProxyRouteDetailPageClient() {
   const searchParams = useSearchParams();
   const routeId = Number(searchParams.get('id'));
   const activeSection = getProxyRouteConfigSection(searchParams.get('section'));
+  const hasValidId = Number.isFinite(routeId) && routeId > 0;
 
   const [route, setRoute] = useState<ProxyRouteItem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [sectionSaving, setSectionSaving] = useState(false);
 
   const handleSectionChange = useCallback(
@@ -41,47 +44,36 @@ export function ProxyRouteDetailPageClient() {
     setRoute(updatedRoute);
   }, []);
 
-  useEffect(() => {
-    if (!Number.isFinite(routeId) || routeId <= 0) {
+  const fetchRoute = useCallback(async () => {
+    if (!hasValidId) {
       setLoading(false);
       setRoute(null);
+      setLoadError(null);
       return;
     }
 
-    let cancelled = false;
+    setLoading(true);
+    setLoadError(null);
 
-    const fetchRoute = async () => {
-      setLoading(true);
-      try {
-        const data = await ProxyRouteService.getById(routeId);
-        if (!cancelled) {
-          setRoute(data);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setRoute(null);
-          toast.error('规则详情加载失败', {
-            description: error instanceof Error ? error.message : '未知错误',
-          });
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
+    try {
+      const data = await ProxyRouteService.getById(routeId);
+      setRoute(data);
+    } catch (error) {
+      setRoute(null);
+      setLoadError(error instanceof Error ? error.message : '未知错误');
+    } finally {
+      setLoading(false);
+    }
+  }, [hasValidId, routeId]);
 
+  useEffect(() => {
     void fetchRoute();
+  }, [fetchRoute]);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [routeId]);
-
-  if (!Number.isFinite(routeId) || routeId <= 0) {
+  if (!hasValidId) {
     return (
       <div className="py-6 px-1">
-        <p className="text-sm text-muted-foreground">缺少有效的规则 ID。</p>
+        <ErrorInline message="缺少有效的规则 ID。" />
       </div>
     );
   }
@@ -96,10 +88,24 @@ export function ProxyRouteDetailPageClient() {
     );
   }
 
+  if (loadError) {
+    return (
+      <div className="py-6 px-1">
+        <ErrorInline
+          message={loadError}
+          onRetry={() => void fetchRoute()}
+        />
+      </div>
+    );
+  }
+
   if (!route) {
     return (
       <div className="py-6 px-1">
-        <p className="text-sm text-muted-foreground">未找到对应规则，请返回列表重试。</p>
+        <EmptyStateWithBorder
+          title="未找到对应规则"
+          description="请返回列表重试。"
+        />
       </div>
     );
   }

@@ -5,6 +5,7 @@ import {
   Gauge,
   GitBranch,
   Globe,
+  Info,
   LayoutDashboard,
   MapPin,
   Route,
@@ -43,6 +44,7 @@ export const openflareNavItems: OpenFlareNavItem[] = [
   {title: '访问日志', url: '/openflare/access-logs', icon: ScrollText},
   {title: '应用日志', url: '/openflare/apply-logs', icon: ClipboardList},
   {title: '性能', url: '/openflare/performance', icon: Gauge},
+  {title: '关于', url: '/openflare/about', icon: Info},
 ];
 
 /** 网站模块页内二级导航 */
