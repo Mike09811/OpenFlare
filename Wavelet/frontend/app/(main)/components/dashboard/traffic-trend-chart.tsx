@@ -12,14 +12,20 @@ import type {TrafficTrendPoint} from '@/lib/services/openflare';
 
 import {formatTrendHour} from './dashboard-utils';
 
-export function TrafficTrendChart({points}: {points: TrafficTrendPoint[]}) {
+export function TrafficTrendChart({
+  points,
+  title = '24 小时请求趋势',
+  description = '观察整体请求量和错误量是否出现异常抬升。',
+}: {
+  points: TrafficTrendPoint[];
+  title?: string;
+  description?: string;
+}) {
   return (
     <Card className="border-dashed shadow-none">
       <CardHeader>
-        <CardTitle className="text-sm font-semibold">24 小时请求趋势</CardTitle>
-        <CardDescription className="text-xs">
-          观察整体请求量和错误量是否出现异常抬升。
-        </CardDescription>
+        <CardTitle className="text-sm font-semibold">{title}</CardTitle>
+        <CardDescription className="text-xs">{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <TrendChart

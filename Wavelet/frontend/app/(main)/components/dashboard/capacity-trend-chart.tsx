@@ -12,14 +12,20 @@ import type {CapacityTrendPoint} from '@/lib/services/openflare';
 
 import {formatPercent, formatTrendHour} from './dashboard-utils';
 
-export function CapacityTrendChart({points}: {points: CapacityTrendPoint[]}) {
+export function CapacityTrendChart({
+  points,
+  title = '24 小时容量趋势',
+  description = '按小时聚合 CPU 与内存使用率，判断整体容量是否持续紧张。',
+}: {
+  points: CapacityTrendPoint[];
+  title?: string;
+  description?: string;
+}) {
   return (
     <Card className="border-dashed shadow-none">
       <CardHeader>
-        <CardTitle className="text-sm font-semibold">24 小时容量趋势</CardTitle>
-        <CardDescription className="text-xs">
-          按小时聚合 CPU 与内存使用率，判断整体容量是否持续紧张。
-        </CardDescription>
+        <CardTitle className="text-sm font-semibold">{title}</CardTitle>
+        <CardDescription className="text-xs">{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <TrendChart
