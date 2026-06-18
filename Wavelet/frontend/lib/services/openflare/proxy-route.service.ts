@@ -2,7 +2,7 @@ import {OpenFlareBaseService} from './base.service';
 import type {ProxyRouteItem, ProxyRouteMutationPayload} from './types';
 
 export class ProxyRouteService extends OpenFlareBaseService {
-  protected static override readonly basePath: string = '/api/v1/custom/openflare/proxy-routes';
+  protected static override readonly basePath: string = '/api/v1/openflare/proxy-routes';
 
   static async list(): Promise<ProxyRouteItem[]> {
     return this.get<ProxyRouteItem[]>('/');

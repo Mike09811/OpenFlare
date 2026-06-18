@@ -5,13 +5,12 @@ package openflare
 
 import "github.com/gin-gonic/gin"
 
-// V1BasePath is the OpenFlare console API prefix under /api/v1/custom.
-const V1BasePath = "/api/v1/custom/openflare"
+// V1BasePath is the OpenFlare console API prefix under /api/v1.
+const V1BasePath = "/api/v1/openflare"
 
-// RegisterV1Routes mounts OpenFlare management console APIs under /custom/openflare.
-// The parent group must already be the /custom router group from v1/custom.go.
-func RegisterV1Routes(customGroup *gin.RouterGroup) {
-	group := customGroup.Group("/openflare")
+// RegisterV1Routes mounts OpenFlare management console APIs under /api/v1/openflare.
+func RegisterV1Routes(apiV1Router *gin.RouterGroup) {
+	group := apiV1Router.Group("/openflare")
 	registerOptionRoutes(group)
 	registerOriginRoutes(group)
 	registerApplyLogRoutes(group)

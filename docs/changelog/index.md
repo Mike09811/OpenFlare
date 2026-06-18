@@ -73,10 +73,11 @@ sidebar: false
 - 移除 `internal/router/openflare` 中与 Wavelet `/api/v1` 重复的 legacy 认证路由（用户登录/注册、OAuth、Cap、认证源等），统一由 Wavelet 内置用户/OAuth/Cap 模块提供。
 - OpenFlare 路由注册统一收敛至 `internal/router/v1/openflare/`（`register_*.go` + `RegisterV1Routes`）；`internal/apps/openflare/*/routers.go` 仅保留 Handler 与业务逻辑。
 - 将 OpenFlare 路由注册包从 `internal/router/openflare/` 迁移至 `internal/router/v1/openflare/`，与 v1 路由分层目录结构对齐。
-- OpenFlare 管理控制台 API 统一迁移至 `/api/v1/custom/openflare/*`，响应格式对齐 Wavelet `{error_msg, data}` + `response.Abort*`。
+- OpenFlare 管理端路由注册从 `RegisterCustomRoutes` 移至 `v1.RegisterV1Routes`，API 前缀由 `/api/v1/custom/openflare` 调整为 `/api/v1/openflare`。
+- OpenFlare 管理控制台 API 统一迁移至 `/api/v1/openflare/*`，响应格式对齐 Wavelet `{error_msg, data}` + `response.Abort*`。
 - `/api/*` 仅保留 Agent/Relay/Flared 节点协议路由（legacy `{success, message, data}` 信封）；控制台鉴权改为 `apiutil.AdminRequired()`。
 - 前端 OpenFlare Service 层由 `LegacyOpenFlareBaseService` 切换为 `OpenFlareBaseService`（`BaseService` + v1 路径）。
-- 为 OpenFlare v1 管理端 API 补充 Swagger 注解（`/api/v1/custom/openflare/*`，约 99 个端点）。
+- 为 OpenFlare v1 管理端 API 补充 Swagger 注解（`/api/v1/openflare/*`，约 99 个端点）。
 - 移除已无引用的 `internal/apps/openflare/auth/`、`compat/auth.go`、`compat/routes.go` 及前端 `legacy-base.service.ts`。
 
 ## [v2.3.4] - 2026-06-17

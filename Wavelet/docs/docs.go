@@ -4109,7028 +4109,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/custom/openflare/about": {
-            "get": {
-                "description": "返回 OpenFlare 关于页面文本，无需登录",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-option"
-                ],
-                "summary": "获取关于信息",
-                "responses": {
-                    "200": {
-                        "description": "关于信息",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/access-logs": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "分页返回 OpenFlare 访问日志，支持按节点、IP、主机与路径筛选，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-observability"
-                ],
-                "summary": "列出访问日志",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "节点 ID",
-                        "name": "node_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "客户端 IP",
-                        "name": "remote_addr",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "请求 Host",
-                        "name": "host",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "请求路径",
-                        "name": "path",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "页码",
-                        "name": "p",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "每页条数",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "排序字段",
-                        "name": "sort_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "排序方向",
-                        "name": "sort_order",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "访问日志列表",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/observability.AccessLogList"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/access-logs/cleanup": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按保留天数清理过期访问日志记录，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-observability"
-                ],
-                "summary": "清理访问日志",
-                "parameters": [
-                    {
-                        "description": "清理参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/observability.AccessLogCleanupInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "清理结果",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/observability.AccessLogCleanupResult"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/access-logs/folds": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按时间桶聚合访问日志并分页返回，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-observability"
-                ],
-                "summary": "列出折叠访问日志",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "节点 ID",
-                        "name": "node_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "客户端 IP",
-                        "name": "remote_addr",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "请求 Host",
-                        "name": "host",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "请求路径",
-                        "name": "path",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "折叠时间窗口（分钟）",
-                        "name": "fold_minutes",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "页码",
-                        "name": "p",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "每页条数",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "排序字段",
-                        "name": "sort_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "排序方向",
-                        "name": "sort_order",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "折叠访问日志列表",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/observability.FoldedAccessLogList"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/access-logs/folds/ip-summary": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "在指定时间桶内按 IP 聚合访问统计，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-observability"
-                ],
-                "summary": "列出折叠访问日志 IP 汇总",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "节点 ID",
-                        "name": "node_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "客户端 IP",
-                        "name": "remote_addr",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "请求 Host",
-                        "name": "host",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "请求路径",
-                        "name": "path",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "时间桶起始时间",
-                        "name": "bucket_started_at",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "折叠时间窗口（分钟）",
-                        "name": "fold_minutes",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "页码",
-                        "name": "p",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "每页条数",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "排序字段",
-                        "name": "sort_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "排序方向",
-                        "name": "sort_order",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "折叠 IP 汇总列表",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/observability.FoldedAccessLogIPList"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/access-logs/ip-summary": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按 IP 聚合访问日志统计并分页返回，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-observability"
-                ],
-                "summary": "列出访问日志 IP 汇总",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "节点 ID",
-                        "name": "node_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "客户端 IP",
-                        "name": "remote_addr",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "请求 Host",
-                        "name": "host",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "页码",
-                        "name": "p",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "每页条数",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "排序字段",
-                        "name": "sort_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "排序方向",
-                        "name": "sort_order",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "IP 汇总列表",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/observability.AccessLogIPSummaryList"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/access-logs/ip-summary/trend": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回指定 IP 在时间范围内的访问趋势数据，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-observability"
-                ],
-                "summary": "获取访问日志 IP 趋势",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "节点 ID",
-                        "name": "node_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "客户端 IP",
-                        "name": "remote_addr",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "请求 Host",
-                        "name": "host",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "统计时间范围（小时）",
-                        "name": "hours",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "时间桶粒度（分钟）",
-                        "name": "bucket_minutes",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "IP 访问趋势",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/observability.AccessLogIPTrendView"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/acme-accounts/default": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回系统默认 ACME 账号配置，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-tls"
-                ],
-                "summary": "获取默认 ACME 账号",
-                "responses": {
-                    "200": {
-                        "description": "默认 ACME 账号",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.AcmeAccount"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/apply-logs": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "分页返回节点配置下发记录，支持按节点 ID 筛选，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-apply-log"
-                ],
-                "summary": "获取配置下发日志",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "节点 ID 筛选",
-                        "name": "node_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "页码",
-                        "name": "pageNo",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "页码（别名）",
-                        "name": "page_no",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "每页数量",
-                        "name": "pageSize",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "每页数量（别名）",
-                        "name": "page_size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "下发日志列表",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/apply_log.ListResult"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/apply-logs/cleanup": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按保留天数清理历史下发记录，或删除全部记录，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-apply-log"
-                ],
-                "summary": "清理配置下发日志",
-                "parameters": [
-                    {
-                        "description": "清理参数",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/apply_log.CleanupInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "清理结果",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/apply_log.CleanupResult"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/config-versions": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回所有已发布的 OpenResty 配置版本摘要，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-config-version"
-                ],
-                "summary": "获取配置版本列表",
-                "responses": {
-                    "200": {
-                        "description": "配置版本列表",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/model.ConfigVersionSummary"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/config-versions/active": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回当前正在使用的配置版本，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-config-version"
-                ],
-                "summary": "获取当前活跃配置版本",
-                "responses": {
-                    "200": {
-                        "description": "活跃配置版本",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.ConfigVersion"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限、不存在或无活跃版本",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/config-versions/cleanup": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "删除超出保留数量的非活跃配置版本，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-config-version"
-                ],
-                "summary": "清理历史配置版本",
-                "parameters": [
-                    {
-                        "description": "清理参数",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/config_version.CleanupInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "清理结果",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/config_version.CleanupResult"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/config-versions/diff": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "对比当前草稿配置与活跃版本之间的差异，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-config-version"
-                ],
-                "summary": "对比草稿与活跃配置",
-                "responses": {
-                    "200": {
-                        "description": "配置差异",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/config_version.ConfigDiffResult"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/config-versions/preview": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "渲染并返回当前草稿配置的预览结果，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-config-version"
-                ],
-                "summary": "预览当前草稿配置",
-                "responses": {
-                    "200": {
-                        "description": "配置预览",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/config_version.ConfigPreviewResult"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/config-versions/publish": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "将当前草稿配置发布为新版本，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-config-version"
-                ],
-                "summary": "发布配置版本",
-                "parameters": [
-                    {
-                        "type": "boolean",
-                        "description": "是否强制发布",
-                        "name": "force",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "发布成功",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.ConfigVersion"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/config-versions/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回指定配置版本的完整快照与渲染内容，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-config-version"
-                ],
-                "summary": "获取配置版本详情",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "配置版本 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "配置版本详情",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.ConfigVersion"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或版本不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/config-versions/{id}/activate": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "将指定历史版本设为当前活跃配置，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-config-version"
-                ],
-                "summary": "激活配置版本",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "配置版本 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "激活成功",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.ConfigVersion"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或版本不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/dashboard/overview": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "聚合节点与可观测性数据，返回 OpenFlare 控制台仪表盘概览，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-dashboard"
-                ],
-                "summary": "获取仪表盘概览",
-                "responses": {
-                    "200": {
-                        "description": "仪表盘概览",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dashboard.OverviewPayload"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/dns-accounts": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回全部 DNS 提供商账号，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-tls"
-                ],
-                "summary": "列出 DNS 账号",
-                "responses": {
-                    "200": {
-                        "description": "DNS 账号列表",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/model.DNSAccount"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "创建新的 DNS 提供商账号，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-tls"
-                ],
-                "summary": "创建 DNS 账号",
-                "parameters": [
-                    {
-                        "description": "DNS 账号参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/tls.DNSAccountInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "创建成功的 DNS 账号",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.DNSAccount"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/dns-accounts/{id}/delete": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按 ID 删除 DNS 提供商账号，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-tls"
-                ],
-                "summary": "删除 DNS 账号",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "DNS 账号 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "删除成功",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/dns-accounts/{id}/update": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按 ID 更新 DNS 提供商账号，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-tls"
-                ],
-                "summary": "更新 DNS 账号",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "DNS 账号 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "DNS 账号参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/tls.DNSAccountInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "更新后的 DNS 账号",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.DNSAccount"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/managed-domains": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回全部托管域名及关联证书，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-tls"
-                ],
-                "summary": "列出托管域名",
-                "responses": {
-                    "200": {
-                        "description": "托管域名列表",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/model.ManagedDomain"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "创建新的托管域名记录，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-tls"
-                ],
-                "summary": "创建托管域名",
-                "parameters": [
-                    {
-                        "description": "托管域名参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/tls.ManagedDomainInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "创建成功的托管域名",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.ManagedDomain"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/managed-domains/match": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按域名查询可用的证书匹配候选，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-tls"
-                ],
-                "summary": "匹配托管域名证书",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "域名",
-                        "name": "domain",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "证书匹配结果",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/tls.ManagedDomainMatchResult"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/managed-domains/{id}/delete": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按 ID 删除托管域名，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-tls"
-                ],
-                "summary": "删除托管域名",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "托管域名 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "删除成功",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/managed-domains/{id}/update": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按 ID 更新托管域名，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-tls"
-                ],
-                "summary": "更新托管域名",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "托管域名 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "托管域名参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/tls.ManagedDomainInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "更新后的托管域名",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.ManagedDomain"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/nodes": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回所有节点及最新配置下发记录，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-node"
-                ],
-                "summary": "获取节点列表",
-                "responses": {
-                    "200": {
-                        "description": "节点列表",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/node.View"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "创建新的边缘节点记录，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-node"
-                ],
-                "summary": "创建节点",
-                "parameters": [
-                    {
-                        "description": "节点参数",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/node.Input"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "创建成功",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/node.View"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/nodes/bootstrap-token": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回全局节点发现引导令牌，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-node"
-                ],
-                "summary": "获取引导令牌",
-                "responses": {
-                    "200": {
-                        "description": "引导令牌",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/node.BootstrapView"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/nodes/bootstrap-token/rotate": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "重新生成全局节点发现引导令牌，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-node"
-                ],
-                "summary": "轮换引导令牌",
-                "responses": {
-                    "200": {
-                        "description": "新引导令牌",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/node.BootstrapView"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/nodes/{id}/agent-release": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回指定节点可用的最新 Agent 版本信息，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-node"
-                ],
-                "summary": "获取 Agent 发布信息",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "节点 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "发布渠道",
-                        "name": "channel",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Agent 发布信息",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/node.AgentReleaseInfo"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或节点不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/nodes/{id}/agent-update": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "向指定节点下发 Agent 自更新指令，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-node"
-                ],
-                "summary": "请求 Agent 更新",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "节点 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "更新参数（可选）",
-                        "name": "body",
-                        "in": "body",
-                        "schema": {
-                            "$ref": "#/definitions/node.AgentUpdateInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "更新请求已下发",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/node.View"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或节点不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/nodes/{id}/delete": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "删除指定节点记录，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-node"
-                ],
-                "summary": "删除节点",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "节点 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "删除成功",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或节点不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/nodes/{id}/force-sync": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "向指定节点下发强制同步当前活跃配置的指令，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-node"
-                ],
-                "summary": "请求强制同步配置",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "节点 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "同步请求已下发",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/node.View"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或节点不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/nodes/{id}/observability": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回指定节点的指标、健康事件与流量分析数据，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-node"
-                ],
-                "summary": "获取节点可观测性数据",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "节点 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "统计时间范围（小时）",
-                        "name": "hours",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "返回记录数量上限",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "可观测性数据",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/node.ObservabilityView"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或节点不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/nodes/{id}/observability/cleanup": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "清理指定节点的历史健康事件记录，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-node"
-                ],
-                "summary": "清理节点健康事件",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "节点 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "清理结果",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/node.HealthEventCleanupResult"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或节点不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/nodes/{id}/openresty-restart": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "向指定节点下发 OpenResty 重启指令，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-node"
-                ],
-                "summary": "请求重启 OpenResty",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "节点 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "重启请求已下发",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/node.View"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或节点不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/nodes/{id}/update": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "更新指定节点的配置信息，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-node"
-                ],
-                "summary": "更新节点",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "节点 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "节点参数",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/node.Input"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "更新成功",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/node.View"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或节点不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/notice": {
-            "get": {
-                "description": "返回 OpenFlare 控制台公告文本，无需登录",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-option"
-                ],
-                "summary": "获取系统公告",
-                "responses": {
-                    "200": {
-                        "description": "系统公告",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/option": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回全部非敏感 OpenFlare 配置项，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-option"
-                ],
-                "summary": "列出 OpenFlare 配置项",
-                "responses": {
-                    "200": {
-                        "description": "配置项列表",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/model.OpenFlareOption"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/option/database/cleanup": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按目标与保留天数清理可观测性相关数据表，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-option"
-                ],
-                "summary": "清理可观测性数据库",
-                "parameters": [
-                    {
-                        "description": "清理参数",
-                        "name": "request",
-                        "in": "body",
-                        "schema": {
-                            "$ref": "#/definitions/option.databaseCleanupInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "清理结果",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/option.databaseCleanupResult"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/option/geoip/lookup": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按提供商与 IP 查询地理位置信息，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-option"
-                ],
-                "summary": "GeoIP 地址查询",
-                "parameters": [
-                    {
-                        "description": "查询参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/option.geoIPLookupRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "GeoIP 查询结果",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/option.geoIPLookupView"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/option/update": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "更新单个 OpenFlare 配置项，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-option"
-                ],
-                "summary": "更新 OpenFlare 配置项",
-                "parameters": [
-                    {
-                        "description": "配置项",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.OpenFlareOption"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "更新成功",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/option/update-batch": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "批量更新多个 OpenFlare 配置项，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-option"
-                ],
-                "summary": "批量更新 OpenFlare 配置项",
-                "parameters": [
-                    {
-                        "description": "批量配置项",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/option.optionBatchPayload"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "更新成功",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/origins": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回所有源站及关联代理规则数量，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-origin"
-                ],
-                "summary": "获取源站列表",
-                "responses": {
-                    "200": {
-                        "description": "源站列表",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/origin.View"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "创建新的上游源站记录，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-origin"
-                ],
-                "summary": "创建源站",
-                "parameters": [
-                    {
-                        "description": "源站参数",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/origin.Input"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "创建成功",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/origin.View"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/origins/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回指定源站信息及关联代理规则摘要，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-origin"
-                ],
-                "summary": "获取源站详情",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "源站 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "源站详情",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/origin.DetailView"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或源站不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/origins/{id}/delete": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "删除指定源站记录，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-origin"
-                ],
-                "summary": "删除源站",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "源站 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "删除成功",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或源站不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/origins/{id}/update": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "更新指定源站的配置信息，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-origin"
-                ],
-                "summary": "更新源站",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "源站 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "源站参数",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/origin.Input"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "更新成功",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/origin.View"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或源站不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/pages": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回全部 OpenFlare Pages 项目，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-pages"
-                ],
-                "summary": "列出 Pages 项目",
-                "responses": {
-                    "200": {
-                        "description": "Pages 项目列表",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/pages.View"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "创建新的 OpenFlare Pages 项目，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-pages"
-                ],
-                "summary": "创建 Pages 项目",
-                "parameters": [
-                    {
-                        "description": "项目参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/pages.Input"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "创建成功的项目",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/pages.View"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/pages/deployments/{deployment_id}/files": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回指定部署包含的文件清单，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-pages"
-                ],
-                "summary": "列出 Pages 部署文件",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "部署 ID",
-                        "name": "deployment_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "部署文件列表",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/pages.DeploymentFileView"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "部署不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/pages/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按 ID 返回 Pages 项目详情，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-pages"
-                ],
-                "summary": "获取 Pages 项目详情",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "项目 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Pages 项目详情",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/pages.View"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "项目不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/pages/{id}/delete": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按 ID 删除 OpenFlare Pages 项目，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-pages"
-                ],
-                "summary": "删除 Pages 项目",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "项目 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "删除成功",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "项目不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/pages/{id}/deployments": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回指定项目的全部部署记录，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-pages"
-                ],
-                "summary": "列出 Pages 部署",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "项目 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "部署列表",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/pages.DeploymentView"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "项目不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/pages/{id}/deployments/upload": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "为指定项目上传 ZIP 部署包，需要管理员权限",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-pages"
-                ],
-                "summary": "上传 Pages 部署包",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "项目 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "file",
-                        "description": "部署包 ZIP 文件",
-                        "name": "package",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "部署记录",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/pages.DeploymentView"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "项目不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/pages/{id}/deployments/{deployment_id}/activate": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "将指定部署设为项目当前生效版本，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-pages"
-                ],
-                "summary": "激活 Pages 部署",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "项目 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "部署 ID",
-                        "name": "deployment_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "激活后的项目",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/pages.View"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "项目或部署不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/pages/{id}/deployments/{deployment_id}/delete": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "删除指定项目的部署记录，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-pages"
-                ],
-                "summary": "删除 Pages 部署",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "项目 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "部署 ID",
-                        "name": "deployment_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "删除成功",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "项目或部署不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/pages/{id}/update": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按 ID 更新 OpenFlare Pages 项目，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-pages"
-                ],
-                "summary": "更新 Pages 项目",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "项目 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "项目参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/pages.Input"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "更新后的项目",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/pages.View"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "项目不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/proxy-routes": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回所有代理规则配置，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-proxy-route"
-                ],
-                "summary": "获取代理规则列表",
-                "responses": {
-                    "200": {
-                        "description": "代理规则列表",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/proxy_route.View"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "创建新的反向代理规则，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-proxy-route"
-                ],
-                "summary": "创建代理规则",
-                "parameters": [
-                    {
-                        "description": "代理规则参数",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/proxy_route.Input"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "创建成功",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/proxy_route.View"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/proxy-routes/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回指定代理规则的完整配置，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-proxy-route"
-                ],
-                "summary": "获取代理规则详情",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "代理规则 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "代理规则详情",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/proxy_route.View"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或规则不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/proxy-routes/{id}/delete": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "删除指定代理规则，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-proxy-route"
-                ],
-                "summary": "删除代理规则",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "代理规则 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "删除成功",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或规则不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/proxy-routes/{id}/update": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "更新指定代理规则的配置，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-proxy-route"
-                ],
-                "summary": "更新代理规则",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "代理规则 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "代理规则参数",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/proxy_route.Input"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "更新成功",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/proxy_route.View"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或规则不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/status": {
-            "get": {
-                "description": "返回版本、认证源与系统公开配置，无需登录",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-option"
-                ],
-                "summary": "获取 OpenFlare 公开状态",
-                "responses": {
-                    "200": {
-                        "description": "公开状态",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/option.statusView"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/tls-certificates": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回全部 TLS 证书（不含 PEM），需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-tls"
-                ],
-                "summary": "列出 TLS 证书",
-                "responses": {
-                    "200": {
-                        "description": "证书列表",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/model.TLSCertificate"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "从 PEM 文本创建 TLS 证书，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-tls"
-                ],
-                "summary": "创建 TLS 证书",
-                "parameters": [
-                    {
-                        "description": "证书参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/tls.CertificateInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "创建成功的证书",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.TLSCertificate"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/tls-certificates/apply": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "通过 ACME 申请新的 TLS 证书，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-tls"
-                ],
-                "summary": "申请 ACME 证书",
-                "parameters": [
-                    {
-                        "description": "ACME 申请参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/tls.ApplyInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "申请中的证书",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.TLSCertificate"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/tls-certificates/import-file": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "上传证书与私钥文件创建 TLS 证书，需要管理员权限",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-tls"
-                ],
-                "summary": "从文件导入 TLS 证书",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "证书名称",
-                        "name": "name",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "备注",
-                        "name": "remark",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "file",
-                        "description": "证书文件",
-                        "name": "cert_file",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "file",
-                        "description": "私钥文件",
-                        "name": "key_file",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "导入成功的证书",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.TLSCertificate"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/tls-certificates/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按 ID 返回 TLS 证书详情（不含 PEM），需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-tls"
-                ],
-                "summary": "获取 TLS 证书详情",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "证书 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "证书详情",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.TLSCertificate"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/tls-certificates/{id}/content": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按 ID 返回证书与私钥 PEM 内容，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-tls"
-                ],
-                "summary": "获取 TLS 证书 PEM 内容",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "证书 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "证书 PEM 内容",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/tls.CertificateContent"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/tls-certificates/{id}/convert-acme": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "将已上传证书转换为 ACME 自动续期模式，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-tls"
-                ],
-                "summary": "将证书转为 ACME 管理",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "证书 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "ACME 申请参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/tls.ApplyInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "转换后的证书",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.TLSCertificate"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/tls-certificates/{id}/delete": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按 ID 删除 TLS 证书，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-tls"
-                ],
-                "summary": "删除 TLS 证书",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "证书 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "删除成功",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/tls-certificates/{id}/renew": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "手动触发 ACME 证书续期，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-tls"
-                ],
-                "summary": "续期 ACME 证书",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "证书 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "续期后的证书",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.TLSCertificate"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/tls-certificates/{id}/update": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按 ID 更新 TLS 证书 PEM 信息，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-tls"
-                ],
-                "summary": "更新 TLS 证书",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "证书 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "证书参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/tls.CertificateInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "更新后的证书",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.TLSCertificate"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/tls-certificates/{id}/update-acme": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按 ID 更新 ACME 证书申请配置，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-tls"
-                ],
-                "summary": "更新 ACME 证书配置",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "证书 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "ACME 申请参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/tls.ApplyInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "更新后的证书",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.TLSCertificate"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/update/latest-release": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "查询 OpenFlare 服务端最新 GitHub Release 及升级状态，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-update"
-                ],
-                "summary": "获取最新服务端发布版本",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "发布渠道（stable/preview）",
-                        "name": "channel",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "最新发布信息",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/update.LatestReleaseView"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/update/logs/ws": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "通过 WebSocket 推送升级进度快照，需要管理员权限",
-                "tags": [
-                    "openflare-update"
-                ],
-                "summary": "流式获取服务端升级日志",
-                "responses": {
-                    "101": {
-                        "description": "WebSocket 升级日志流",
-                        "schema": {
-                            "$ref": "#/definitions/update.StreamSnapshot"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/update/manual-upgrade": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "确认并执行手动上传的服务端升级（当前功能已禁用），需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-update"
-                ],
-                "summary": "确认手动服务端升级",
-                "responses": {
-                    "400": {
-                        "description": "功能已禁用或参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/update/manual-upload": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "上传服务端二进制以进行手动升级（当前功能已禁用），需要管理员权限",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-update"
-                ],
-                "summary": "上传手动升级二进制",
-                "parameters": [
-                    {
-                        "type": "file",
-                        "description": "服务端二进制文件",
-                        "name": "binary",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "400": {
-                        "description": "功能已禁用或参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/update/upgrade": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "从最新 Release 调度 OpenFlare 服务端自动升级，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-update"
-                ],
-                "summary": "触发服务端自动升级",
-                "parameters": [
-                    {
-                        "description": "升级参数",
-                        "name": "request",
-                        "in": "body",
-                        "schema": {
-                            "$ref": "#/definitions/update.upgradeRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "升级任务已调度",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/update.LatestReleaseView"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/uptimekuma/sync": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "将 OpenFlare 节点同步到 Uptime Kuma，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-option"
-                ],
-                "summary": "同步 Uptime Kuma",
-                "responses": {
-                    "200": {
-                        "description": "同步成功",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/waf/ip-groups": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回全部 WAF IP 组，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-waf"
-                ],
-                "summary": "列出 WAF IP 组",
-                "responses": {
-                    "200": {
-                        "description": "IP 组列表",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/waf.IPGroupView"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "创建新的 WAF IP 组，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-waf"
-                ],
-                "summary": "创建 WAF IP 组",
-                "parameters": [
-                    {
-                        "description": "IP 组参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/waf.IPGroupInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "创建成功的 IP 组",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/waf.IPGroupView"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/waf/ip-groups/test": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "根据自动配置规则测试 IP 匹配结果（桩实现），需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-waf"
-                ],
-                "summary": "测试 WAF IP 组自动配置",
-                "parameters": [
-                    {
-                        "description": "自动配置参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/waf.IPGroupAutoTestInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "测试结果",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/waf.IPGroupAutoTestResult"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/waf/ip-groups/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按 ID 返回 WAF IP 组详情，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-waf"
-                ],
-                "summary": "获取 WAF IP 组详情",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "IP 组 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "IP 组详情",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/waf.IPGroupView"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/waf/ip-groups/{id}/delete": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按 ID 删除 WAF IP 组，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-waf"
-                ],
-                "summary": "删除 WAF IP 组",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "IP 组 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "删除成功",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/waf/ip-groups/{id}/sync": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "手动触发 WAF IP 组外部 IP 同步，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-waf"
-                ],
-                "summary": "同步 WAF IP 组",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "IP 组 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "同步结果",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/waf.IPGroupSyncResult"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/waf/ip-groups/{id}/update": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按 ID 更新 WAF IP 组，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-waf"
-                ],
-                "summary": "更新 WAF IP 组",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "IP 组 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "IP 组参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/waf.IPGroupInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "更新后的 IP 组",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/waf.IPGroupView"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/waf/rule-groups": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回全部 WAF 规则组，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-waf"
-                ],
-                "summary": "列出 WAF 规则组",
-                "responses": {
-                    "200": {
-                        "description": "规则组列表",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/waf.RuleGroupView"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "创建新的 WAF 规则组，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-waf"
-                ],
-                "summary": "创建 WAF 规则组",
-                "parameters": [
-                    {
-                        "description": "规则组参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/waf.RuleGroupInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "创建成功的规则组",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/waf.RuleGroupView"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/waf/rule-groups/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按 ID 返回 WAF 规则组详情，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-waf"
-                ],
-                "summary": "获取 WAF 规则组详情",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "规则组 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "规则组详情",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/waf.RuleGroupView"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/waf/rule-groups/{id}/delete": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按 ID 删除 WAF 规则组，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-waf"
-                ],
-                "summary": "删除 WAF 规则组",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "规则组 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "删除成功",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/waf/rule-groups/{id}/sites": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "替换 WAF 规则组关联的代理站点列表，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-waf"
-                ],
-                "summary": "替换规则组站点绑定",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "规则组 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "站点 ID 列表",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/waf.IDsRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "更新后的规则组",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/waf.RuleGroupView"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/waf/rule-groups/{id}/update": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "按 ID 更新 WAF 规则组，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-waf"
-                ],
-                "summary": "更新 WAF 规则组",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "规则组 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "规则组参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/waf.RuleGroupInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "更新后的规则组",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/waf.RuleGroupView"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/custom/openflare/waf/sites/{route_id}/rule-groups": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回代理站点关联的 WAF 规则组绑定，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-waf"
-                ],
-                "summary": "获取站点 WAF 规则组",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "代理路由 ID",
-                        "name": "route_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "站点规则组绑定",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/waf.SiteRuleGroupsView"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "替换代理站点关联的 WAF 规则组列表，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-waf"
-                ],
-                "summary": "替换站点 WAF 规则组",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "代理路由 ID",
-                        "name": "route_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "规则组 ID 列表",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/waf.IDsRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "更新后的站点规则组绑定",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/waf.SiteRuleGroupsView"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "记录不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/oauth/callback": {
             "post": {
                 "description": "接收前端传回的 state 和 code，完成 OAuth/OIDC 认证并建立会话。支持登录（login）和账号绑定（bind）两种场景。",
@@ -11531,6 +4509,7028 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Redis 异常或构造 URL 失败",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/about": {
+            "get": {
+                "description": "返回 OpenFlare 关于页面文本，无需登录",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-option"
+                ],
+                "summary": "获取关于信息",
+                "responses": {
+                    "200": {
+                        "description": "关于信息",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/access-logs": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "分页返回 OpenFlare 访问日志，支持按节点、IP、主机与路径筛选，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-observability"
+                ],
+                "summary": "列出访问日志",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "节点 ID",
+                        "name": "node_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "客户端 IP",
+                        "name": "remote_addr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "请求 Host",
+                        "name": "host",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "请求路径",
+                        "name": "path",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "p",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页条数",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序字段",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序方向",
+                        "name": "sort_order",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "访问日志列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/observability.AccessLogList"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/access-logs/cleanup": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按保留天数清理过期访问日志记录，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-observability"
+                ],
+                "summary": "清理访问日志",
+                "parameters": [
+                    {
+                        "description": "清理参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/observability.AccessLogCleanupInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "清理结果",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/observability.AccessLogCleanupResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/access-logs/folds": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按时间桶聚合访问日志并分页返回，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-observability"
+                ],
+                "summary": "列出折叠访问日志",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "节点 ID",
+                        "name": "node_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "客户端 IP",
+                        "name": "remote_addr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "请求 Host",
+                        "name": "host",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "请求路径",
+                        "name": "path",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "折叠时间窗口（分钟）",
+                        "name": "fold_minutes",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "p",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页条数",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序字段",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序方向",
+                        "name": "sort_order",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "折叠访问日志列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/observability.FoldedAccessLogList"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/access-logs/folds/ip-summary": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "在指定时间桶内按 IP 聚合访问统计，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-observability"
+                ],
+                "summary": "列出折叠访问日志 IP 汇总",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "节点 ID",
+                        "name": "node_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "客户端 IP",
+                        "name": "remote_addr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "请求 Host",
+                        "name": "host",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "请求路径",
+                        "name": "path",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "时间桶起始时间",
+                        "name": "bucket_started_at",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "折叠时间窗口（分钟）",
+                        "name": "fold_minutes",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "p",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页条数",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序字段",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序方向",
+                        "name": "sort_order",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "折叠 IP 汇总列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/observability.FoldedAccessLogIPList"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/access-logs/ip-summary": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按 IP 聚合访问日志统计并分页返回，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-observability"
+                ],
+                "summary": "列出访问日志 IP 汇总",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "节点 ID",
+                        "name": "node_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "客户端 IP",
+                        "name": "remote_addr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "请求 Host",
+                        "name": "host",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "p",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页条数",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序字段",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序方向",
+                        "name": "sort_order",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "IP 汇总列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/observability.AccessLogIPSummaryList"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/access-logs/ip-summary/trend": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回指定 IP 在时间范围内的访问趋势数据，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-observability"
+                ],
+                "summary": "获取访问日志 IP 趋势",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "节点 ID",
+                        "name": "node_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "客户端 IP",
+                        "name": "remote_addr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "请求 Host",
+                        "name": "host",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "统计时间范围（小时）",
+                        "name": "hours",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "时间桶粒度（分钟）",
+                        "name": "bucket_minutes",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "IP 访问趋势",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/observability.AccessLogIPTrendView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/acme-accounts/default": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回系统默认 ACME 账号配置，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-tls"
+                ],
+                "summary": "获取默认 ACME 账号",
+                "responses": {
+                    "200": {
+                        "description": "默认 ACME 账号",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.AcmeAccount"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/apply-logs": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "分页返回节点配置下发记录，支持按节点 ID 筛选，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-apply-log"
+                ],
+                "summary": "获取配置下发日志",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "节点 ID 筛选",
+                        "name": "node_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "pageNo",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码（别名）",
+                        "name": "page_no",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量（别名）",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "下发日志列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/apply_log.ListResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/apply-logs/cleanup": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按保留天数清理历史下发记录，或删除全部记录，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-apply-log"
+                ],
+                "summary": "清理配置下发日志",
+                "parameters": [
+                    {
+                        "description": "清理参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/apply_log.CleanupInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "清理结果",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/apply_log.CleanupResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/config-versions": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回所有已发布的 OpenResty 配置版本摘要，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-config-version"
+                ],
+                "summary": "获取配置版本列表",
+                "responses": {
+                    "200": {
+                        "description": "配置版本列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.ConfigVersionSummary"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/config-versions/active": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回当前正在使用的配置版本，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-config-version"
+                ],
+                "summary": "获取当前活跃配置版本",
+                "responses": {
+                    "200": {
+                        "description": "活跃配置版本",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.ConfigVersion"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限、不存在或无活跃版本",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/config-versions/cleanup": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "删除超出保留数量的非活跃配置版本，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-config-version"
+                ],
+                "summary": "清理历史配置版本",
+                "parameters": [
+                    {
+                        "description": "清理参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/config_version.CleanupInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "清理结果",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/config_version.CleanupResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/config-versions/diff": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "对比当前草稿配置与活跃版本之间的差异，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-config-version"
+                ],
+                "summary": "对比草稿与活跃配置",
+                "responses": {
+                    "200": {
+                        "description": "配置差异",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/config_version.ConfigDiffResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/config-versions/preview": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "渲染并返回当前草稿配置的预览结果，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-config-version"
+                ],
+                "summary": "预览当前草稿配置",
+                "responses": {
+                    "200": {
+                        "description": "配置预览",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/config_version.ConfigPreviewResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/config-versions/publish": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "将当前草稿配置发布为新版本，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-config-version"
+                ],
+                "summary": "发布配置版本",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "是否强制发布",
+                        "name": "force",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "发布成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.ConfigVersion"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/config-versions/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回指定配置版本的完整快照与渲染内容，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-config-version"
+                ],
+                "summary": "获取配置版本详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "配置版本 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "配置版本详情",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.ConfigVersion"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或版本不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/config-versions/{id}/activate": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "将指定历史版本设为当前活跃配置，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-config-version"
+                ],
+                "summary": "激活配置版本",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "配置版本 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "激活成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.ConfigVersion"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或版本不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/dashboard/overview": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "聚合节点与可观测性数据，返回 OpenFlare 控制台仪表盘概览，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-dashboard"
+                ],
+                "summary": "获取仪表盘概览",
+                "responses": {
+                    "200": {
+                        "description": "仪表盘概览",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dashboard.OverviewPayload"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/dns-accounts": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回全部 DNS 提供商账号，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-tls"
+                ],
+                "summary": "列出 DNS 账号",
+                "responses": {
+                    "200": {
+                        "description": "DNS 账号列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.DNSAccount"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "创建新的 DNS 提供商账号，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-tls"
+                ],
+                "summary": "创建 DNS 账号",
+                "parameters": [
+                    {
+                        "description": "DNS 账号参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/tls.DNSAccountInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建成功的 DNS 账号",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.DNSAccount"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/dns-accounts/{id}/delete": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按 ID 删除 DNS 提供商账号，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-tls"
+                ],
+                "summary": "删除 DNS 账号",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "DNS 账号 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/dns-accounts/{id}/update": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按 ID 更新 DNS 提供商账号，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-tls"
+                ],
+                "summary": "更新 DNS 账号",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "DNS 账号 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "DNS 账号参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/tls.DNSAccountInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新后的 DNS 账号",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.DNSAccount"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/managed-domains": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回全部托管域名及关联证书，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-tls"
+                ],
+                "summary": "列出托管域名",
+                "responses": {
+                    "200": {
+                        "description": "托管域名列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.ManagedDomain"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "创建新的托管域名记录，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-tls"
+                ],
+                "summary": "创建托管域名",
+                "parameters": [
+                    {
+                        "description": "托管域名参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/tls.ManagedDomainInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建成功的托管域名",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.ManagedDomain"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/managed-domains/match": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按域名查询可用的证书匹配候选，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-tls"
+                ],
+                "summary": "匹配托管域名证书",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "域名",
+                        "name": "domain",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "证书匹配结果",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/tls.ManagedDomainMatchResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/managed-domains/{id}/delete": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按 ID 删除托管域名，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-tls"
+                ],
+                "summary": "删除托管域名",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "托管域名 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/managed-domains/{id}/update": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按 ID 更新托管域名，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-tls"
+                ],
+                "summary": "更新托管域名",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "托管域名 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "托管域名参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/tls.ManagedDomainInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新后的托管域名",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.ManagedDomain"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/nodes": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回所有节点及最新配置下发记录，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-node"
+                ],
+                "summary": "获取节点列表",
+                "responses": {
+                    "200": {
+                        "description": "节点列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/node.View"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "创建新的边缘节点记录，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-node"
+                ],
+                "summary": "创建节点",
+                "parameters": [
+                    {
+                        "description": "节点参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/node.Input"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/node.View"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/nodes/bootstrap-token": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回全局节点发现引导令牌，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-node"
+                ],
+                "summary": "获取引导令牌",
+                "responses": {
+                    "200": {
+                        "description": "引导令牌",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/node.BootstrapView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/nodes/bootstrap-token/rotate": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "重新生成全局节点发现引导令牌，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-node"
+                ],
+                "summary": "轮换引导令牌",
+                "responses": {
+                    "200": {
+                        "description": "新引导令牌",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/node.BootstrapView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/nodes/{id}/agent-release": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回指定节点可用的最新 Agent 版本信息，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-node"
+                ],
+                "summary": "获取 Agent 发布信息",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "节点 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "发布渠道",
+                        "name": "channel",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Agent 发布信息",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/node.AgentReleaseInfo"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或节点不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/nodes/{id}/agent-update": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "向指定节点下发 Agent 自更新指令，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-node"
+                ],
+                "summary": "请求 Agent 更新",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "节点 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新参数（可选）",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/node.AgentUpdateInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新请求已下发",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/node.View"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或节点不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/nodes/{id}/delete": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "删除指定节点记录，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-node"
+                ],
+                "summary": "删除节点",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "节点 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或节点不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/nodes/{id}/force-sync": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "向指定节点下发强制同步当前活跃配置的指令，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-node"
+                ],
+                "summary": "请求强制同步配置",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "节点 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "同步请求已下发",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/node.View"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或节点不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/nodes/{id}/observability": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回指定节点的指标、健康事件与流量分析数据，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-node"
+                ],
+                "summary": "获取节点可观测性数据",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "节点 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "统计时间范围（小时）",
+                        "name": "hours",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "返回记录数量上限",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "可观测性数据",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/node.ObservabilityView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或节点不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/nodes/{id}/observability/cleanup": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "清理指定节点的历史健康事件记录，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-node"
+                ],
+                "summary": "清理节点健康事件",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "节点 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "清理结果",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/node.HealthEventCleanupResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或节点不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/nodes/{id}/openresty-restart": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "向指定节点下发 OpenResty 重启指令，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-node"
+                ],
+                "summary": "请求重启 OpenResty",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "节点 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "重启请求已下发",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/node.View"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或节点不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/nodes/{id}/update": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "更新指定节点的配置信息，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-node"
+                ],
+                "summary": "更新节点",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "节点 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "节点参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/node.Input"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/node.View"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或节点不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/notice": {
+            "get": {
+                "description": "返回 OpenFlare 控制台公告文本，无需登录",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-option"
+                ],
+                "summary": "获取系统公告",
+                "responses": {
+                    "200": {
+                        "description": "系统公告",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/option": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回全部非敏感 OpenFlare 配置项，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-option"
+                ],
+                "summary": "列出 OpenFlare 配置项",
+                "responses": {
+                    "200": {
+                        "description": "配置项列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.OpenFlareOption"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/option/database/cleanup": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按目标与保留天数清理可观测性相关数据表，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-option"
+                ],
+                "summary": "清理可观测性数据库",
+                "parameters": [
+                    {
+                        "description": "清理参数",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/option.databaseCleanupInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "清理结果",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/option.databaseCleanupResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/option/geoip/lookup": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按提供商与 IP 查询地理位置信息，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-option"
+                ],
+                "summary": "GeoIP 地址查询",
+                "parameters": [
+                    {
+                        "description": "查询参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/option.geoIPLookupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "GeoIP 查询结果",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/option.geoIPLookupView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/option/update": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "更新单个 OpenFlare 配置项，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-option"
+                ],
+                "summary": "更新 OpenFlare 配置项",
+                "parameters": [
+                    {
+                        "description": "配置项",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.OpenFlareOption"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/option/update-batch": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "批量更新多个 OpenFlare 配置项，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-option"
+                ],
+                "summary": "批量更新 OpenFlare 配置项",
+                "parameters": [
+                    {
+                        "description": "批量配置项",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/option.optionBatchPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/origins": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回所有源站及关联代理规则数量，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-origin"
+                ],
+                "summary": "获取源站列表",
+                "responses": {
+                    "200": {
+                        "description": "源站列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/origin.View"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "创建新的上游源站记录，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-origin"
+                ],
+                "summary": "创建源站",
+                "parameters": [
+                    {
+                        "description": "源站参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/origin.Input"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/origin.View"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/origins/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回指定源站信息及关联代理规则摘要，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-origin"
+                ],
+                "summary": "获取源站详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "源站 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "源站详情",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/origin.DetailView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或源站不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/origins/{id}/delete": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "删除指定源站记录，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-origin"
+                ],
+                "summary": "删除源站",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "源站 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或源站不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/origins/{id}/update": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "更新指定源站的配置信息，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-origin"
+                ],
+                "summary": "更新源站",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "源站 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "源站参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/origin.Input"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/origin.View"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或源站不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/pages": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回全部 OpenFlare Pages 项目，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-pages"
+                ],
+                "summary": "列出 Pages 项目",
+                "responses": {
+                    "200": {
+                        "description": "Pages 项目列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/pages.View"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "创建新的 OpenFlare Pages 项目，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-pages"
+                ],
+                "summary": "创建 Pages 项目",
+                "parameters": [
+                    {
+                        "description": "项目参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pages.Input"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建成功的项目",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/pages.View"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/pages/deployments/{deployment_id}/files": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回指定部署包含的文件清单，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-pages"
+                ],
+                "summary": "列出 Pages 部署文件",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "部署 ID",
+                        "name": "deployment_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "部署文件列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/pages.DeploymentFileView"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "部署不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/pages/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按 ID 返回 Pages 项目详情，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-pages"
+                ],
+                "summary": "获取 Pages 项目详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "项目 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pages 项目详情",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/pages.View"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "项目不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/pages/{id}/delete": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按 ID 删除 OpenFlare Pages 项目，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-pages"
+                ],
+                "summary": "删除 Pages 项目",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "项目 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "项目不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/pages/{id}/deployments": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回指定项目的全部部署记录，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-pages"
+                ],
+                "summary": "列出 Pages 部署",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "项目 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "部署列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/pages.DeploymentView"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "项目不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/pages/{id}/deployments/upload": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "为指定项目上传 ZIP 部署包，需要管理员权限",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-pages"
+                ],
+                "summary": "上传 Pages 部署包",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "项目 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "部署包 ZIP 文件",
+                        "name": "package",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "部署记录",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/pages.DeploymentView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "项目不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/pages/{id}/deployments/{deployment_id}/activate": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "将指定部署设为项目当前生效版本，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-pages"
+                ],
+                "summary": "激活 Pages 部署",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "项目 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "部署 ID",
+                        "name": "deployment_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "激活后的项目",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/pages.View"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "项目或部署不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/pages/{id}/deployments/{deployment_id}/delete": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "删除指定项目的部署记录，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-pages"
+                ],
+                "summary": "删除 Pages 部署",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "项目 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "部署 ID",
+                        "name": "deployment_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "项目或部署不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/pages/{id}/update": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按 ID 更新 OpenFlare Pages 项目，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-pages"
+                ],
+                "summary": "更新 Pages 项目",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "项目 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "项目参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pages.Input"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新后的项目",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/pages.View"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "项目不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/proxy-routes": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回所有代理规则配置，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-proxy-route"
+                ],
+                "summary": "获取代理规则列表",
+                "responses": {
+                    "200": {
+                        "description": "代理规则列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/proxy_route.View"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "创建新的反向代理规则，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-proxy-route"
+                ],
+                "summary": "创建代理规则",
+                "parameters": [
+                    {
+                        "description": "代理规则参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/proxy_route.Input"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/proxy_route.View"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/proxy-routes/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回指定代理规则的完整配置，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-proxy-route"
+                ],
+                "summary": "获取代理规则详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "代理规则 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "代理规则详情",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/proxy_route.View"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或规则不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/proxy-routes/{id}/delete": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "删除指定代理规则，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-proxy-route"
+                ],
+                "summary": "删除代理规则",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "代理规则 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或规则不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/proxy-routes/{id}/update": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "更新指定代理规则的配置，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-proxy-route"
+                ],
+                "summary": "更新代理规则",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "代理规则 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "代理规则参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/proxy_route.Input"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/proxy_route.View"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或规则不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/status": {
+            "get": {
+                "description": "返回版本、认证源与系统公开配置，无需登录",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-option"
+                ],
+                "summary": "获取 OpenFlare 公开状态",
+                "responses": {
+                    "200": {
+                        "description": "公开状态",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/option.statusView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/tls-certificates": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回全部 TLS 证书（不含 PEM），需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-tls"
+                ],
+                "summary": "列出 TLS 证书",
+                "responses": {
+                    "200": {
+                        "description": "证书列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.TLSCertificate"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "从 PEM 文本创建 TLS 证书，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-tls"
+                ],
+                "summary": "创建 TLS 证书",
+                "parameters": [
+                    {
+                        "description": "证书参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/tls.CertificateInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建成功的证书",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.TLSCertificate"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/tls-certificates/apply": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "通过 ACME 申请新的 TLS 证书，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-tls"
+                ],
+                "summary": "申请 ACME 证书",
+                "parameters": [
+                    {
+                        "description": "ACME 申请参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/tls.ApplyInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "申请中的证书",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.TLSCertificate"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/tls-certificates/import-file": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "上传证书与私钥文件创建 TLS 证书，需要管理员权限",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-tls"
+                ],
+                "summary": "从文件导入 TLS 证书",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "证书名称",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "备注",
+                        "name": "remark",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "证书文件",
+                        "name": "cert_file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "私钥文件",
+                        "name": "key_file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "导入成功的证书",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.TLSCertificate"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/tls-certificates/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按 ID 返回 TLS 证书详情（不含 PEM），需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-tls"
+                ],
+                "summary": "获取 TLS 证书详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "证书 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "证书详情",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.TLSCertificate"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/tls-certificates/{id}/content": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按 ID 返回证书与私钥 PEM 内容，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-tls"
+                ],
+                "summary": "获取 TLS 证书 PEM 内容",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "证书 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "证书 PEM 内容",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/tls.CertificateContent"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/tls-certificates/{id}/convert-acme": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "将已上传证书转换为 ACME 自动续期模式，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-tls"
+                ],
+                "summary": "将证书转为 ACME 管理",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "证书 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "ACME 申请参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/tls.ApplyInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "转换后的证书",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.TLSCertificate"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/tls-certificates/{id}/delete": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按 ID 删除 TLS 证书，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-tls"
+                ],
+                "summary": "删除 TLS 证书",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "证书 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/tls-certificates/{id}/renew": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "手动触发 ACME 证书续期，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-tls"
+                ],
+                "summary": "续期 ACME 证书",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "证书 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "续期后的证书",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.TLSCertificate"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/tls-certificates/{id}/update": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按 ID 更新 TLS 证书 PEM 信息，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-tls"
+                ],
+                "summary": "更新 TLS 证书",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "证书 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "证书参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/tls.CertificateInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新后的证书",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.TLSCertificate"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/tls-certificates/{id}/update-acme": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按 ID 更新 ACME 证书申请配置，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-tls"
+                ],
+                "summary": "更新 ACME 证书配置",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "证书 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "ACME 申请参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/tls.ApplyInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新后的证书",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.TLSCertificate"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/update/latest-release": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "查询 OpenFlare 服务端最新 GitHub Release 及升级状态，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-update"
+                ],
+                "summary": "获取最新服务端发布版本",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "发布渠道（stable/preview）",
+                        "name": "channel",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "最新发布信息",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/update.LatestReleaseView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/update/logs/ws": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "通过 WebSocket 推送升级进度快照，需要管理员权限",
+                "tags": [
+                    "openflare-update"
+                ],
+                "summary": "流式获取服务端升级日志",
+                "responses": {
+                    "101": {
+                        "description": "WebSocket 升级日志流",
+                        "schema": {
+                            "$ref": "#/definitions/update.StreamSnapshot"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/update/manual-upgrade": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "确认并执行手动上传的服务端升级（当前功能已禁用），需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-update"
+                ],
+                "summary": "确认手动服务端升级",
+                "responses": {
+                    "400": {
+                        "description": "功能已禁用或参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/update/manual-upload": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "上传服务端二进制以进行手动升级（当前功能已禁用），需要管理员权限",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-update"
+                ],
+                "summary": "上传手动升级二进制",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "服务端二进制文件",
+                        "name": "binary",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "功能已禁用或参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/update/upgrade": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "从最新 Release 调度 OpenFlare 服务端自动升级，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-update"
+                ],
+                "summary": "触发服务端自动升级",
+                "parameters": [
+                    {
+                        "description": "升级参数",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/update.upgradeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "升级任务已调度",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/update.LatestReleaseView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/uptimekuma/sync": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "将 OpenFlare 节点同步到 Uptime Kuma，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-option"
+                ],
+                "summary": "同步 Uptime Kuma",
+                "responses": {
+                    "200": {
+                        "description": "同步成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/waf/ip-groups": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回全部 WAF IP 组，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "列出 WAF IP 组",
+                "responses": {
+                    "200": {
+                        "description": "IP 组列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/waf.IPGroupView"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "创建新的 WAF IP 组，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "创建 WAF IP 组",
+                "parameters": [
+                    {
+                        "description": "IP 组参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/waf.IPGroupInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建成功的 IP 组",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/waf.IPGroupView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/waf/ip-groups/test": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "根据自动配置规则测试 IP 匹配结果（桩实现），需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "测试 WAF IP 组自动配置",
+                "parameters": [
+                    {
+                        "description": "自动配置参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/waf.IPGroupAutoTestInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "测试结果",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/waf.IPGroupAutoTestResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/waf/ip-groups/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按 ID 返回 WAF IP 组详情，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "获取 WAF IP 组详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "IP 组 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "IP 组详情",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/waf.IPGroupView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/waf/ip-groups/{id}/delete": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按 ID 删除 WAF IP 组，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "删除 WAF IP 组",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "IP 组 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/waf/ip-groups/{id}/sync": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "手动触发 WAF IP 组外部 IP 同步，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "同步 WAF IP 组",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "IP 组 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "同步结果",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/waf.IPGroupSyncResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/waf/ip-groups/{id}/update": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按 ID 更新 WAF IP 组，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "更新 WAF IP 组",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "IP 组 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "IP 组参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/waf.IPGroupInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新后的 IP 组",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/waf.IPGroupView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/waf/rule-groups": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回全部 WAF 规则组，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "列出 WAF 规则组",
+                "responses": {
+                    "200": {
+                        "description": "规则组列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/waf.RuleGroupView"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "创建新的 WAF 规则组，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "创建 WAF 规则组",
+                "parameters": [
+                    {
+                        "description": "规则组参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/waf.RuleGroupInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建成功的规则组",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/waf.RuleGroupView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/waf/rule-groups/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按 ID 返回 WAF 规则组详情，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "获取 WAF 规则组详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "规则组 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "规则组详情",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/waf.RuleGroupView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/waf/rule-groups/{id}/delete": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按 ID 删除 WAF 规则组，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "删除 WAF 规则组",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "规则组 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/waf/rule-groups/{id}/sites": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "替换 WAF 规则组关联的代理站点列表，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "替换规则组站点绑定",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "规则组 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "站点 ID 列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/waf.IDsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新后的规则组",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/waf.RuleGroupView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/waf/rule-groups/{id}/update": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "按 ID 更新 WAF 规则组，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "更新 WAF 规则组",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "规则组 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "规则组参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/waf.RuleGroupInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新后的规则组",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/waf.RuleGroupView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/openflare/waf/sites/{route_id}/rule-groups": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "返回代理站点关联的 WAF 规则组绑定，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "获取站点 WAF 规则组",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "代理路由 ID",
+                        "name": "route_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "站点规则组绑定",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/waf.SiteRuleGroupsView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "替换代理站点关联的 WAF 规则组列表，需要管理员权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "替换站点 WAF 规则组",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "代理路由 ID",
+                        "name": "route_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "规则组 ID 列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/waf.IDsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新后的站点规则组绑定",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/waf.SiteRuleGroupsView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "记录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
                         "schema": {
                             "$ref": "#/definitions/response.Any"
                         }

@@ -11,7 +11,7 @@ import type {
 } from './types';
 
 export class ConfigVersionService extends OpenFlareBaseService {
-  protected static override readonly basePath: string = '/api/v1/custom/openflare/config-versions';
+  protected static override readonly basePath: string = '/api/v1/openflare/config-versions';
 
   static list(): Promise<ConfigVersionSummary[]> {
     return this.get<ConfigVersionSummary[]>('/');

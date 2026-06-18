@@ -2,7 +2,7 @@ import {OpenFlareBaseService} from './base.service';
 import type {OriginDetail, OriginItem, OriginMutationPayload} from './types';
 
 export class OriginService extends OpenFlareBaseService {
-  protected static override readonly basePath: string = '/api/v1/custom/openflare/origins';
+  protected static override readonly basePath: string = '/api/v1/openflare/origins';
 
   static list(): Promise<OriginItem[]> {
     return this.get<OriginItem[]>('/');

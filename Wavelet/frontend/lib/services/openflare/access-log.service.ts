@@ -26,7 +26,7 @@ function buildSearchParams(filters: object): Record<string, unknown> {
 }
 
 export class AccessLogService extends OpenFlareBaseService {
-  protected static override readonly basePath: string = '/api/v1/custom/openflare/access-logs';
+  protected static override readonly basePath: string = '/api/v1/openflare/access-logs';
 
   static list(filters: AccessLogFilters = {}): Promise<AccessLogList> {
     return this.get<AccessLogList>('/', buildSearchParams(filters));

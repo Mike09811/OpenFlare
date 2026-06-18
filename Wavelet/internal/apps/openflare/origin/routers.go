@@ -29,7 +29,7 @@ func handleLogicError(c *gin.Context, err error) bool {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或不存在"
-// @Router /api/v1/custom/openflare/origins [get]
+// @Router /api/v1/openflare/origins [get]
 func GetOrigins(c *gin.Context) {
 	origins, err := ListOrigins(c.Request.Context())
 	if handleLogicError(c, err) {
@@ -49,7 +49,7 @@ func GetOrigins(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或源站不存在"
-// @Router /api/v1/custom/openflare/origins/{id} [get]
+// @Router /api/v1/openflare/origins/{id} [get]
 func GetOrigin(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -74,7 +74,7 @@ func GetOrigin(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或不存在"
-// @Router /api/v1/custom/openflare/origins [post]
+// @Router /api/v1/openflare/origins [post]
 func CreateOriginHandler(c *gin.Context) {
 	var input Input
 	if !apiutil.BindJSON(c, &input) {
@@ -100,7 +100,7 @@ func CreateOriginHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或源站不存在"
-// @Router /api/v1/custom/openflare/origins/{id}/update [post]
+// @Router /api/v1/openflare/origins/{id}/update [post]
 func UpdateOriginHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -128,7 +128,7 @@ func UpdateOriginHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或源站不存在"
-// @Router /api/v1/custom/openflare/origins/{id}/delete [post]
+// @Router /api/v1/openflare/origins/{id}/delete [post]
 func DeleteOriginHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {

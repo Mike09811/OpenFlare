@@ -45,7 +45,7 @@ func routeIDParam(c *gin.Context) (uint, bool) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/waf/rule-groups [get]
+// @Router /api/v1/openflare/waf/rule-groups [get]
 func ListRuleGroupsHandler(c *gin.Context) {
 	groups, err := ListRuleGroups(c.Request.Context())
 	if handleLogicError(c, err) {
@@ -67,7 +67,7 @@ func ListRuleGroupsHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/waf/rule-groups/{id} [get]
+// @Router /api/v1/openflare/waf/rule-groups/{id} [get]
 func GetRuleGroupHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -93,7 +93,7 @@ func GetRuleGroupHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/waf/rule-groups [post]
+// @Router /api/v1/openflare/waf/rule-groups [post]
 func CreateRuleGroupHandler(c *gin.Context) {
 	var input RuleGroupInput
 	if !apiutil.BindJSON(c, &input) {
@@ -121,7 +121,7 @@ func CreateRuleGroupHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/waf/rule-groups/{id}/update [post]
+// @Router /api/v1/openflare/waf/rule-groups/{id}/update [post]
 func UpdateRuleGroupHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -151,7 +151,7 @@ func UpdateRuleGroupHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/waf/rule-groups/{id}/delete [post]
+// @Router /api/v1/openflare/waf/rule-groups/{id}/delete [post]
 func DeleteRuleGroupHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -178,7 +178,7 @@ func DeleteRuleGroupHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/waf/rule-groups/{id}/sites [post]
+// @Router /api/v1/openflare/waf/rule-groups/{id}/sites [post]
 func ReplaceRuleGroupSitesHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -208,7 +208,7 @@ func ReplaceRuleGroupSitesHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/waf/sites/{route_id}/rule-groups [get]
+// @Router /api/v1/openflare/waf/sites/{route_id}/rule-groups [get]
 func GetSiteRuleGroupsHandler(c *gin.Context) {
 	routeID, ok := routeIDParam(c)
 	if !ok {
@@ -236,7 +236,7 @@ func GetSiteRuleGroupsHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/waf/sites/{route_id}/rule-groups [post]
+// @Router /api/v1/openflare/waf/sites/{route_id}/rule-groups [post]
 func ReplaceSiteRuleGroupsHandler(c *gin.Context) {
 	routeID, ok := routeIDParam(c)
 	if !ok {
@@ -264,7 +264,7 @@ func ReplaceSiteRuleGroupsHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/waf/ip-groups [get]
+// @Router /api/v1/openflare/waf/ip-groups [get]
 func ListIPGroupsHandler(c *gin.Context) {
 	groups, err := ListIPGroups(c.Request.Context())
 	if handleLogicError(c, err) {
@@ -286,7 +286,7 @@ func ListIPGroupsHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/waf/ip-groups/{id} [get]
+// @Router /api/v1/openflare/waf/ip-groups/{id} [get]
 func GetIPGroupHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -312,7 +312,7 @@ func GetIPGroupHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/waf/ip-groups [post]
+// @Router /api/v1/openflare/waf/ip-groups [post]
 func CreateIPGroupHandler(c *gin.Context) {
 	var input IPGroupInput
 	if !apiutil.BindJSON(c, &input) {
@@ -340,7 +340,7 @@ func CreateIPGroupHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/waf/ip-groups/{id}/update [post]
+// @Router /api/v1/openflare/waf/ip-groups/{id}/update [post]
 func UpdateIPGroupHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -370,7 +370,7 @@ func UpdateIPGroupHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/waf/ip-groups/{id}/delete [post]
+// @Router /api/v1/openflare/waf/ip-groups/{id}/delete [post]
 func DeleteIPGroupHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -395,7 +395,7 @@ func DeleteIPGroupHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/waf/ip-groups/{id}/sync [post]
+// @Router /api/v1/openflare/waf/ip-groups/{id}/sync [post]
 func SyncIPGroupHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -421,7 +421,7 @@ func SyncIPGroupHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/waf/ip-groups/test [post]
+// @Router /api/v1/openflare/waf/ip-groups/test [post]
 func TestIPGroupAutoConfigHandler(c *gin.Context) {
 	var input IPGroupAutoTestInput
 	if !apiutil.BindJSON(c, &input) {

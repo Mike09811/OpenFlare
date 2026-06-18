@@ -22,7 +22,7 @@ import (
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/dashboard/overview [get]
+// @Router /api/v1/openflare/dashboard/overview [get]
 func GetOverviewHandler(c *gin.Context) {
 	overview, err := GetOverview(c.Request.Context())
 	if apiutil.AbortBadRequestOnError(c, err) {

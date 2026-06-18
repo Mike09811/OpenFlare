@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Package openflare registers OpenFlare HTTP routes.
-// Management console APIs are mounted via RegisterV1Routes under /api/v1/custom/openflare.
+// Management console APIs are mounted via RegisterV1Routes under /api/v1/openflare.
 // Agent/Relay/Flared protocol routes are mounted via RegisterRoutes under /api.
 package openflare
 

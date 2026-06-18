@@ -31,7 +31,7 @@ import (
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/access-logs [get]
+// @Router /api/v1/openflare/access-logs [get]
 func GetAccessLogsHandler(c *gin.Context) {
 	logs, err := ListAccessLogs(c.Request.Context(), readAccessLogQuery(c))
 	if apiutil.AbortBadRequestOnError(c, err) {
@@ -60,7 +60,7 @@ func GetAccessLogsHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/access-logs/folds [get]
+// @Router /api/v1/openflare/access-logs/folds [get]
 func GetFoldedAccessLogsHandler(c *gin.Context) {
 	query := readAccessLogQuery(c)
 	query.FoldMinutes = readQueryInt(c, "fold_minutes")
@@ -92,7 +92,7 @@ func GetFoldedAccessLogsHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/access-logs/folds/ip-summary [get]
+// @Router /api/v1/openflare/access-logs/folds/ip-summary [get]
 func GetFoldedAccessLogIPsHandler(c *gin.Context) {
 	result, err := ListFoldedAccessLogIPs(c.Request.Context(), FoldedAccessLogIPQuery{
 		NodeID:          c.Query("node_id"),
@@ -130,7 +130,7 @@ func GetFoldedAccessLogIPsHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/access-logs/ip-summary [get]
+// @Router /api/v1/openflare/access-logs/ip-summary [get]
 func GetAccessLogIPSummariesHandler(c *gin.Context) {
 	result, err := ListAccessLogIPSummaries(c.Request.Context(), AccessLogIPSummaryQuery{
 		NodeID:     c.Query("node_id"),
@@ -163,7 +163,7 @@ func GetAccessLogIPSummariesHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/access-logs/ip-summary/trend [get]
+// @Router /api/v1/openflare/access-logs/ip-summary/trend [get]
 func GetAccessLogIPTrendHandler(c *gin.Context) {
 	result, err := GetAccessLogIPTrend(c.Request.Context(), AccessLogIPTrendQuery{
 		NodeID:        c.Query("node_id"),
@@ -191,7 +191,7 @@ func GetAccessLogIPTrendHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/access-logs/cleanup [post]
+// @Router /api/v1/openflare/access-logs/cleanup [post]
 func CleanupAccessLogsHandler(c *gin.Context) {
 	var input AccessLogCleanupInput
 	if !apiutil.BindJSON(c, &input) {

@@ -32,7 +32,7 @@ func handleLogicError(c *gin.Context, err error) bool {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或不存在"
-// @Router /api/v1/custom/openflare/nodes [get]
+// @Router /api/v1/openflare/nodes [get]
 func ListNodesHandler(c *gin.Context) {
 	nodes, err := ListNodes(c.Request.Context())
 	if handleLogicError(c, err) {
@@ -53,7 +53,7 @@ func ListNodesHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或不存在"
-// @Router /api/v1/custom/openflare/nodes [post]
+// @Router /api/v1/openflare/nodes [post]
 func CreateNodeHandler(c *gin.Context) {
 	var input Input
 	if !apiutil.BindJSON(c, &input) {
@@ -79,7 +79,7 @@ func CreateNodeHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或节点不存在"
-// @Router /api/v1/custom/openflare/nodes/{id}/update [post]
+// @Router /api/v1/openflare/nodes/{id}/update [post]
 func UpdateNodeHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -107,7 +107,7 @@ func UpdateNodeHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或节点不存在"
-// @Router /api/v1/custom/openflare/nodes/{id}/delete [post]
+// @Router /api/v1/openflare/nodes/{id}/delete [post]
 func DeleteNodeHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -128,7 +128,7 @@ func DeleteNodeHandler(c *gin.Context) {
 // @Success 200 {object} response.Any{data=node.BootstrapView} "引导令牌"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或不存在"
-// @Router /api/v1/custom/openflare/nodes/bootstrap-token [get]
+// @Router /api/v1/openflare/nodes/bootstrap-token [get]
 func GetBootstrapTokenHandler(c *gin.Context) {
 	view, err := GetBootstrapToken(c.Request.Context())
 	if handleLogicError(c, err) {
@@ -146,7 +146,7 @@ func GetBootstrapTokenHandler(c *gin.Context) {
 // @Success 200 {object} response.Any{data=node.BootstrapView} "新引导令牌"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或不存在"
-// @Router /api/v1/custom/openflare/nodes/bootstrap-token/rotate [post]
+// @Router /api/v1/openflare/nodes/bootstrap-token/rotate [post]
 func RotateBootstrapTokenHandler(c *gin.Context) {
 	view, err := RotateBootstrapToken(c.Request.Context())
 	if handleLogicError(c, err) {
@@ -167,7 +167,7 @@ func RotateBootstrapTokenHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或节点不存在"
-// @Router /api/v1/custom/openflare/nodes/{id}/agent-release [get]
+// @Router /api/v1/openflare/nodes/{id}/agent-release [get]
 func GetAgentReleaseHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -193,7 +193,7 @@ func GetAgentReleaseHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或节点不存在"
-// @Router /api/v1/custom/openflare/nodes/{id}/agent-update [post]
+// @Router /api/v1/openflare/nodes/{id}/agent-update [post]
 func RequestAgentUpdateHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -224,7 +224,7 @@ func RequestAgentUpdateHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或节点不存在"
-// @Router /api/v1/custom/openflare/nodes/{id}/openresty-restart [post]
+// @Router /api/v1/openflare/nodes/{id}/openresty-restart [post]
 func RequestOpenrestyRestartHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -248,7 +248,7 @@ func RequestOpenrestyRestartHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或节点不存在"
-// @Router /api/v1/custom/openflare/nodes/{id}/force-sync [post]
+// @Router /api/v1/openflare/nodes/{id}/force-sync [post]
 func RequestForceSyncHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -274,7 +274,7 @@ func RequestForceSyncHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或节点不存在"
-// @Router /api/v1/custom/openflare/nodes/{id}/observability [get]
+// @Router /api/v1/openflare/nodes/{id}/observability [get]
 func GetObservabilityHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -303,7 +303,7 @@ func GetObservabilityHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或节点不存在"
-// @Router /api/v1/custom/openflare/nodes/{id}/observability/cleanup [post]
+// @Router /api/v1/openflare/nodes/{id}/observability/cleanup [post]
 func CleanupHealthEventsHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {

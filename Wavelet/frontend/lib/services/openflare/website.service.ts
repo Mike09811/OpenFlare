@@ -6,7 +6,7 @@ import type {
 } from './types';
 
 export class WebsiteService extends OpenFlareBaseService {
-  protected static override readonly basePath: string = '/api/v1/custom/openflare/managed-domains';
+  protected static override readonly basePath: string = '/api/v1/openflare/managed-domains';
 
   static async list(): Promise<ManagedDomainItem[]> {
     return this.get<ManagedDomainItem[]>('/');

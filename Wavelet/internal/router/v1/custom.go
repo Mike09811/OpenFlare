@@ -6,7 +6,6 @@ package v1
 
 import (
 	"github.com/Rain-kl/Wavelet/internal/apps/custom"
-	ofrouter "github.com/Rain-kl/Wavelet/internal/router/v1/openflare"
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,6 +14,5 @@ func RegisterCustomRoutes(apiV1Router *gin.RouterGroup) {
 	customRouter := apiV1Router.Group("/custom")
 	{
 		customRouter.GET("/hello", custom.Hello)
-		ofrouter.RegisterV1Routes(customRouter)
 	}
 }

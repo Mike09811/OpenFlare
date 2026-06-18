@@ -231,7 +231,7 @@ function normalizeDashboardOverview(
 }
 
 export class DashboardService extends OpenFlareBaseService {
-  protected static override readonly basePath: string = '/api/v1/custom/openflare/dashboard';
+  protected static override readonly basePath: string = '/api/v1/openflare/dashboard';
 
   static async getOverview(): Promise<DashboardOverview | null> {
     const overview = await this.get<

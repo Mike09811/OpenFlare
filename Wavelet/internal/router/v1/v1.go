@@ -5,6 +5,7 @@
 package v1
 
 import (
+	ofrouter "github.com/Rain-kl/Wavelet/internal/router/v1/openflare"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,6 +17,9 @@ func RegisterV1Routes(apiV1Router *gin.RouterGroup, apiGroup *gin.RouterGroup) {
 	// 2. Admin routes
 	RegisterAdminRoutes(apiV1Router)
 
-	// 3. Register custom business routes
+	// 3. OpenFlare management console APIs
+	ofrouter.RegisterV1Routes(apiV1Router)
+
+	// 4. Custom business routes (example only)
 	RegisterCustomRoutes(apiV1Router)
 }

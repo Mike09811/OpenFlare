@@ -31,7 +31,7 @@ func handleLogicError(c *gin.Context, err error) bool {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/tls-certificates [get]
+// @Router /api/v1/openflare/tls-certificates [get]
 func GetCertificates(c *gin.Context) {
 	certificates, err := ListCertificates(c.Request.Context())
 	if handleLogicError(c, err) {
@@ -53,7 +53,7 @@ func GetCertificates(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/tls-certificates/{id} [get]
+// @Router /api/v1/openflare/tls-certificates/{id} [get]
 func GetCertificateDetail(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -79,7 +79,7 @@ func GetCertificateDetail(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/tls-certificates/{id}/content [get]
+// @Router /api/v1/openflare/tls-certificates/{id}/content [get]
 func GetCertificateContentHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -105,7 +105,7 @@ func GetCertificateContentHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/tls-certificates [post]
+// @Router /api/v1/openflare/tls-certificates [post]
 func CreateCertificateHandler(c *gin.Context) {
 	var input CertificateInput
 	if !apiutil.BindJSON(c, &input) {
@@ -133,7 +133,7 @@ func CreateCertificateHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/tls-certificates/{id}/update [post]
+// @Router /api/v1/openflare/tls-certificates/{id}/update [post]
 func UpdateCertificateHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -166,7 +166,7 @@ func UpdateCertificateHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/tls-certificates/import-file [post]
+// @Router /api/v1/openflare/tls-certificates/import-file [post]
 func ImportCertificateFile(c *gin.Context) {
 	name := c.PostForm("name")
 	remark := c.PostForm("remark")
@@ -200,7 +200,7 @@ func ImportCertificateFile(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/tls-certificates/{id}/delete [post]
+// @Router /api/v1/openflare/tls-certificates/{id}/delete [post]
 func DeleteCertificateHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -225,7 +225,7 @@ func DeleteCertificateHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/tls-certificates/apply [post]
+// @Router /api/v1/openflare/tls-certificates/apply [post]
 func ApplyCertificateHandler(c *gin.Context) {
 	var input ApplyInput
 	if !apiutil.BindJSON(c, &input) {
@@ -253,7 +253,7 @@ func ApplyCertificateHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/tls-certificates/{id}/update-acme [post]
+// @Router /api/v1/openflare/tls-certificates/{id}/update-acme [post]
 func UpdateACMECertificateHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -285,7 +285,7 @@ func UpdateACMECertificateHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/tls-certificates/{id}/convert-acme [post]
+// @Router /api/v1/openflare/tls-certificates/{id}/convert-acme [post]
 func ConvertCertificateToACMEHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -315,7 +315,7 @@ func ConvertCertificateToACMEHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/tls-certificates/{id}/renew [post]
+// @Router /api/v1/openflare/tls-certificates/{id}/renew [post]
 func RenewCertificateHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -339,7 +339,7 @@ func RenewCertificateHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/managed-domains [get]
+// @Router /api/v1/openflare/managed-domains [get]
 func GetManagedDomains(c *gin.Context) {
 	domains, err := ListManagedDomains(c.Request.Context())
 	if handleLogicError(c, err) {
@@ -361,7 +361,7 @@ func GetManagedDomains(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/managed-domains [post]
+// @Router /api/v1/openflare/managed-domains [post]
 func CreateManagedDomainHandler(c *gin.Context) {
 	var input ManagedDomainInput
 	if !apiutil.BindJSON(c, &input) {
@@ -389,7 +389,7 @@ func CreateManagedDomainHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/managed-domains/{id}/update [post]
+// @Router /api/v1/openflare/managed-domains/{id}/update [post]
 func UpdateManagedDomainHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -419,7 +419,7 @@ func UpdateManagedDomainHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/managed-domains/{id}/delete [post]
+// @Router /api/v1/openflare/managed-domains/{id}/delete [post]
 func DeleteManagedDomainHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -443,7 +443,7 @@ func DeleteManagedDomainHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/managed-domains/match [get]
+// @Router /api/v1/openflare/managed-domains/match [get]
 func MatchManagedDomainCertificateHandler(c *gin.Context) {
 	domain := strings.TrimSpace(c.Query("domain"))
 	result, err := MatchManagedDomainCertificate(c.Request.Context(), domain)
@@ -464,7 +464,7 @@ func MatchManagedDomainCertificateHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/dns-accounts [get]
+// @Router /api/v1/openflare/dns-accounts [get]
 func GetDNSAccounts(c *gin.Context) {
 	accounts, err := ListDNSAccounts(c.Request.Context())
 	if handleLogicError(c, err) {
@@ -486,7 +486,7 @@ func GetDNSAccounts(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/dns-accounts [post]
+// @Router /api/v1/openflare/dns-accounts [post]
 func CreateDNSAccountHandler(c *gin.Context) {
 	var input DNSAccountInput
 	if !apiutil.BindJSON(c, &input) {
@@ -514,7 +514,7 @@ func CreateDNSAccountHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/dns-accounts/{id}/update [post]
+// @Router /api/v1/openflare/dns-accounts/{id}/update [post]
 func UpdateDNSAccountHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -544,7 +544,7 @@ func UpdateDNSAccountHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/dns-accounts/{id}/delete [post]
+// @Router /api/v1/openflare/dns-accounts/{id}/delete [post]
 func DeleteDNSAccountHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -568,7 +568,7 @@ func DeleteDNSAccountHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "记录不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/custom/openflare/acme-accounts/default [get]
+// @Router /api/v1/openflare/acme-accounts/default [get]
 func GetDefaultAcmeAccountHandler(c *gin.Context) {
 	account, err := GetDefaultAcmeAccount(c.Request.Context())
 	if handleLogicError(c, err) {

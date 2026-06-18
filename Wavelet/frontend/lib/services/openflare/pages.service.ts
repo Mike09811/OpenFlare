@@ -13,7 +13,7 @@ import type {
 } from './types';
 
 export class PagesService extends OpenFlareBaseService {
-  protected static override readonly basePath: string = '/api/v1/custom/openflare/pages';
+  protected static override readonly basePath: string = '/api/v1/openflare/pages';
 
   static listProjects(): Promise<PagesProject[]> {
     return this.get<PagesProject[]>('/');
