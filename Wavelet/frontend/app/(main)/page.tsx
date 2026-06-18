@@ -19,8 +19,8 @@ import {
 import {NetworkDiskTrendChart} from './components/dashboard/network-disk-trend-chart';
 import {NodeHealthTable} from './components/dashboard/node-health-table';
 import {NodeRankPanel} from './components/dashboard/node-rank-panel';
-import {DashboardStatCards} from './components/dashboard/stat-cards';
 import {TrafficTrendChart} from './components/dashboard/traffic-trend-chart';
+import {WorldStage} from './components/dashboard/world-stage';
 import {getErrorMessage} from './nodes/components/node-utils';
 
 const dashboardQueryKey = ['openflare', 'dashboard', 'overview'];
@@ -77,10 +77,12 @@ export default function OpenFlareDashboardPage() {
         />
       ) : (
         <>
-          <DashboardStatCards
+          <WorldStage
             summary={overview.summary}
             traffic={overview.traffic}
             capacity={overview.capacity}
+            nodes={overview.nodes}
+            sourceCountries={overview.distributions.source_countries}
           />
 
           <div className="grid gap-6 xl:grid-cols-2">
