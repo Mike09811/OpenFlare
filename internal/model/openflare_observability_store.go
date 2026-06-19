@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Rain-kl/Wavelet/internal/apps/openflare/chwriter"
 	analyticsmodel "github.com/Rain-kl/Wavelet/internal/model/analytics"
 	analyticsrepo "github.com/Rain-kl/Wavelet/internal/repository/analytics"
 )
@@ -74,11 +75,12 @@ func NewMemoryObservabilityStore() observabilityStore {
 
 type clickhouseObservabilityStore struct{}
 
-func (clickhouseObservabilityStore) InsertMetricSnapshot(ctx context.Context, record *OpenFlareMetricSnapshot) error {
+func (clickhouseObservabilityStore) InsertMetricSnapshot(_ context.Context, record *OpenFlareMetricSnapshot) error {
 	if record == nil {
 		return nil
 	}
-	return analyticsrepo.InsertNodeMetricSnapshot(ctx, toAnalyticsNodeMetricSnapshot(record))
+	chwriter.QueueMetricSnapshot(toAnalyticsNodeMetricSnapshot(record))
+	return nil
 }
 
 func (clickhouseObservabilityStore) ListMetricSnapshots(ctx context.Context, nodeID string, since time.Time, limit int) ([]*OpenFlareMetricSnapshot, error) {
@@ -97,11 +99,12 @@ func (clickhouseObservabilityStore) DeleteMetricSnapshotsBefore(ctx context.Cont
 	return analyticsrepo.DeleteNodeMetricSnapshotsBefore(ctx, cutoff)
 }
 
-func (clickhouseObservabilityStore) InsertRequestReport(ctx context.Context, record *OpenFlareRequestReport) error {
+func (clickhouseObservabilityStore) InsertRequestReport(_ context.Context, record *OpenFlareRequestReport) error {
 	if record == nil {
 		return nil
 	}
-	return analyticsrepo.InsertNodeRequestReport(ctx, toAnalyticsNodeRequestReport(record))
+	chwriter.QueueRequestReport(toAnalyticsNodeRequestReport(record))
+	return nil
 }
 
 func (clickhouseObservabilityStore) ListRequestReports(ctx context.Context, nodeID string, since time.Time, limit int) ([]*OpenFlareRequestReport, error) {
@@ -120,11 +123,12 @@ func (clickhouseObservabilityStore) DeleteRequestReportsBefore(ctx context.Conte
 	return analyticsrepo.DeleteNodeRequestReportsBefore(ctx, cutoff)
 }
 
-func (clickhouseObservabilityStore) InsertNodeObservationOpenresty(ctx context.Context, record *OpenFlareNodeObservationOpenresty) error {
+func (clickhouseObservabilityStore) InsertNodeObservationOpenresty(_ context.Context, record *OpenFlareNodeObservationOpenresty) error {
 	if record == nil {
 		return nil
 	}
-	return analyticsrepo.InsertNodeObsOpenresty(ctx, toAnalyticsNodeObsOpenresty(record))
+	chwriter.QueueOpenrestyObservation(toAnalyticsNodeObsOpenresty(record))
+	return nil
 }
 
 func (clickhouseObservabilityStore) ListNodeObservationOpenresty(ctx context.Context, nodeID string, since time.Time, limit int) ([]*OpenFlareNodeObservationOpenresty, error) {
@@ -143,11 +147,12 @@ func (clickhouseObservabilityStore) DeleteNodeObservationOpenrestyBefore(ctx con
 	return analyticsrepo.DeleteNodeObsOpenrestyBefore(ctx, cutoff)
 }
 
-func (clickhouseObservabilityStore) InsertNodeObservationFrps(ctx context.Context, record *OpenFlareNodeObservationFrps) error {
+func (clickhouseObservabilityStore) InsertNodeObservationFrps(_ context.Context, record *OpenFlareNodeObservationFrps) error {
 	if record == nil {
 		return nil
 	}
-	return analyticsrepo.InsertNodeObsFrps(ctx, toAnalyticsNodeObsFrps(record))
+	chwriter.QueueFrpsObservation(toAnalyticsNodeObsFrps(record))
+	return nil
 }
 
 func (clickhouseObservabilityStore) ListNodeObservationFrps(ctx context.Context, nodeID string, since time.Time, limit int) ([]*OpenFlareNodeObservationFrps, error) {
@@ -166,11 +171,12 @@ func (clickhouseObservabilityStore) DeleteNodeObservationFrpsBefore(ctx context.
 	return analyticsrepo.DeleteNodeObsFrpsBefore(ctx, cutoff)
 }
 
-func (clickhouseObservabilityStore) InsertNodeObservationFrpc(ctx context.Context, record *OpenFlareNodeObservationFrpc) error {
+func (clickhouseObservabilityStore) InsertNodeObservationFrpc(_ context.Context, record *OpenFlareNodeObservationFrpc) error {
 	if record == nil {
 		return nil
 	}
-	return analyticsrepo.InsertNodeObsFrpc(ctx, toAnalyticsNodeObsFrpc(record))
+	chwriter.QueueFrpcObservation(toAnalyticsNodeObsFrpc(record))
+	return nil
 }
 
 func (clickhouseObservabilityStore) ListNodeObservationFrpc(ctx context.Context, nodeID string, since time.Time, limit int) ([]*OpenFlareNodeObservationFrpc, error) {

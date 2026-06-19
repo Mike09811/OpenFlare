@@ -24,7 +24,8 @@ sidebar: false
 
 ### 新增
 
-- 新增 `internal/db/batchwriter` 通用批量写入框架，支持各业务域独立队列实例、按条数/时间 flush、非阻塞入队与优雅停机；业务层尚未接入。
+- 新增 `internal/db/batchwriter` 通用批量写入框架，支持各业务域独立队列实例、按条数/时间 flush、非阻塞入队与优雅停机。
+- 业务层接入批量写入：`risk_control` 审计日志迁移至 `batchwriter`；OpenFlare 可观测时序与节点访问日志通过 `internal/apps/openflare/chwriter` 异步 flush，移除写前 `SELECT count()` 去重。
 
 ### 变更
 

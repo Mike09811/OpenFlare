@@ -4,6 +4,7 @@
 package risk_control
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -12,12 +13,42 @@ import (
 
 	"github.com/Rain-kl/Wavelet/internal/apps/oauth"
 	"github.com/Rain-kl/Wavelet/internal/config"
+	"github.com/Rain-kl/Wavelet/internal/db/batchwriter"
 	"github.com/Rain-kl/Wavelet/internal/model"
 	"github.com/Rain-kl/Wavelet/internal/model/analytics"
 	"github.com/Rain-kl/Wavelet/internal/testhelper"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
+
+const testLogQueueSize = 10_000
+
+func newTestLogWriter(t *testing.T, queueSize int) (*batchwriter.Writer[*analytics.UserAccessLog], chan *analytics.UserAccessLog) {
+	t.Helper()
+
+	received := make(chan *analytics.UserAccessLog, queueSize)
+	cfg := batchwriter.Config{
+		QueueSize:     queueSize,
+		MaxBatchSize:  1,
+		FlushInterval: 5 * time.Millisecond,
+	}
+	writer, err := batchwriter.New[*analytics.UserAccessLog](cfg, func(_ context.Context, items []*analytics.UserAccessLog) error {
+		for _, item := range items {
+			if item != nil {
+				received <- item
+			}
+		}
+		return nil
+	})
+	assert.NoError(t, err)
+	writer.Start(context.Background())
+	t.Cleanup(func() {
+		stopCtx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		_ = writer.Stop(stopCtx)
+	})
+	return writer, received
+}
 
 func TestRiskControlMiddleware(t *testing.T) {
 	gin.SetMode(gin.TestMode)
@@ -41,15 +72,15 @@ func TestRiskControlMiddleware(t *testing.T) {
 
 	t.Run("ClickHouse enabled - Normal Authenticated Request", func(t *testing.T) {
 		config.Config.ClickHouse.Enabled = true
-		logChan = make(chan *analytics.UserAccessLog, defaultQueueSize)
+		writer, received := newTestLogWriter(t, testLogQueueSize)
+		resetWriter := SetLogWriterForTest(writer)
 		defer func() {
 			config.Config.ClickHouse.Enabled = false
-			logChan = nil
+			resetWriter()
 		}()
 
 		r := gin.New()
 		r.Use(func(c *gin.Context) {
-			// Mock authentication middleware placing user in context
 			user := &model.User{ID: 12345}
 			oauth.SetToContext(c, oauth.UserObjKey, user)
 			c.Next()
@@ -68,9 +99,8 @@ func TestRiskControlMiddleware(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, "ok", w.Body.String())
 
-		// Verify log is enqueued
 		select {
-		case logItem := <-logChan:
+		case logItem := <-received:
 			assert.Equal(t, uint64(12345), logItem.UserID)
 			assert.Equal(t, "/test", logItem.Path)
 			assert.Equal(t, http.MethodGet, logItem.Method)
@@ -78,17 +108,18 @@ func TestRiskControlMiddleware(t *testing.T) {
 			assert.NotEmpty(t, logItem.Headers)
 			assert.Contains(t, logItem.Headers, "X-Test-Header")
 			assert.NotContains(t, logItem.Headers, "Cookie")
-		case <-time.After(100 * time.Millisecond):
-			t.Fatal("expected log item in logChan, but got none")
+		case <-time.After(200 * time.Millisecond):
+			t.Fatal("expected flushed log item, but got none")
 		}
 	})
 
 	t.Run("ClickHouse enabled - Unauthenticated Request", func(t *testing.T) {
 		config.Config.ClickHouse.Enabled = true
-		logChan = make(chan *analytics.UserAccessLog, defaultQueueSize)
+		writer, received := newTestLogWriter(t, testLogQueueSize)
+		resetWriter := SetLogWriterForTest(writer)
 		defer func() {
 			config.Config.ClickHouse.Enabled = false
-			logChan = nil
+			resetWriter()
 		}()
 
 		r := testhelper.NewTestGinEngine(RiskControlMiddleware())
@@ -103,26 +134,24 @@ func TestRiskControlMiddleware(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, "ok", w.Body.String())
 
-		// Verify no log is enqueued
 		select {
-		case <-logChan:
+		case <-received:
 			t.Fatal("expected no log item for unauthenticated request")
 		case <-time.After(50 * time.Millisecond):
-			// Success
 		}
 	})
 
 	t.Run("ClickHouse enabled - Buffer Full Rate Limiting", func(t *testing.T) {
 		config.Config.ClickHouse.Enabled = true
-		logChan = make(chan *analytics.UserAccessLog, 2) // small capacity for quick fill
+		writer, _ := newTestLogWriter(t, 2)
+		resetWriter := SetLogWriterForTest(writer)
 		defer func() {
 			config.Config.ClickHouse.Enabled = false
-			logChan = nil
+			resetWriter()
 		}()
 
-		// fill logChan up to cap to simulate buffer full
-		for len(logChan) < cap(logChan) {
-			logChan <- &analytics.UserAccessLog{}
+		for range 2 {
+			assert.True(t, writer.TryEnqueue(&analytics.UserAccessLog{}))
 		}
 
 		r := testhelper.NewTestGinEngine(RiskControlMiddleware())

@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Rain-kl/Wavelet/internal/apps/openflare/chwriter"
 	analyticsmodel "github.com/Rain-kl/Wavelet/internal/model/analytics"
 	analyticsrepo "github.com/Rain-kl/Wavelet/internal/repository/analytics"
 )
@@ -63,7 +64,7 @@ func NewMemoryAccessLogStore() accessLogStore {
 
 type clickhouseAccessLogStore struct{}
 
-func (clickhouseAccessLogStore) InsertBatch(ctx context.Context, records []*OpenFlareAccessLog) error {
+func (clickhouseAccessLogStore) InsertBatch(_ context.Context, records []*OpenFlareAccessLog) error {
 	logs := make([]analyticsmodel.NodeAccessLog, 0, len(records))
 	for _, record := range records {
 		if record == nil {
@@ -71,7 +72,8 @@ func (clickhouseAccessLogStore) InsertBatch(ctx context.Context, records []*Open
 		}
 		logs = append(logs, toAnalyticsNodeAccessLog(record))
 	}
-	return analyticsrepo.BatchInsertNodeAccessLogs(ctx, logs)
+	chwriter.QueueNodeAccessLogs(logs)
+	return nil
 }
 
 func (clickhouseAccessLogStore) List(ctx context.Context, query OpenFlareAccessLogQuery) ([]*OpenFlareAccessLog, error) {

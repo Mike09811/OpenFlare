@@ -11,6 +11,7 @@ import (
 
 	admin_push "github.com/Rain-kl/Wavelet/internal/apps/admin/push"
 	"github.com/Rain-kl/Wavelet/internal/apps/admin/push/custom_events"
+	"github.com/Rain-kl/Wavelet/internal/apps/openflare/chwriter"
 	"github.com/Rain-kl/Wavelet/internal/apps/risk_control"
 	taskhandlers "github.com/Rain-kl/Wavelet/internal/task/handlers"
 	"github.com/Rain-kl/Wavelet/pkg/logger"
@@ -83,6 +84,7 @@ func Init(ctx context.Context, opts Options) {
 		}
 		if opts.API {
 			risk_control.InitLogWriter(ctx)
+			chwriter.Init(ctx)
 		}
 	})
 }

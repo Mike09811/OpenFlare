@@ -58,9 +58,9 @@ writer.Stop(stopCtx)      // close 队列 + drain + 最终 flush
 
 | 域 | 表 | 现状 | 目标形态 |
 | :--- | :--- | :--- | :--- |
-| 管理端审计 | `w_user_access_logs` | `risk_control` 手写 channel worker | 迁移至 `batchwriter` + `analyticsrepo.BatchInsert` |
-| 边缘访问日志 | `of_node_access_logs` | 心跳内 `BatchInsertNodeAccessLogs` | 高 QPS 时增加独立 `batchwriter`；低规模可维持心跳内批量 |
-| 可观测时序 | `of_node_metric_snapshots` 等 5 表 | repository 逐条 `PrepareBatch` + 部分写前 `SELECT count()` | **优先改造**：`batchwriter` 或心跳内按表聚合 + 去掉 exists 查询 |
+| 管理端审计 | `w_user_access_logs` | `risk_control` → `batchwriter` + `analyticsrepo.BatchInsert` | 已接入 |
+| 边缘访问日志 | `of_node_access_logs` | `openflare/chwriter` 异步 flush | 已接入 |
+| 可观测时序 | `of_node_metric_snapshots` 等 5 表 | `openflare/chwriter` 五表独立 writer + 进程内短 TTL 去重 | 已接入 |
 
 **不要**把 audit、access log、observability 并入同一 channel。
 
@@ -154,7 +154,8 @@ make code-check
 
 - 框架：`internal/db/batchwriter/{config,writer,errs}.go`
 - 连接：`internal/db/clickhouse.go`
-- 审计写入（待迁移）：`internal/apps/risk_control/logics.go`
-- 节点访问日志：`internal/repository/analytics/node_access_log_writer.go`
-- 可观测写入（待改造）：`internal/repository/analytics/node_observability_writer.go`
+- 审计写入：`internal/apps/risk_control/logics.go`
+- OpenFlare 写入胶水：`internal/apps/openflare/chwriter/writer.go`
+- 节点访问日志 repository：`internal/repository/analytics/node_access_log_writer.go`
+- 可观测 repository：`internal/repository/analytics/node_observability_writer.go`
 - Bootstrap：`internal/bootstrap/bootstrap.go`

@@ -14,26 +14,19 @@ import (
 	analyticsmodel "github.com/Rain-kl/Wavelet/internal/model/analytics"
 )
 
-// InsertNodeMetricSnapshot writes a metric snapshot when no row exists for node_id+captured_at.
+// InsertNodeMetricSnapshot writes a single metric snapshot via the batch API.
 func InsertNodeMetricSnapshot(ctx context.Context, snapshot analyticsmodel.NodeMetricSnapshot) error {
-	nodeID := strings.TrimSpace(snapshot.NodeID)
-	if nodeID == "" {
+	if strings.TrimSpace(snapshot.NodeID) == "" {
 		return nil
 	}
-	capturedAt := snapshot.CapturedAt.UTC()
+	return BatchInsertNodeMetricSnapshots(ctx, []analyticsmodel.NodeMetricSnapshot{snapshot})
+}
 
-	exists, err := nodeObservabilityRowExists(
-		ctx,
-		fmt.Sprintf("SELECT count() FROM %s WHERE node_id = ? AND captured_at = ?", nodeMetricSnapshotTableName()),
-		nodeID, capturedAt,
-	)
-	if err != nil {
-		return err
-	}
-	if exists {
+// BatchInsertNodeMetricSnapshots writes metric snapshots to ClickHouse.
+func BatchInsertNodeMetricSnapshots(ctx context.Context, snapshots []analyticsmodel.NodeMetricSnapshot) error {
+	if len(snapshots) == 0 {
 		return nil
 	}
-
 	if db.ChConn == nil {
 		return fmt.Errorf("clickhouse connection is not initialized")
 	}
@@ -44,30 +37,40 @@ func InsertNodeMetricSnapshot(ctx context.Context, snapshot analyticsmodel.NodeM
 	}
 
 	now := time.Now().UTC()
-	id := snapshot.ID
-	if id == 0 {
-		id = idgen.NextUint64ID()
+	for _, snapshot := range snapshots {
+		nodeID := strings.TrimSpace(snapshot.NodeID)
+		if nodeID == "" {
+			continue
+		}
+		id := snapshot.ID
+		if id == 0 {
+			id = idgen.NextUint64ID()
+		}
+		createdAt := snapshot.CreatedAt
+		if createdAt.IsZero() {
+			createdAt = now
+		}
+		if err := batch.Append(
+			id,
+			nodeID,
+			snapshot.CapturedAt.UTC(),
+			snapshot.CPUUsagePercent,
+			snapshot.MemoryUsedBytes,
+			snapshot.MemoryTotalBytes,
+			snapshot.StorageUsedBytes,
+			snapshot.StorageTotalBytes,
+			snapshot.DiskReadBytes,
+			snapshot.DiskWriteBytes,
+			snapshot.NetworkRxBytes,
+			snapshot.NetworkTxBytes,
+			createdAt.UTC(),
+		); err != nil {
+			return fmt.Errorf("append node metric snapshot to batch: %w", err)
+		}
 	}
-	createdAt := snapshot.CreatedAt
-	if createdAt.IsZero() {
-		createdAt = now
-	}
-	if err := batch.Append(
-		id,
-		nodeID,
-		capturedAt,
-		snapshot.CPUUsagePercent,
-		snapshot.MemoryUsedBytes,
-		snapshot.MemoryTotalBytes,
-		snapshot.StorageUsedBytes,
-		snapshot.StorageTotalBytes,
-		snapshot.DiskReadBytes,
-		snapshot.DiskWriteBytes,
-		snapshot.NetworkRxBytes,
-		snapshot.NetworkTxBytes,
-		createdAt.UTC(),
-	); err != nil {
-		return fmt.Errorf("append node metric snapshot to batch: %w", err)
+
+	if batch.Rows() == 0 {
+		return nil
 	}
 	if err := batch.Send(); err != nil {
 		return fmt.Errorf("send clickhouse batch: %w", err)
@@ -75,30 +78,19 @@ func InsertNodeMetricSnapshot(ctx context.Context, snapshot analyticsmodel.NodeM
 	return nil
 }
 
-// InsertNodeRequestReport writes a request report when no row exists for node_id+window bounds.
+// InsertNodeRequestReport writes a single request report via the batch API.
 func InsertNodeRequestReport(ctx context.Context, report analyticsmodel.NodeRequestReport) error {
-	nodeID := strings.TrimSpace(report.NodeID)
-	if nodeID == "" {
+	if strings.TrimSpace(report.NodeID) == "" {
 		return nil
 	}
-	windowStartedAt := report.WindowStartedAt.UTC()
-	windowEndedAt := report.WindowEndedAt.UTC()
+	return BatchInsertNodeRequestReports(ctx, []analyticsmodel.NodeRequestReport{report})
+}
 
-	exists, err := nodeObservabilityRowExists(
-		ctx,
-		fmt.Sprintf(
-			"SELECT count() FROM %s WHERE node_id = ? AND window_started_at = ? AND window_ended_at = ?",
-			nodeRequestReportTableName(),
-		),
-		nodeID, windowStartedAt, windowEndedAt,
-	)
-	if err != nil {
-		return err
-	}
-	if exists {
+// BatchInsertNodeRequestReports writes request reports to ClickHouse.
+func BatchInsertNodeRequestReports(ctx context.Context, reports []analyticsmodel.NodeRequestReport) error {
+	if len(reports) == 0 {
 		return nil
 	}
-
 	if db.ChConn == nil {
 		return fmt.Errorf("clickhouse connection is not initialized")
 	}
@@ -109,28 +101,38 @@ func InsertNodeRequestReport(ctx context.Context, report analyticsmodel.NodeRequ
 	}
 
 	now := time.Now().UTC()
-	id := report.ID
-	if id == 0 {
-		id = idgen.NextUint64ID()
+	for _, report := range reports {
+		nodeID := strings.TrimSpace(report.NodeID)
+		if nodeID == "" {
+			continue
+		}
+		id := report.ID
+		if id == 0 {
+			id = idgen.NextUint64ID()
+		}
+		createdAt := report.CreatedAt
+		if createdAt.IsZero() {
+			createdAt = now
+		}
+		if err := batch.Append(
+			id,
+			nodeID,
+			report.WindowStartedAt.UTC(),
+			report.WindowEndedAt.UTC(),
+			report.RequestCount,
+			report.ErrorCount,
+			report.UniqueVisitorCount,
+			report.StatusCodesJSON,
+			report.TopDomainsJSON,
+			report.SourceCountriesJSON,
+			createdAt.UTC(),
+		); err != nil {
+			return fmt.Errorf("append node request report to batch: %w", err)
+		}
 	}
-	createdAt := report.CreatedAt
-	if createdAt.IsZero() {
-		createdAt = now
-	}
-	if err := batch.Append(
-		id,
-		nodeID,
-		windowStartedAt,
-		windowEndedAt,
-		report.RequestCount,
-		report.ErrorCount,
-		report.UniqueVisitorCount,
-		report.StatusCodesJSON,
-		report.TopDomainsJSON,
-		report.SourceCountriesJSON,
-		createdAt.UTC(),
-	); err != nil {
-		return fmt.Errorf("append node request report to batch: %w", err)
+
+	if batch.Rows() == 0 {
+		return nil
 	}
 	if err := batch.Send(); err != nil {
 		return fmt.Errorf("send clickhouse batch: %w", err)
@@ -138,34 +140,19 @@ func InsertNodeRequestReport(ctx context.Context, report analyticsmodel.NodeRequ
 	return nil
 }
 
-// InsertNodeObsOpenresty writes an OpenResty observability snapshot.
+// InsertNodeObsOpenresty writes a single OpenResty observation via the batch API.
 func InsertNodeObsOpenresty(ctx context.Context, obs analyticsmodel.NodeObsOpenresty) error {
-	nodeID := strings.TrimSpace(obs.NodeID)
-	if nodeID == "" {
+	if strings.TrimSpace(obs.NodeID) == "" {
 		return nil
 	}
-	return insertNodeObsOpenrestyBatch(ctx, obs, nodeID)
+	return BatchInsertNodeObsOpenresty(ctx, []analyticsmodel.NodeObsOpenresty{obs})
 }
 
-// InsertNodeObsFrps writes an FRPS observability snapshot.
-func InsertNodeObsFrps(ctx context.Context, obs analyticsmodel.NodeObsFrps) error {
-	nodeID := strings.TrimSpace(obs.NodeID)
-	if nodeID == "" {
+// BatchInsertNodeObsOpenresty writes OpenResty observations to ClickHouse.
+func BatchInsertNodeObsOpenresty(ctx context.Context, observations []analyticsmodel.NodeObsOpenresty) error {
+	if len(observations) == 0 {
 		return nil
 	}
-	return insertNodeObsFrpsBatch(ctx, obs, nodeID)
-}
-
-// InsertNodeObsFrpc writes an FRPC observability snapshot.
-func InsertNodeObsFrpc(ctx context.Context, obs analyticsmodel.NodeObsFrpc) error {
-	nodeID := strings.TrimSpace(obs.NodeID)
-	if nodeID == "" {
-		return nil
-	}
-	return insertNodeObsFrpcBatch(ctx, obs, nodeID)
-}
-
-func insertNodeObsOpenrestyBatch(ctx context.Context, obs analyticsmodel.NodeObsOpenresty, nodeID string) error {
 	if db.ChConn == nil {
 		return fmt.Errorf("clickhouse connection is not initialized")
 	}
@@ -176,28 +163,38 @@ func insertNodeObsOpenrestyBatch(ctx context.Context, obs analyticsmodel.NodeObs
 	}
 
 	now := time.Now().UTC()
-	id := obs.ID
-	if id == 0 {
-		id = idgen.NextUint64ID()
+	for _, obs := range observations {
+		nodeID := strings.TrimSpace(obs.NodeID)
+		if nodeID == "" {
+			continue
+		}
+		id := obs.ID
+		if id == 0 {
+			id = idgen.NextUint64ID()
+		}
+		createdAt := obs.CreatedAt
+		if createdAt.IsZero() {
+			createdAt = now
+		}
+		capturedAt := obs.CapturedAt.UTC()
+		if capturedAt.IsZero() {
+			capturedAt = now
+		}
+		if err := batch.Append(
+			id,
+			nodeID,
+			capturedAt,
+			obs.OpenrestyRxBytes,
+			obs.OpenrestyTxBytes,
+			obs.OpenrestyConnections,
+			createdAt.UTC(),
+		); err != nil {
+			return fmt.Errorf("append node openresty observation to batch: %w", err)
+		}
 	}
-	createdAt := obs.CreatedAt
-	if createdAt.IsZero() {
-		createdAt = now
-	}
-	capturedAt := obs.CapturedAt.UTC()
-	if capturedAt.IsZero() {
-		capturedAt = now
-	}
-	if err := batch.Append(
-		id,
-		nodeID,
-		capturedAt,
-		obs.OpenrestyRxBytes,
-		obs.OpenrestyTxBytes,
-		obs.OpenrestyConnections,
-		createdAt.UTC(),
-	); err != nil {
-		return fmt.Errorf("append node openresty observation to batch: %w", err)
+
+	if batch.Rows() == 0 {
+		return nil
 	}
 	if err := batch.Send(); err != nil {
 		return fmt.Errorf("send clickhouse batch: %w", err)
@@ -205,7 +202,19 @@ func insertNodeObsOpenrestyBatch(ctx context.Context, obs analyticsmodel.NodeObs
 	return nil
 }
 
-func insertNodeObsFrpsBatch(ctx context.Context, obs analyticsmodel.NodeObsFrps, nodeID string) error {
+// InsertNodeObsFrps writes a single FRPS observation via the batch API.
+func InsertNodeObsFrps(ctx context.Context, obs analyticsmodel.NodeObsFrps) error {
+	if strings.TrimSpace(obs.NodeID) == "" {
+		return nil
+	}
+	return BatchInsertNodeObsFrps(ctx, []analyticsmodel.NodeObsFrps{obs})
+}
+
+// BatchInsertNodeObsFrps writes FRPS observations to ClickHouse.
+func BatchInsertNodeObsFrps(ctx context.Context, observations []analyticsmodel.NodeObsFrps) error {
+	if len(observations) == 0 {
+		return nil
+	}
 	if db.ChConn == nil {
 		return fmt.Errorf("clickhouse connection is not initialized")
 	}
@@ -216,29 +225,39 @@ func insertNodeObsFrpsBatch(ctx context.Context, obs analyticsmodel.NodeObsFrps,
 	}
 
 	now := time.Now().UTC()
-	id := obs.ID
-	if id == 0 {
-		id = idgen.NextUint64ID()
+	for _, obs := range observations {
+		nodeID := strings.TrimSpace(obs.NodeID)
+		if nodeID == "" {
+			continue
+		}
+		id := obs.ID
+		if id == 0 {
+			id = idgen.NextUint64ID()
+		}
+		createdAt := obs.CreatedAt
+		if createdAt.IsZero() {
+			createdAt = now
+		}
+		capturedAt := obs.CapturedAt.UTC()
+		if capturedAt.IsZero() {
+			capturedAt = now
+		}
+		if err := batch.Append(
+			id,
+			nodeID,
+			capturedAt,
+			obs.FrpsConnections,
+			obs.FrpsProxyCount,
+			obs.FrpsClientCount,
+			obs.FrpsProxies,
+			createdAt.UTC(),
+		); err != nil {
+			return fmt.Errorf("append node frps observation to batch: %w", err)
+		}
 	}
-	createdAt := obs.CreatedAt
-	if createdAt.IsZero() {
-		createdAt = now
-	}
-	capturedAt := obs.CapturedAt.UTC()
-	if capturedAt.IsZero() {
-		capturedAt = now
-	}
-	if err := batch.Append(
-		id,
-		nodeID,
-		capturedAt,
-		obs.FrpsConnections,
-		obs.FrpsProxyCount,
-		obs.FrpsClientCount,
-		obs.FrpsProxies,
-		createdAt.UTC(),
-	); err != nil {
-		return fmt.Errorf("append node frps observation to batch: %w", err)
+
+	if batch.Rows() == 0 {
+		return nil
 	}
 	if err := batch.Send(); err != nil {
 		return fmt.Errorf("send clickhouse batch: %w", err)
@@ -246,7 +265,19 @@ func insertNodeObsFrpsBatch(ctx context.Context, obs analyticsmodel.NodeObsFrps,
 	return nil
 }
 
-func insertNodeObsFrpcBatch(ctx context.Context, obs analyticsmodel.NodeObsFrpc, nodeID string) error {
+// InsertNodeObsFrpc writes a single FRPC observation via the batch API.
+func InsertNodeObsFrpc(ctx context.Context, obs analyticsmodel.NodeObsFrpc) error {
+	if strings.TrimSpace(obs.NodeID) == "" {
+		return nil
+	}
+	return BatchInsertNodeObsFrpc(ctx, []analyticsmodel.NodeObsFrpc{obs})
+}
+
+// BatchInsertNodeObsFrpc writes FRPC observations to ClickHouse.
+func BatchInsertNodeObsFrpc(ctx context.Context, observations []analyticsmodel.NodeObsFrpc) error {
+	if len(observations) == 0 {
+		return nil
+	}
 	if db.ChConn == nil {
 		return fmt.Errorf("clickhouse connection is not initialized")
 	}
@@ -257,42 +288,40 @@ func insertNodeObsFrpcBatch(ctx context.Context, obs analyticsmodel.NodeObsFrpc,
 	}
 
 	now := time.Now().UTC()
-	id := obs.ID
-	if id == 0 {
-		id = idgen.NextUint64ID()
+	for _, obs := range observations {
+		nodeID := strings.TrimSpace(obs.NodeID)
+		if nodeID == "" {
+			continue
+		}
+		id := obs.ID
+		if id == 0 {
+			id = idgen.NextUint64ID()
+		}
+		createdAt := obs.CreatedAt
+		if createdAt.IsZero() {
+			createdAt = now
+		}
+		capturedAt := obs.CapturedAt.UTC()
+		if capturedAt.IsZero() {
+			capturedAt = now
+		}
+		if err := batch.Append(
+			id,
+			nodeID,
+			capturedAt,
+			obs.TunnelStatus,
+			obs.ConnectedRelaysCount,
+			createdAt.UTC(),
+		); err != nil {
+			return fmt.Errorf("append node frpc observation to batch: %w", err)
+		}
 	}
-	createdAt := obs.CreatedAt
-	if createdAt.IsZero() {
-		createdAt = now
-	}
-	capturedAt := obs.CapturedAt.UTC()
-	if capturedAt.IsZero() {
-		capturedAt = now
-	}
-	if err := batch.Append(
-		id,
-		nodeID,
-		capturedAt,
-		obs.TunnelStatus,
-		obs.ConnectedRelaysCount,
-		createdAt.UTC(),
-	); err != nil {
-		return fmt.Errorf("append node frpc observation to batch: %w", err)
+
+	if batch.Rows() == 0 {
+		return nil
 	}
 	if err := batch.Send(); err != nil {
 		return fmt.Errorf("send clickhouse batch: %w", err)
 	}
 	return nil
-}
-
-func nodeObservabilityRowExists(ctx context.Context, countSQL string, args ...any) (bool, error) {
-	conn, err := observabilityConn()
-	if err != nil {
-		return false, err
-	}
-	var count int64
-	if err := conn.QueryRow(ctx, countSQL, args...).Scan(&count); err != nil {
-		return false, fmt.Errorf("check observability row exists: %w", err)
-	}
-	return count > 0, nil
 }
