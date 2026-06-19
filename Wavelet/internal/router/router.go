@@ -18,7 +18,6 @@ import (
 	"github.com/Rain-kl/Wavelet/internal/apps/risk_control"
 	router_root "github.com/Rain-kl/Wavelet/internal/router/root"
 	v1 "github.com/Rain-kl/Wavelet/internal/router/v1"
-	ofrouter "github.com/Rain-kl/Wavelet/internal/router/v1/openflare"
 
 	"github.com/Rain-kl/Wavelet/internal/apps/oauth"
 	"github.com/Rain-kl/Wavelet/internal/config"
@@ -116,10 +115,6 @@ func registerRoutes(r *gin.Engine) {
 
 	apiGroup := r.Group(config.Config.App.APIPrefix)
 	{
-		// OpenFlare Agent/Relay/Flared protocol routes under /api/*
-		ofrouter.RegisterRoutes(apiGroup)
-
-		// API V1
 		apiV1Router := apiGroup.Group("/v1")
 		{
 			v1.RegisterV1Routes(apiV1Router, apiGroup)

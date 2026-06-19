@@ -29,7 +29,7 @@ func handleLogicError(c *gin.Context, err error) bool {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或不存在"
-// @Router /api/v1/openflare/config-versions [get]
+// @Router /api/v1/d/config-versions [get]
 func ListConfigVersionsHandler(c *gin.Context) {
 	versions, err := ListConfigVersions(c.Request.Context())
 	if handleLogicError(c, err) {
@@ -49,7 +49,7 @@ func ListConfigVersionsHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或版本不存在"
-// @Router /api/v1/openflare/config-versions/{id} [get]
+// @Router /api/v1/d/config-versions/{id} [get]
 func GetConfigVersionHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -71,7 +71,7 @@ func GetConfigVersionHandler(c *gin.Context) {
 // @Success 200 {object} response.Any{data=model.ConfigVersion} "活跃配置版本"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限、不存在或无活跃版本"
-// @Router /api/v1/openflare/config-versions/active [get]
+// @Router /api/v1/d/config-versions/active [get]
 func GetActiveConfigVersionHandler(c *gin.Context) {
 	version, err := GetActiveConfigVersion(c.Request.Context())
 	if apiutil.AbortNotFoundIfMissing(c, err, errNoActiveVersion) {
@@ -90,7 +90,7 @@ func GetActiveConfigVersionHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或不存在"
-// @Router /api/v1/openflare/config-versions/preview [get]
+// @Router /api/v1/d/config-versions/preview [get]
 func PreviewConfigVersionHandler(c *gin.Context) {
 	preview, err := PreviewConfigVersion(c.Request.Context())
 	if handleLogicError(c, err) {
@@ -109,7 +109,7 @@ func PreviewConfigVersionHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或不存在"
-// @Router /api/v1/openflare/config-versions/diff [get]
+// @Router /api/v1/d/config-versions/diff [get]
 func DiffConfigVersionHandler(c *gin.Context) {
 	diff, err := DiffConfigVersion(c.Request.Context())
 	if handleLogicError(c, err) {
@@ -129,7 +129,7 @@ func DiffConfigVersionHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或不存在"
-// @Router /api/v1/openflare/config-versions/publish [post]
+// @Router /api/v1/d/config-versions/publish [post]
 func PublishConfigVersionHandler(c *gin.Context) {
 	username := c.GetString("username")
 	force := c.Query("force") == "true"
@@ -151,7 +151,7 @@ func PublishConfigVersionHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或版本不存在"
-// @Router /api/v1/openflare/config-versions/{id}/activate [post]
+// @Router /api/v1/d/config-versions/{id}/activate [post]
 func ActivateConfigVersionHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -176,7 +176,7 @@ func ActivateConfigVersionHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或不存在"
-// @Router /api/v1/openflare/config-versions/cleanup [post]
+// @Router /api/v1/d/config-versions/cleanup [post]
 func CleanupConfigVersionsHandler(c *gin.Context) {
 	var input CleanupInput
 	if !apiutil.BindJSON(c, &input) {

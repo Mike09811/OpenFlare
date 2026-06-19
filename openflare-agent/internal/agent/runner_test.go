@@ -156,7 +156,7 @@ type fakeWebSocketConnection struct {
 }
 
 func (f *fakeWebSocketConnection) URL() string {
-	return "ws://127.0.0.1/api/agent/ws"
+	return "ws://127.0.0.1/api/v1/agent/ws"
 }
 
 func (f *fakeWebSocketConnection) SendStatus(payload protocol.NodePayload) error {

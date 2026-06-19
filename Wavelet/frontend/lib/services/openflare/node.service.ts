@@ -10,7 +10,7 @@ import type {
 } from './types';
 
 export class NodeService extends OpenFlareBaseService {
-  protected static override readonly basePath: string = '/api/v1/openflare/nodes';
+  protected static override readonly basePath: string = '/api/v1/d/nodes';
 
   static async listNodes(): Promise<NodeItem[]> {
     return this.get<NodeItem[]>('/');

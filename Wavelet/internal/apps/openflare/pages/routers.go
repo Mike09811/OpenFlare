@@ -45,7 +45,7 @@ func deploymentIDParam(c *gin.Context) (uint, bool) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/openflare/pages [get]
+// @Router /api/v1/d/pages [get]
 func ListProjectsHandler(c *gin.Context) {
 	projects, err := ListProjects(c.Request.Context())
 	if handleLogicError(c, err) {
@@ -67,7 +67,7 @@ func ListProjectsHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "项目不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/openflare/pages/{id} [get]
+// @Router /api/v1/d/pages/{id} [get]
 func GetProjectHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -93,7 +93,7 @@ func GetProjectHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/openflare/pages [post]
+// @Router /api/v1/d/pages [post]
 func CreateProjectHandler(c *gin.Context) {
 	var input Input
 	if !apiutil.BindJSON(c, &input) {
@@ -121,7 +121,7 @@ func CreateProjectHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "项目不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/openflare/pages/{id}/update [post]
+// @Router /api/v1/d/pages/{id}/update [post]
 func UpdateProjectHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -151,7 +151,7 @@ func UpdateProjectHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "项目不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/openflare/pages/{id}/delete [post]
+// @Router /api/v1/d/pages/{id}/delete [post]
 func DeleteProjectHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -176,7 +176,7 @@ func DeleteProjectHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "项目不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/openflare/pages/{id}/deployments [get]
+// @Router /api/v1/d/pages/{id}/deployments [get]
 func ListDeploymentsHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -204,7 +204,7 @@ func ListDeploymentsHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "项目不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/openflare/pages/{id}/deployments/upload [post]
+// @Router /api/v1/d/pages/{id}/deployments/upload [post]
 func UploadDeploymentHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -236,7 +236,7 @@ func UploadDeploymentHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "项目或部署不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/openflare/pages/{id}/deployments/{deployment_id}/activate [post]
+// @Router /api/v1/d/pages/{id}/deployments/{deployment_id}/activate [post]
 func ActivateDeploymentHandler(c *gin.Context) {
 	projectID, ok := apiutil.IDParam(c)
 	if !ok {
@@ -267,7 +267,7 @@ func ActivateDeploymentHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "项目或部署不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/openflare/pages/{id}/deployments/{deployment_id}/delete [post]
+// @Router /api/v1/d/pages/{id}/deployments/{deployment_id}/delete [post]
 func DeleteDeploymentHandler(c *gin.Context) {
 	projectID, ok := apiutil.IDParam(c)
 	if !ok {
@@ -296,7 +296,7 @@ func DeleteDeploymentHandler(c *gin.Context) {
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 404 {object} response.Any "部署不存在"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/openflare/pages/deployments/{deployment_id}/files [get]
+// @Router /api/v1/d/pages/deployments/{deployment_id}/files [get]
 func ListDeploymentFilesHandler(c *gin.Context) {
 	deploymentID, ok := deploymentIDParam(c)
 	if !ok {

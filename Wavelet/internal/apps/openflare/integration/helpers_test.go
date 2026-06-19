@@ -83,8 +83,6 @@ func unmarshalEnvelopeSlice(t *testing.T, data any) []any {
 
 func mountOpenFlareTestRoutes(engine *gin.Engine) {
 	api := engine.Group("/api")
-	ofrouter.RegisterRoutes(api)
-
 	apiV1 := api.Group("/v1")
 	v1.RegisterV1Routes(apiV1, api)
 }

@@ -209,7 +209,7 @@ func TestCoreChainMigrationFlow(t *testing.T) {
 	})
 
 	t.Run("create apply log for node", func(t *testing.T) {
-		rec := performJSONRequest(t, engine, http.MethodPost, "/api/agent/apply-logs", map[string]any{
+		rec := performJSONRequest(t, engine, http.MethodPost, "/api/v1/agent/apply-logs", map[string]any{
 			"version":               configVersion,
 			"result":                "success",
 			"message":               "config applied",

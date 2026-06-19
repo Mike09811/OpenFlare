@@ -16,6 +16,10 @@ sidebar: false
 
 ## [Unreleased]
 
+### 变更
+
+- Wavelet API 路径统一：管理端由 `/api/v1/openflare/*` 调整为 `/api/v1/d/*`；Agent/Relay/Tunnel 协议路由分别迁移至 `/api/v1/agent/*`、`/api/v1/relay/*`、`/api/v1/tunnel/*`（原 `/api/flared/*`）。同步更新 Wavelet 前端服务层与 `openflare-agent`、`openflare-relay`、`openflared` 客户端连接端点。
+
 ### 新增
 
 - Wavelet 总览仪表盘图表对齐旧前端 ECharts 样式：24 小时请求/容量趋势补充请求量与错误量展示，新增网络与磁盘趋势、Top 节点榜单、来源分布、状态码分布与 Top Domain 板块。

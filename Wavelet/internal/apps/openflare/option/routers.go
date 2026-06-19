@@ -23,9 +23,9 @@ import (
 // @Success 200 {object} response.Any{data=option.statusView} "公开状态"
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/openflare/status [get]
+// @Router /api/v1/d/status [get]
 func GetStatusHandler(c *gin.Context) {
-	view, err := getStatus(c.Request.Context(), "/api/v1/openflare")
+	view, err := getStatus(c.Request.Context(), "/api/v1/d")
 	if apiutil.AbortBadRequestOnError(c, err) {
 		return
 	}
@@ -40,7 +40,7 @@ func GetStatusHandler(c *gin.Context) {
 // @Success 200 {object} response.Any{data=string} "系统公告"
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/openflare/notice [get]
+// @Router /api/v1/d/notice [get]
 // GetNoticeHandler returns the notice content.
 func GetNoticeHandler(c *gin.Context) {
 	notice, err := getNotice(c.Request.Context())
@@ -58,7 +58,7 @@ func GetNoticeHandler(c *gin.Context) {
 // @Success 200 {object} response.Any{data=string} "关于信息"
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/openflare/about [get]
+// @Router /api/v1/d/about [get]
 // GetAboutHandler returns the about content.
 func GetAboutHandler(c *gin.Context) {
 	about, err := getAbout(c.Request.Context())
@@ -79,7 +79,7 @@ func GetAboutHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/openflare/option [get]
+// @Router /api/v1/d/option [get]
 // ListOptionsHandler lists OpenFlare options.
 func ListOptionsHandler(c *gin.Context) {
 	options, err := listOptions(c.Request.Context())
@@ -102,7 +102,7 @@ func ListOptionsHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/openflare/option/update [post]
+// @Router /api/v1/d/option/update [post]
 // UpdateOptionHandler updates a single option.
 func UpdateOptionHandler(c *gin.Context) {
 	var option model.OpenFlareOption
@@ -128,7 +128,7 @@ func UpdateOptionHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/openflare/option/update-batch [post]
+// @Router /api/v1/d/option/update-batch [post]
 // UpdateOptionsBatchHandler updates options in batch.
 func UpdateOptionsBatchHandler(c *gin.Context) {
 	var payload optionBatchPayload
@@ -154,7 +154,7 @@ func UpdateOptionsBatchHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/openflare/option/geoip/lookup [post]
+// @Router /api/v1/d/option/geoip/lookup [post]
 // LookupGeoIPHandler performs a GeoIP lookup.
 func LookupGeoIPHandler(c *gin.Context) {
 	var request geoIPLookupRequest
@@ -181,7 +181,7 @@ func LookupGeoIPHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/openflare/option/database/cleanup [post]
+// @Router /api/v1/d/option/database/cleanup [post]
 // CleanupDatabaseHandler cleans up observability data.
 func CleanupDatabaseHandler(c *gin.Context) {
 	var input databaseCleanupInput
@@ -208,7 +208,7 @@ func CleanupDatabaseHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/openflare/uptimekuma/sync [post]
+// @Router /api/v1/d/uptimekuma/sync [post]
 // SyncUptimeKumaHandler triggers UptimeKuma sync.
 func SyncUptimeKumaHandler(c *gin.Context) {
 	if apiutil.AbortBadRequestOnError(c, syncUptimeKuma(c.Request.Context())) {

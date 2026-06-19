@@ -33,7 +33,7 @@ var upgradeLogsUpgrader = websocket.Upgrader{
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/openflare/update/latest-release [get]
+// @Router /api/v1/d/update/latest-release [get]
 func GetLatestReleaseHandler(c *gin.Context) {
 	release, err := GetLatestRelease(c.Request.Context(), c.Query("channel"))
 	if apiutil.AbortBadRequestOnError(c, err) {
@@ -55,7 +55,7 @@ func GetLatestReleaseHandler(c *gin.Context) {
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
 // @Failure 500 {object} response.Any "内部错误"
-// @Router /api/v1/openflare/update/upgrade [post]
+// @Router /api/v1/d/update/upgrade [post]
 func UpgradeServerHandler(c *gin.Context) {
 	var request upgradeRequest
 	if err := bindOptionalJSON(c.Request.Body, &request); err != nil {
@@ -82,7 +82,7 @@ func UpgradeServerHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "功能已禁用或参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
-// @Router /api/v1/openflare/update/manual-upload [post]
+// @Router /api/v1/d/update/manual-upload [post]
 func UploadManualServerBinaryHandler(c *gin.Context) {
 	if apiutil.AbortBadRequestOnError(c, UploadManualBinary()) {
 		return
@@ -99,7 +99,7 @@ func UploadManualServerBinaryHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "功能已禁用或参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
-// @Router /api/v1/openflare/update/manual-upgrade [post]
+// @Router /api/v1/d/update/manual-upgrade [post]
 func ConfirmManualServerUpgradeHandler(c *gin.Context) {
 	if apiutil.AbortBadRequestOnError(c, ConfirmManualUpgrade()) {
 		return
@@ -114,7 +114,7 @@ func ConfirmManualServerUpgradeHandler(c *gin.Context) {
 // @Success 101 {object} update.StreamSnapshot "WebSocket 升级日志流"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 403 {object} response.Any "无管理员权限"
-// @Router /api/v1/openflare/update/logs/ws [get]
+// @Router /api/v1/d/update/logs/ws [get]
 func StreamServerUpgradeLogsHandler(c *gin.Context) {
 	conn, err := upgradeLogsUpgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {

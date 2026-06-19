@@ -7,7 +7,7 @@ import type {
 } from './types';
 
 export class ApplyLogService extends OpenFlareBaseService {
-  protected static override readonly basePath: string = '/api/v1/openflare/apply-logs';
+  protected static override readonly basePath: string = '/api/v1/d/apply-logs';
 
   static list(query: ApplyLogListQuery = {}): Promise<ApplyLogList> {
     const params: Record<string, unknown> = {};

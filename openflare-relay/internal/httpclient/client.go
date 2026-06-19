@@ -38,7 +38,7 @@ func New(baseURL string, token string, timeout time.Duration) *Client {
 
 func (c *Client) Heartbeat(ctx context.Context, payload service.RelayHeartbeatPayload) (*service.RelayHeartbeatResponse, error) {
 	resp := APIResponse[service.RelayHeartbeatResponse]{}
-	if err := c.postJSON(ctx, "/api/relay/heartbeat", payload, &resp); err != nil {
+	if err := c.postJSON(ctx, "/api/v1/relay/heartbeat", payload, &resp); err != nil {
 		return nil, err
 	}
 	if !resp.Success {

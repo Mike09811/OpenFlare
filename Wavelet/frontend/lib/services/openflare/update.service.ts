@@ -8,10 +8,10 @@ import {OpenFlareBaseService} from './base.service';
 import type {LatestReleaseInfo, ReleaseChannel, UpgradeStreamSnapshot, UploadedServerBinaryInfo} from './types';
 
 /**
- * OpenFlare 服务端升级 API（`/api/v1/openflare/update/*`）。
+ * OpenFlare 服务端升级 API（`/api/v1/d/update/*`）。
  */
 export class UpdateService extends OpenFlareBaseService {
-  protected static override readonly basePath: string = '/api/v1/openflare/update';
+  protected static override readonly basePath: string = '/api/v1/d/update';
 
   private static getApiUrl(path: string): string {
     const baseURL = getApiBaseUrl();

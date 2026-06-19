@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func registerAgentRoutes(apiGroup *gin.RouterGroup) {
-	agentRoute := apiGroup.Group("/agent")
+func registerAgentRoutes(apiV1Router *gin.RouterGroup) {
+	agentRoute := apiV1Router.Group("/agent")
 	{
 		discoveryRoute := agentRoute.Group("/")
 		discoveryRoute.Use(agent.AgentRegisterAuth())

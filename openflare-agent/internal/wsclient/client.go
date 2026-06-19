@@ -26,7 +26,7 @@ func New(baseURL string, token string, timeout time.Duration) *Client {
 			Token:     token,
 			Timeout:   timeout,
 			HeaderKey: "X-Agent-Token",
-			WSPath:    "/api/agent/ws",
+			WSPath:    "/api/v1/agent/ws",
 		}),
 	}
 }

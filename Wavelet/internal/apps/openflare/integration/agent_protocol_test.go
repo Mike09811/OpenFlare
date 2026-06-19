@@ -84,7 +84,7 @@ func TestAgentRelayFlaredProtocol(t *testing.T) {
 		require.NotEmpty(t, edge.AccessToken)
 		assert.Equal(t, "edge_node", edge.NodeType)
 
-		rec := performJSONRequest(t, engine, http.MethodPost, "/api/agent/nodes/heartbeat", map[string]any{
+		rec := performJSONRequest(t, engine, http.MethodPost, "/api/v1/agent/nodes/heartbeat", map[string]any{
 			"name":    "edge-1",
 			"ip":      "203.0.113.10",
 			"version": "0.1.0",
@@ -119,7 +119,7 @@ func TestAgentRelayFlaredProtocol(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEmpty(t, relayNode.AccessToken)
 
-		rec := performJSONRequest(t, engine, http.MethodPost, "/api/relay/heartbeat", map[string]any{
+		rec := performJSONRequest(t, engine, http.MethodPost, "/api/v1/relay/heartbeat", map[string]any{
 			"version":      "v0.1.0",
 			"frp_version":  "0.61.0",
 			"relay_status": "healthy",
@@ -155,7 +155,7 @@ func TestAgentRelayFlaredProtocol(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEmpty(t, clientNode.AccessToken)
 
-		rec := performJSONRequest(t, engine, http.MethodPost, "/api/flared/heartbeat", map[string]any{
+		rec := performJSONRequest(t, engine, http.MethodPost, "/api/v1/tunnel/heartbeat", map[string]any{
 			"client_version": "v0.2.0",
 			"frp_version":    "0.61.0",
 			"tunnel_status":  "running",
@@ -178,7 +178,7 @@ func TestAgentRelayFlaredProtocol(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEmpty(t, bootstrap.DiscoveryToken)
 
-		rec := performJSONRequest(t, engine, http.MethodPost, "/api/agent/nodes/register", map[string]any{
+		rec := performJSONRequest(t, engine, http.MethodPost, "/api/v1/agent/nodes/register", map[string]any{
 			"name":    "discovered-edge",
 			"ip":      "203.0.113.30",
 			"version": "0.2.0",
@@ -209,7 +209,7 @@ func TestAgentRelayFlaredProtocol(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		rec := performJSONRequest(t, engine, http.MethodPost, "/api/agent/apply-logs", map[string]any{
+		rec := performJSONRequest(t, engine, http.MethodPost, "/api/v1/agent/apply-logs", map[string]any{
 			"version": "20260618-001",
 			"result":  "success",
 			"message": "apply ok",

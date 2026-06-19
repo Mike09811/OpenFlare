@@ -28,7 +28,7 @@ import (
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或不存在"
-// @Router /api/v1/openflare/apply-logs [get]
+// @Router /api/v1/d/apply-logs [get]
 func GetApplyLogs(c *gin.Context) {
 	result, err := ListPage(c.Request.Context(), ListQuery{
 		NodeID:   c.Query("node_id"),
@@ -53,7 +53,7 @@ func GetApplyLogs(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或不存在"
-// @Router /api/v1/openflare/apply-logs/cleanup [post]
+// @Router /api/v1/d/apply-logs/cleanup [post]
 func CleanupApplyLogs(c *gin.Context) {
 	var input CleanupInput
 	if !apiutil.BindJSON(c, &input) {

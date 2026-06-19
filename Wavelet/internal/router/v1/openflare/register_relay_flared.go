@@ -9,8 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func registerRelayRoutes(apiGroup *gin.RouterGroup) {
-	relayRoute := apiGroup.Group("/relay")
+func registerRelayRoutes(apiV1Router *gin.RouterGroup) {
+	relayRoute := apiV1Router.Group("/relay")
 	relayRoute.Use(relay.RelayAuth())
 	{
 		relayRoute.POST("/heartbeat", relay.PostHeartbeat)
@@ -18,13 +18,13 @@ func registerRelayRoutes(apiGroup *gin.RouterGroup) {
 	}
 }
 
-func registerFlaredRoutes(apiGroup *gin.RouterGroup) {
-	flaredRoute := apiGroup.Group("/flared")
-	flaredRoute.Use(flared.TunnelAuth())
+func registerTunnelRoutes(apiV1Router *gin.RouterGroup) {
+	tunnelRoute := apiV1Router.Group("/tunnel")
+	tunnelRoute.Use(flared.TunnelAuth())
 	{
-		flaredRoute.POST("/heartbeat", flared.PostHeartbeat)
-		flaredRoute.GET("/config/active", flared.GetActiveConfig)
-		flaredRoute.POST("/apply-log", flared.PostApplyLog)
-		flaredRoute.GET("/ws", flared.GetWebSocket)
+		tunnelRoute.POST("/heartbeat", flared.PostHeartbeat)
+		tunnelRoute.GET("/config/active", flared.GetActiveConfig)
+		tunnelRoute.POST("/apply-log", flared.PostApplyLog)
+		tunnelRoute.GET("/ws", flared.GetWebSocket)
 	}
 }

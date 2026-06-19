@@ -38,7 +38,7 @@ func New(baseURL string, token string, timeout time.Duration) *Client {
 
 func (c *Client) Heartbeat(ctx context.Context, payload service.FlaredHeartbeatPayload) (*service.FlaredHeartbeatResponse, error) {
 	resp := APIResponse[service.FlaredHeartbeatResponse]{}
-	if err := c.postJSON(ctx, "/api/flared/heartbeat", payload, &resp); err != nil {
+	if err := c.postJSON(ctx, "/api/v1/tunnel/heartbeat", payload, &resp); err != nil {
 		return nil, err
 	}
 	if !resp.Success {
@@ -49,7 +49,7 @@ func (c *Client) Heartbeat(ctx context.Context, payload service.FlaredHeartbeatP
 
 func (c *Client) GetActiveConfig(ctx context.Context) (*service.FlaredTunnelConfigResponse, error) {
 	resp := APIResponse[service.FlaredTunnelConfigResponse]{}
-	if err := c.getJSON(ctx, "/api/flared/config/active", &resp); err != nil {
+	if err := c.getJSON(ctx, "/api/v1/tunnel/config/active", &resp); err != nil {
 		return nil, err
 	}
 	if !resp.Success {
@@ -60,7 +60,7 @@ func (c *Client) GetActiveConfig(ctx context.Context) (*service.FlaredTunnelConf
 
 func (c *Client) ReportApplyLog(ctx context.Context, payload service.ApplyLogPayload) error {
 	resp := APIResponse[any]{}
-	if err := c.postJSON(ctx, "/api/flared/apply-log", payload, &resp); err != nil {
+	if err := c.postJSON(ctx, "/api/v1/tunnel/apply-log", payload, &resp); err != nil {
 		return err
 	}
 	if !resp.Success {

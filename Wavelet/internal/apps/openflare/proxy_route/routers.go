@@ -29,7 +29,7 @@ func handleLogicError(c *gin.Context, err error) bool {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或不存在"
-// @Router /api/v1/openflare/proxy-routes [get]
+// @Router /api/v1/d/proxy-routes [get]
 func GetProxyRoutes(c *gin.Context) {
 	routes, err := ListProxyRoutes(c.Request.Context())
 	if handleLogicError(c, err) {
@@ -49,7 +49,7 @@ func GetProxyRoutes(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或规则不存在"
-// @Router /api/v1/openflare/proxy-routes/{id} [get]
+// @Router /api/v1/d/proxy-routes/{id} [get]
 func GetProxyRouteHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -74,7 +74,7 @@ func GetProxyRouteHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或不存在"
-// @Router /api/v1/openflare/proxy-routes [post]
+// @Router /api/v1/d/proxy-routes [post]
 func CreateProxyRouteHandler(c *gin.Context) {
 	var input Input
 	if !apiutil.BindJSON(c, &input) {
@@ -100,7 +100,7 @@ func CreateProxyRouteHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或规则不存在"
-// @Router /api/v1/openflare/proxy-routes/{id}/update [post]
+// @Router /api/v1/d/proxy-routes/{id}/update [post]
 func UpdateProxyRouteHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {
@@ -128,7 +128,7 @@ func UpdateProxyRouteHandler(c *gin.Context) {
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
 // @Failure 404 {object} response.Any "无权限或规则不存在"
-// @Router /api/v1/openflare/proxy-routes/{id}/delete [post]
+// @Router /api/v1/d/proxy-routes/{id}/delete [post]
 func DeleteProxyRouteHandler(c *gin.Context) {
 	id, ok := apiutil.IDParam(c)
 	if !ok {

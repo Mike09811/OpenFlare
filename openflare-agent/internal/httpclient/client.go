@@ -34,7 +34,7 @@ func New(baseURL string, token string, timeout time.Duration) *Client {
 func (c *Client) RegisterNode(ctx context.Context, payload protocol.NodePayload) (*protocol.RegisterNodeResponse, error) {
 	slog.Debug("http register node request", "node_id", payload.NodeID, "current_version", payload.CurrentVersion)
 	resp := protocol.APIResponse[protocol.RegisterNodeResponse]{}
-	if err := c.postJSON(ctx, "/api/agent/nodes/register", payload, &resp); err != nil {
+	if err := c.postJSON(ctx, "/api/v1/agent/nodes/register", payload, &resp); err != nil {
 		return nil, err
 	}
 	if !resp.Success {
@@ -46,7 +46,7 @@ func (c *Client) RegisterNode(ctx context.Context, payload protocol.NodePayload)
 
 func (c *Client) Heartbeat(ctx context.Context, payload protocol.NodePayload) (*protocol.HeartbeatResult, error) {
 	resp := protocol.HeartbeatAPIResponse{}
-	if err := c.postJSON(ctx, "/api/agent/nodes/heartbeat", payload, &resp); err != nil {
+	if err := c.postJSON(ctx, "/api/v1/agent/nodes/heartbeat", payload, &resp); err != nil {
 		return nil, err
 	}
 	if !resp.Success {
@@ -61,7 +61,7 @@ func (c *Client) Heartbeat(ctx context.Context, payload protocol.NodePayload) (*
 
 func (c *Client) GetActiveConfig(ctx context.Context) (*protocol.ActiveConfigResponse, error) {
 	resp := protocol.APIResponse[protocol.ActiveConfigResponse]{}
-	if err := c.getJSON(ctx, "/api/agent/config-versions/active", &resp); err != nil {
+	if err := c.getJSON(ctx, "/api/v1/agent/config-versions/active", &resp); err != nil {
 		return nil, err
 	}
 	if !resp.Success {
@@ -73,12 +73,12 @@ func (c *Client) GetActiveConfig(ctx context.Context) (*protocol.ActiveConfigRes
 
 func (c *Client) ReportApplyLog(ctx context.Context, payload protocol.ApplyLogPayload) error {
 	slog.Debug("http report apply log request", "node_id", payload.NodeID, "version", payload.Version, "result", payload.Result)
-	return c.postJSON(ctx, "/api/agent/apply-logs", payload, nil)
+	return c.postJSON(ctx, "/api/v1/agent/apply-logs", payload, nil)
 }
 
 func (c *Client) SyncWAFIPGroups(ctx context.Context, payload protocol.WAFIPGroupSyncRequest) (*protocol.WAFIPGroupSyncResponse, error) {
 	resp := protocol.APIResponse[protocol.WAFIPGroupSyncResponse]{}
-	if err := c.postJSON(ctx, "/api/agent/waf/ip-groups/sync", payload, &resp); err != nil {
+	if err := c.postJSON(ctx, "/api/v1/agent/waf/ip-groups/sync", payload, &resp); err != nil {
 		return nil, err
 	}
 	if !resp.Success {
@@ -88,7 +88,7 @@ func (c *Client) SyncWAFIPGroups(ctx context.Context, payload protocol.WAFIPGrou
 }
 
 func (c *Client) DownloadPagesDeploymentPackage(ctx context.Context, deploymentID uint) ([]byte, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+fmt.Sprintf("/api/agent/pages/deployments/%d/package", deploymentID), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+fmt.Sprintf("/api/v1/agent/pages/deployments/%d/package", deploymentID), nil)
 	if err != nil {
 		return nil, err
 	}

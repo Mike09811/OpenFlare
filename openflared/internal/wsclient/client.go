@@ -27,7 +27,7 @@ func New(baseURL string, token string, timeout time.Duration) *Client {
 			Token:     token,
 			Timeout:   timeout,
 			HeaderKey: "X-Tunnel-Token",
-			WSPath:    "/api/flared/ws",
+			WSPath:    "/api/v1/tunnel/ws",
 		}),
 	}
 }

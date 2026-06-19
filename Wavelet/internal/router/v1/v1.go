@@ -17,8 +17,9 @@ func RegisterV1Routes(apiV1Router *gin.RouterGroup, apiGroup *gin.RouterGroup) {
 	// 2. Admin routes
 	RegisterAdminRoutes(apiV1Router)
 
-	// 3. OpenFlare management console APIs
+	// 3. OpenFlare management console APIs and Agent/Relay/Tunnel protocol routes
 	ofrouter.RegisterV1Routes(apiV1Router)
+	ofrouter.RegisterRoutes(apiV1Router)
 
 	// 4. Custom business routes (example only)
 	RegisterCustomRoutes(apiV1Router)

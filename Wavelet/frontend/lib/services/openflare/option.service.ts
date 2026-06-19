@@ -8,7 +8,7 @@ import type {
 } from './types';
 
 export class OptionService extends OpenFlareBaseService {
-  protected static override readonly basePath: string = '/api/v1/openflare/option';
+  protected static override readonly basePath: string = '/api/v1/d/option';
 
   static list(): Promise<OptionItem[]> {
     return this.get<OptionItem[]>('/');

@@ -11,7 +11,7 @@ import type {
 } from './types';
 
 export class WafService extends OpenFlareBaseService {
-  protected static override readonly basePath: string = '/api/v1/openflare/waf';
+  protected static override readonly basePath: string = '/api/v1/d/waf';
 
   static async listRuleGroups(): Promise<WAFRuleGroup[]> {
     return this.get<WAFRuleGroup[]>('/rule-groups');
