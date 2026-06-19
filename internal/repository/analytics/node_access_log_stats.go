@@ -76,11 +76,20 @@ GROUP BY bucket_epoch`, bucketExpr, tableName, clause)
 
 	var result []NodeAccessLogBucketAggregate
 	for rows.Next() {
-		var item NodeAccessLogBucketAggregate
-		if err := rows.Scan(&item.BucketEpoch, &item.RequestCount, &item.SuccessCount, &item.ClientErrorCount, &item.ServerErrorCount); err != nil {
+		var (
+			bucketEpoch                                      int64
+			requestCount, successCount, clientErrorCount, serverErrorCount uint64
+		)
+		if err := rows.Scan(&bucketEpoch, &requestCount, &successCount, &clientErrorCount, &serverErrorCount); err != nil {
 			return nil, fmt.Errorf("scan bucket aggregate row: %w", err)
 		}
-		result = append(result, item)
+		result = append(result, NodeAccessLogBucketAggregate{
+			BucketEpoch:      bucketEpoch,
+			RequestCount:     safeInt64Count(requestCount),
+			SuccessCount:     safeInt64Count(successCount),
+			ClientErrorCount: safeInt64Count(clientErrorCount),
+			ServerErrorCount: safeInt64Count(serverErrorCount),
+		})
 	}
 	return result, nil
 }
@@ -156,11 +165,22 @@ GROUP BY trimmed_remote_addr`, lastSeenExpr, tableName, queryClause)
 
 	var result []NodeAccessLogIPAggregate
 	for rows.Next() {
-		var item NodeAccessLogIPAggregate
-		if err := rows.Scan(&item.RemoteAddr, &item.RequestCount, &item.SuccessCount, &item.ClientErrorCount, &item.ServerErrorCount, &item.LastSeenEpoch); err != nil {
+		var (
+			remoteAddr                                       string
+			lastSeenEpoch                                    int64
+			requestCount, successCount, clientErrorCount, serverErrorCount uint64
+		)
+		if err := rows.Scan(&remoteAddr, &requestCount, &successCount, &clientErrorCount, &serverErrorCount, &lastSeenEpoch); err != nil {
 			return nil, fmt.Errorf("scan ip aggregate row: %w", err)
 		}
-		result = append(result, item)
+		result = append(result, NodeAccessLogIPAggregate{
+			RemoteAddr:       remoteAddr,
+			RequestCount:     safeInt64Count(requestCount),
+			SuccessCount:     safeInt64Count(successCount),
+			ClientErrorCount: safeInt64Count(clientErrorCount),
+			ServerErrorCount: safeInt64Count(serverErrorCount),
+			LastSeenEpoch:    lastSeenEpoch,
+		})
 	}
 	return result, nil
 }
@@ -198,11 +218,20 @@ GROUP BY trimmed_remote_addr`, recentClause, lastSeenExpr, tableName, clause)
 
 	var result []NodeAccessLogIPSummary
 	for rows.Next() {
-		var item NodeAccessLogIPSummary
-		if err := rows.Scan(&item.RemoteAddr, &item.TotalRequests, &item.RecentRequests, &item.LastSeenEpoch); err != nil {
+		var (
+			remoteAddr                    string
+			lastSeenEpoch                 int64
+			totalRequests, recentRequests uint64
+		)
+		if err := rows.Scan(&remoteAddr, &totalRequests, &recentRequests, &lastSeenEpoch); err != nil {
 			return nil, fmt.Errorf("scan ip summary row: %w", err)
 		}
-		result = append(result, item)
+		result = append(result, NodeAccessLogIPSummary{
+			RemoteAddr:     remoteAddr,
+			TotalRequests:  safeInt64Count(totalRequests),
+			RecentRequests: safeInt64Count(recentRequests),
+			LastSeenEpoch:  lastSeenEpoch,
+		})
 	}
 	return result, nil
 }
@@ -232,11 +261,17 @@ ORDER BY bucket_epoch ASC`, bucketExpr, tableName, clause)
 
 	var result []NodeAccessLogIPTrend
 	for rows.Next() {
-		var item NodeAccessLogIPTrend
-		if err := rows.Scan(&item.BucketEpoch, &item.RequestCount); err != nil {
+		var (
+			bucketEpoch  int64
+			requestCount uint64
+		)
+		if err := rows.Scan(&bucketEpoch, &requestCount); err != nil {
 			return nil, fmt.Errorf("scan ip trend row: %w", err)
 		}
-		result = append(result, item)
+		result = append(result, NodeAccessLogIPTrend{
+			BucketEpoch:  bucketEpoch,
+			RequestCount: safeInt64Count(requestCount),
+		})
 	}
 	return result, nil
 }

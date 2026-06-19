@@ -16,7 +16,7 @@ import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select"
 import {Switch} from "@/components/ui/switch"
-import {ConfigVersionService, OptionService} from "@/lib/services/openflare"
+import {OptionService} from "@/lib/services/openflare"
 
 import {
   defaultPerformanceFields,
@@ -41,12 +41,6 @@ export default function PerformancePage() {
   const optionsQuery = useQuery({
     queryKey: optionsQueryKey,
     queryFn: () => OptionService.list(),
-    enabled: !!user?.is_admin,
-  })
-
-  const previewQuery = useQuery({
-    queryKey: ["openflare", "config-preview"],
-    queryFn: () => ConfigVersionService.preview(),
     enabled: !!user?.is_admin,
   })
 
@@ -152,25 +146,6 @@ export default function PerformancePage() {
             查看配置预览
           </Link>
         </Button>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-lg border border-dashed px-4 py-3">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">发布链路</p>
-          <p className="mt-2 text-sm font-medium">受管模板渲染</p>
-        </div>
-        <div className="rounded-lg border border-dashed px-4 py-3">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">预览规则数</p>
-          <p className="mt-2 text-sm font-semibold">
-            {previewQuery.data?.route_count ?? "—"} 条
-          </p>
-        </div>
-        <div className="rounded-lg border border-dashed px-4 py-3">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">配置预览</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            在配置发布页查看完整 nginx 渲染结果
-          </p>
-        </div>
       </div>
 
       <Card className="border-dashed shadow-none">

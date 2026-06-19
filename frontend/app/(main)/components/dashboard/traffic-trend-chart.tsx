@@ -30,6 +30,8 @@ export function TrafficTrendChart({
       <CardContent>
         <TrendChart
           labels={points.map((point) => formatTrendHour(point.bucket_started_at))}
+          summaryScope="last-point"
+          summaryHint="当前小时"
           series={[
             {
               label: '请求量',

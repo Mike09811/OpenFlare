@@ -46,7 +46,7 @@ func deleteNodeAccessLogsWithCount(ctx context.Context, countSQL string, countAr
 	if err != nil {
 		return 0, err
 	}
-	var count int64
+	var count uint64
 	if err := conn.QueryRow(ctx, countSQL, countArgs...).Scan(&count); err != nil {
 		return 0, fmt.Errorf("count node access logs for delete: %w", err)
 	}
@@ -56,5 +56,5 @@ func deleteNodeAccessLogsWithCount(ctx context.Context, countSQL string, countAr
 	if err := conn.Exec(ctx, deleteSQL, deleteArgs...); err != nil {
 		return 0, fmt.Errorf("delete node access logs: %w", err)
 	}
-	return count, nil
+	return safeInt64Count(count), nil
 }

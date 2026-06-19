@@ -69,13 +69,6 @@ func ListAccessLogs(ctx context.Context, filter AccessLogFilter, page, pageSize 
 	return logs, safeUint64Count(total), nil
 }
 
-func safeUint64Count(count int64) uint64 {
-	if count < 0 {
-		return 0
-	}
-	return uint64(count)
-}
-
 func applyFilter(query *gorm.DB, filter AccessLogFilter) *gorm.DB {
 	if filter.UserIDs != nil {
 		if len(filter.UserIDs) == 0 {

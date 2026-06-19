@@ -184,10 +184,13 @@ func buildOverviewView(ctx context.Context) (*OverviewView, error) {
 		}
 
 		cpuNodeCount, memoryNodeCount = applyNodeSnapshotMetrics(&nodeHealth, latestSnapshot, view, cpuNodeCount, memoryNodeCount)
-		applyNodeTrafficMetrics(&nodeHealth, latestTraffic, view)
+		applyNodeTrafficMetrics(&nodeHealth, latestTraffic)
 
 		view.Nodes = append(view.Nodes, nodeHealth)
 	}
+
+	applyTrafficTotalsFromTrend(&view.Traffic, view.Trends.Traffic24h)
+	applyTrafficRuntimeMetrics(&view.Traffic, latestTrafficReports)
 
 	view.Summary.TotalNodes = len(nodes)
 	if cpuNodeCount > 0 {
@@ -234,20 +237,44 @@ func applyNodeSnapshotMetrics(nodeHealth *NodeHealth, snapshot *model.OpenFlareM
 	return cpuNodeCount, memoryNodeCount
 }
 
-func applyNodeTrafficMetrics(nodeHealth *NodeHealth, traffic *model.OpenFlareRequestReport, view *OverviewView) {
+func applyNodeTrafficMetrics(nodeHealth *NodeHealth, traffic *model.OpenFlareRequestReport) {
 	if traffic == nil {
 		return
 	}
 	nodeHealth.RequestCount = traffic.RequestCount
 	nodeHealth.ErrorCount = traffic.ErrorCount
 	nodeHealth.UniqueVisitorCount = traffic.UniqueVisitorCount
-	view.Traffic.RequestCount += traffic.RequestCount
-	view.Traffic.UniqueVisitors += traffic.UniqueVisitorCount
-	view.Traffic.ErrorCount += traffic.ErrorCount
-	if duration := traffic.WindowEndedAt.Sub(traffic.WindowStartedAt).Seconds(); duration > 0 {
-		view.Traffic.EstimatedQPS += float64(traffic.RequestCount) / duration
+}
+
+func applyTrafficTotalsFromTrend(traffic *Traffic, points []observability.TrafficTrendPoint) {
+	if traffic == nil {
+		return
 	}
-	view.Traffic.ReportedNodes++
+	traffic.RequestCount = 0
+	traffic.ErrorCount = 0
+	for _, point := range points {
+		traffic.RequestCount += point.RequestCount
+		traffic.ErrorCount += point.ErrorCount
+	}
+}
+
+func applyTrafficRuntimeMetrics(traffic *Traffic, latestReports map[string]*model.OpenFlareRequestReport) {
+	if traffic == nil {
+		return
+	}
+	traffic.UniqueVisitors = 0
+	traffic.EstimatedQPS = 0
+	traffic.ReportedNodes = 0
+	for _, report := range latestReports {
+		if report == nil {
+			continue
+		}
+		traffic.UniqueVisitors += report.UniqueVisitorCount
+		traffic.ReportedNodes++
+		if duration := report.WindowEndedAt.Sub(report.WindowStartedAt).Seconds(); duration > 0 {
+			traffic.EstimatedQPS += float64(report.RequestCount) / duration
+		}
+	}
 }
 
 func compressOverview(view *OverviewView) *OverviewPayload {

@@ -15,11 +15,16 @@ type TrendChartSeries = {
   valueFormatter?: (value: number) => string;
 };
 
+type TrendChartSummaryScope = 'last-point' | 'total';
+
 type TrendChartProps = {
   labels: string[];
   series: TrendChartSeries[];
   height?: number;
   yAxisValueFormatter?: (value: number) => string;
+  showSummary?: boolean;
+  summaryScope?: TrendChartSummaryScope;
+  summaryHint?: string;
 };
 
 type TooltipParam = {
@@ -31,11 +36,24 @@ type TooltipParam = {
 
 const defaultFormatter = (value: number) => formatCompactNumber(value);
 
+function resolveSummaryValue(values: number[], scope: TrendChartSummaryScope) {
+  if (values.length === 0) {
+    return 0;
+  }
+  if (scope === 'total') {
+    return values.reduce((sum, value) => sum + value, 0);
+  }
+  return values[values.length - 1] ?? 0;
+}
+
 export function TrendChart({
   labels,
   series,
   height = 220,
   yAxisValueFormatter,
+  showSummary = true,
+  summaryScope = 'last-point',
+  summaryHint,
 }: TrendChartProps) {
   const option = useMemo<EChartsOption>(() => {
     const axisFormatter = yAxisValueFormatter ?? defaultFormatter;
@@ -165,31 +183,38 @@ export function TrendChart({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-3">
-        {series.map((item) => {
-          const latestValue = item.values[item.values.length - 1] ?? 0;
-          const formatter = item.valueFormatter ?? defaultFormatter;
-          return (
-            <div
-              key={item.label}
-              className="min-w-[140px] rounded-2xl border bg-card px-4 py-3"
-            >
-              <div className="flex items-center gap-2">
-                <span
-                  className="h-2.5 w-2.5 rounded-full"
-                  style={{backgroundColor: item.color}}
-                />
-                <p className="text-xs tracking-[0.18em] text-muted-foreground uppercase">
-                  {item.label}
+      {showSummary ? (
+        <div className="flex flex-wrap gap-3">
+          {series.map((item) => {
+            const summaryValue = resolveSummaryValue(item.values, summaryScope);
+            const formatter = item.valueFormatter ?? defaultFormatter;
+            return (
+              <div
+                key={item.label}
+                className="min-w-[140px] rounded-2xl border bg-card px-4 py-3"
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className="h-2.5 w-2.5 rounded-full"
+                    style={{backgroundColor: item.color}}
+                  />
+                  <p className="text-xs tracking-[0.18em] text-muted-foreground uppercase">
+                    {item.label}
+                  </p>
+                </div>
+                <p className="mt-2 text-lg font-semibold">
+                  {formatter(summaryValue)}
                 </p>
+                {summaryHint ? (
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    {summaryHint}
+                  </p>
+                ) : null}
               </div>
-              <p className="mt-2 text-lg font-semibold">
-                {formatter(latestValue)}
-              </p>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      ) : null}
 
       <div className="overflow-hidden rounded-[28px] border bg-linear-to-b from-white/3 to-transparent px-4 py-4 dark:from-white/3">
         <ReactECharts

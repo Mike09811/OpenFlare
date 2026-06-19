@@ -109,7 +109,7 @@ func deleteNodeObservabilityWithCount(ctx context.Context, countSQL string, coun
 	if err != nil {
 		return 0, err
 	}
-	var count int64
+	var count uint64
 	if err := conn.QueryRow(ctx, countSQL, countArgs...).Scan(&count); err != nil {
 		return 0, fmt.Errorf("count node observability rows for delete: %w", err)
 	}
@@ -119,5 +119,5 @@ func deleteNodeObservabilityWithCount(ctx context.Context, countSQL string, coun
 	if err := conn.Exec(ctx, deleteSQL, deleteArgs...); err != nil {
 		return 0, fmt.Errorf("delete node observability rows: %w", err)
 	}
-	return count, nil
+	return safeInt64Count(count), nil
 }

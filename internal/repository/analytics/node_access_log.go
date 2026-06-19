@@ -87,7 +87,7 @@ func CountNodeAccessLogs(ctx context.Context, filter NodeAccessLogFilter) (int64
 	clause, args := buildNodeAccessLogFilterClause(filter)
 	tableName := nodeAccessLogTableName()
 
-	var totalRecords int64
+	var totalRecords uint64
 	countSQL := fmt.Sprintf("SELECT count() FROM %s WHERE %s", tableName, clause)
 	if err := conn.QueryRow(ctx, countSQL, args...).Scan(&totalRecords); err != nil {
 		return 0, 0, fmt.Errorf("count node access logs: %w", err)
@@ -100,11 +100,11 @@ SELECT count() FROM (
 	WHERE %s AND trim(remote_addr) != ''
 	GROUP BY trimmed_remote_addr
 )`, tableName, clause)
-	var totalIPs int64
+	var totalIPs uint64
 	if err := conn.QueryRow(ctx, ipSQL, args...).Scan(&totalIPs); err != nil {
 		return 0, 0, fmt.Errorf("count node access log ips: %w", err)
 	}
-	return totalRecords, totalIPs, nil
+	return safeInt64Count(totalRecords), safeInt64Count(totalIPs), nil
 }
 
 // RegionCountsNodeAccessLogs returns region counts for a node since a time.
@@ -134,11 +134,17 @@ ORDER BY count DESC, trimmed_region ASC`, tableName, clause)
 
 	var result []NodeAccessLogRegionCount
 	for rows.Next() {
-		var item NodeAccessLogRegionCount
-		if err := rows.Scan(&item.Region, &item.Count); err != nil {
+		var (
+			region string
+			count  uint64
+		)
+		if err := rows.Scan(&region, &count); err != nil {
 			return nil, fmt.Errorf("scan region count row: %w", err)
 		}
-		result = append(result, item)
+		result = append(result, NodeAccessLogRegionCount{
+			Region: region,
+			Count:  safeInt64Count(count),
+		})
 	}
 	return result, nil
 }
