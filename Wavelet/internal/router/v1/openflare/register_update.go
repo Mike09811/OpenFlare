@@ -11,7 +11,7 @@ import (
 
 func registerUpdateRoutes(apiGroup *gin.RouterGroup) {
 	updateRoute := apiGroup.Group("/update")
-	updateRoute.Use(apiutil.AdminRequired())
+	updateRoute.Use(apiutil.AdminMiddlewares()...)
 	{
 		updateRoute.GET("/latest-release", update.GetLatestReleaseHandler)
 		updateRoute.GET("/logs/ws", update.StreamServerUpgradeLogsHandler)

@@ -11,7 +11,7 @@ import (
 
 func registerApplyLogRoutes(apiGroup *gin.RouterGroup) {
 	applyLogRoute := apiGroup.Group("/apply-logs")
-	applyLogRoute.Use(apiutil.AdminRequired())
+	applyLogRoute.Use(apiutil.AdminMiddlewares()...)
 	{
 		apiutil.RegisterCollection(applyLogRoute, "GET", apply_log.GetApplyLogs)
 		applyLogRoute.POST("/cleanup", apply_log.CleanupApplyLogs)

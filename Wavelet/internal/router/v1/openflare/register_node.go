@@ -11,7 +11,7 @@ import (
 
 func registerNodeRoutes(apiGroup *gin.RouterGroup) {
 	nodeRoute := apiGroup.Group("/nodes")
-	nodeRoute.Use(apiutil.AdminRequired())
+	nodeRoute.Use(apiutil.AdminMiddlewares()...)
 	{
 		nodeRoute.GET("/bootstrap-token", node.GetBootstrapTokenHandler)
 		nodeRoute.POST("/bootstrap-token/rotate", node.RotateBootstrapTokenHandler)

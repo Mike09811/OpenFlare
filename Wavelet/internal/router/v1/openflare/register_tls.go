@@ -11,7 +11,7 @@ import (
 
 func registerTLSRoutes(apiGroup *gin.RouterGroup) {
 	managedDomainRoute := apiGroup.Group("/managed-domains")
-	managedDomainRoute.Use(apiutil.AdminRequired())
+	managedDomainRoute.Use(apiutil.AdminMiddlewares()...)
 	{
 		apiutil.RegisterCollection(managedDomainRoute, "GET", tls.GetManagedDomains)
 		managedDomainRoute.GET("/match", tls.MatchManagedDomainCertificateHandler)
@@ -21,7 +21,7 @@ func registerTLSRoutes(apiGroup *gin.RouterGroup) {
 	}
 
 	tlsCertificateRoute := apiGroup.Group("/tls-certificates")
-	tlsCertificateRoute.Use(apiutil.AdminRequired())
+	tlsCertificateRoute.Use(apiutil.AdminMiddlewares()...)
 	{
 		apiutil.RegisterCollection(tlsCertificateRoute, "GET", tls.GetCertificates)
 		tlsCertificateRoute.GET("/:id", tls.GetCertificateDetail)
@@ -37,13 +37,13 @@ func registerTLSRoutes(apiGroup *gin.RouterGroup) {
 	}
 
 	acmeAccountRoute := apiGroup.Group("/acme-accounts")
-	acmeAccountRoute.Use(apiutil.AdminRequired())
+	acmeAccountRoute.Use(apiutil.AdminMiddlewares()...)
 	{
 		acmeAccountRoute.GET("/default", tls.GetDefaultAcmeAccountHandler)
 	}
 
 	dnsAccountRoute := apiGroup.Group("/dns-accounts")
-	dnsAccountRoute.Use(apiutil.AdminRequired())
+	dnsAccountRoute.Use(apiutil.AdminMiddlewares()...)
 	{
 		apiutil.RegisterCollection(dnsAccountRoute, "GET", tls.GetDNSAccounts)
 		apiutil.RegisterCollection(dnsAccountRoute, "POST", tls.CreateDNSAccountHandler)

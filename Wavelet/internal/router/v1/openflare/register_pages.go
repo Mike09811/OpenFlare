@@ -11,7 +11,7 @@ import (
 
 func registerPagesRoutes(apiGroup *gin.RouterGroup) {
 	pagesRoute := apiGroup.Group("/pages")
-	pagesRoute.Use(apiutil.AdminRequired())
+	pagesRoute.Use(apiutil.AdminMiddlewares()...)
 	{
 		apiutil.RegisterCollection(pagesRoute, "GET", pages.ListProjectsHandler)
 		pagesRoute.GET("/:id", pages.GetProjectHandler)

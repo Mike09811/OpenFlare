@@ -11,7 +11,7 @@ import (
 
 func registerDashboardRoutes(apiGroup *gin.RouterGroup) {
 	dashboardRoute := apiGroup.Group("/dashboard")
-	dashboardRoute.Use(apiutil.AdminRequired())
+	dashboardRoute.Use(apiutil.AdminMiddlewares()...)
 	{
 		dashboardRoute.GET("/overview", dashboard.GetOverviewHandler)
 	}

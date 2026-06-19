@@ -11,7 +11,7 @@ import (
 
 func registerObservabilityRoutes(apiGroup *gin.RouterGroup) {
 	accessLogRoute := apiGroup.Group("/access-logs")
-	accessLogRoute.Use(apiutil.AdminRequired())
+	accessLogRoute.Use(apiutil.AdminMiddlewares()...)
 	{
 		apiutil.RegisterCollection(accessLogRoute, "GET", observability.GetAccessLogsHandler)
 		accessLogRoute.GET("/folds", observability.GetFoldedAccessLogsHandler)
