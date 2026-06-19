@@ -222,10 +222,8 @@ func TestCoreChainMigrationFlow(t *testing.T) {
 		})
 		require.Equal(t, http.StatusOK, rec.Code)
 
-		envelope := decodeEnvelope(t, rec)
-		require.True(t, envelope.Success, envelope.Message)
-
-		data := unmarshalEnvelopeMap(t, envelope.Data)
+		resp := requireAPIOK(t, rec)
+		data := unmarshalAPIMap(t, resp.Data)
 		assert.Equal(t, nodePublicID, data["node_id"])
 		assert.Equal(t, configVersion, data["version"])
 		assert.Equal(t, "success", data["result"])

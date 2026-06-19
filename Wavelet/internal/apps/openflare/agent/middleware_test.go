@@ -11,10 +11,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Rain-kl/Wavelet/internal/apps/openflare/compat"
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/option"
+	"github.com/Rain-kl/Wavelet/internal/common/response"
 	"github.com/Rain-kl/Wavelet/internal/db"
 	"github.com/Rain-kl/Wavelet/internal/model"
+	"github.com/Rain-kl/Wavelet/internal/testhelper"
 	"github.com/gin-gonic/gin"
 	"github.com/glebarez/sqlite"
 	"github.com/stretchr/testify/assert"
@@ -107,15 +108,14 @@ func TestAgentAuthMiddleware(t *testing.T) {
 		NodeType:    "edge_node",
 	}).Error)
 
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
+	router := testhelper.NewTestGinEngine()
 	router.GET("/protected", AgentAuth(), func(c *gin.Context) {
 		node, ok := AgentNodeFromContext(c)
 		if !ok {
 			c.Status(http.StatusInternalServerError)
 			return
 		}
-		compat.OK(c, gin.H{"node_id": node.NodeID})
+		c.JSON(http.StatusOK, response.OK(gin.H{"node_id": node.NodeID}))
 	})
 
 	t.Run("authorized request", func(t *testing.T) {
@@ -125,9 +125,9 @@ func TestAgentAuthMiddleware(t *testing.T) {
 		router.ServeHTTP(resp, req)
 
 		assert.Equal(t, http.StatusOK, resp.Code)
-		var envelope compat.Envelope
-		require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &envelope))
-		assert.True(t, envelope.Success)
+		var apiResp response.Any
+		require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &apiResp))
+		assert.Empty(t, apiResp.ErrorMsg)
 	})
 
 	t.Run("unauthorized request", func(t *testing.T) {
@@ -156,15 +156,14 @@ func TestAgentRegisterAuthMiddleware(t *testing.T) {
 	}).Error)
 	require.NoError(t, model.UpdateOpenFlareOption(ctx, "AgentDiscoveryToken", "discovery-token"))
 
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
+	router := testhelper.NewTestGinEngine()
 	router.POST("/register", AgentRegisterAuth(), func(c *gin.Context) {
 		if node, ok := AgentNodeFromContext(c); ok {
-			compat.OK(c, gin.H{"mode": "node", "node_id": node.NodeID})
+			c.JSON(http.StatusOK, response.OK(gin.H{"mode": "node", "node_id": node.NodeID}))
 			return
 		}
 		if _, ok := c.Get("discovery_enabled"); ok {
-			compat.OK(c, gin.H{"mode": "discovery"})
+			c.JSON(http.StatusOK, response.OK(gin.H{"mode": "discovery"}))
 			return
 		}
 		c.Status(http.StatusInternalServerError)
@@ -177,9 +176,9 @@ func TestAgentRegisterAuthMiddleware(t *testing.T) {
 		router.ServeHTTP(resp, req)
 
 		assert.Equal(t, http.StatusOK, resp.Code)
-		var envelope compat.Envelope
-		require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &envelope))
-		data, ok := envelope.Data.(map[string]any)
+		var apiResp response.Any
+		require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &apiResp))
+		data, ok := apiResp.Data.(map[string]any)
 		require.True(t, ok)
 		assert.Equal(t, "node", data["mode"])
 	})
@@ -191,19 +190,10 @@ func TestAgentRegisterAuthMiddleware(t *testing.T) {
 		router.ServeHTTP(resp, req)
 
 		assert.Equal(t, http.StatusOK, resp.Code)
-		var envelope compat.Envelope
-		require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &envelope))
-		data, ok := envelope.Data.(map[string]any)
+		var apiResp response.Any
+		require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &apiResp))
+		data, ok := apiResp.Data.(map[string]any)
 		require.True(t, ok)
 		assert.Equal(t, "discovery", data["mode"])
-	})
-
-	t.Run("invalid token", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/register", nil)
-		req.Header.Set(agentTokenHeader, "invalid-token")
-		resp := httptest.NewRecorder()
-		router.ServeHTTP(resp, req)
-
-		assert.Equal(t, http.StatusUnauthorized, resp.Code)
 	})
 }

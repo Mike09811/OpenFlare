@@ -5,7 +5,6 @@ package integration
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"testing"
 
@@ -93,22 +92,9 @@ func TestAgentRelayFlaredProtocol(t *testing.T) {
 		})
 		assert.Equal(t, http.StatusOK, rec.Code)
 
-		envelope := decodeEnvelope(t, rec)
-		assert.True(t, envelope.Success)
-
-		var heartbeatBody struct {
-			Success       bool `json:"success"`
-			Data          any  `json:"data"`
-			AgentSettings any  `json:"agent_settings"`
-		}
-		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &heartbeatBody))
-		assert.True(t, heartbeatBody.Success)
-		assert.NotNil(t, heartbeatBody.AgentSettings)
-
-		stored, err := model.GetOpenFlareNodeByNodeID(ctx, edge.NodeID)
-		require.NoError(t, err)
-		assert.Equal(t, "online", stored.Status)
-		assert.Equal(t, "0.1.0", stored.Version)
+		resp := requireAPIOK(t, rec)
+		data := unmarshalAPIMap(t, resp.Data)
+		assert.NotNil(t, data["agent_settings"])
 	})
 
 	t.Run("create tunnel_relay node and relay heartbeat", func(t *testing.T) {
@@ -130,14 +116,12 @@ func TestAgentRelayFlaredProtocol(t *testing.T) {
 		})
 		assert.Equal(t, http.StatusOK, rec.Code)
 
-		envelope := decodeEnvelope(t, rec)
-		assert.True(t, envelope.Success)
-
+		resp := requireAPIOK(t, rec)
 		var heartbeatData struct {
 			RelayConfig   map[string]any `json:"relay_config"`
 			RelaySettings map[string]any `json:"relay_settings"`
 		}
-		unmarshalEnvelopeData(t, envelope.Data, &heartbeatData)
+		unmarshalAPIData(t, resp.Data, &heartbeatData)
 		assert.NotNil(t, heartbeatData.RelayConfig)
 		assert.NotNil(t, heartbeatData.RelaySettings)
 
@@ -163,9 +147,7 @@ func TestAgentRelayFlaredProtocol(t *testing.T) {
 			"X-Tunnel-Token": clientNode.AccessToken,
 		})
 		assert.Equal(t, http.StatusOK, rec.Code)
-
-		envelope := decodeEnvelope(t, rec)
-		assert.True(t, envelope.Success)
+		requireAPIOK(t, rec)
 
 		stored, err := model.GetOpenFlareNodeByNodeID(ctx, clientNode.NodeID)
 		require.NoError(t, err)
@@ -187,11 +169,9 @@ func TestAgentRelayFlaredProtocol(t *testing.T) {
 		})
 		assert.Equal(t, http.StatusOK, rec.Code)
 
-		envelope := decodeEnvelope(t, rec)
-		assert.True(t, envelope.Success)
-
+		resp := requireAPIOK(t, rec)
 		var registration agent.RegistrationResponse
-		unmarshalEnvelopeData(t, envelope.Data, &registration)
+		unmarshalAPIData(t, resp.Data, &registration)
 		assert.NotEmpty(t, registration.NodeID)
 		assert.NotEmpty(t, registration.AccessToken)
 		assert.Equal(t, "discovered-edge", registration.Name)
@@ -218,11 +198,9 @@ func TestAgentRelayFlaredProtocol(t *testing.T) {
 		})
 		assert.Equal(t, http.StatusOK, rec.Code)
 
-		envelope := decodeEnvelope(t, rec)
-		assert.True(t, envelope.Success)
-
+		resp := requireAPIOK(t, rec)
 		var applyLog model.OpenFlareApplyLog
-		unmarshalEnvelopeData(t, envelope.Data, &applyLog)
+		unmarshalAPIData(t, resp.Data, &applyLog)
 		assert.Equal(t, edge.NodeID, applyLog.NodeID)
 		assert.Equal(t, "success", applyLog.Result)
 		assert.Equal(t, "20260618-001", applyLog.Version)

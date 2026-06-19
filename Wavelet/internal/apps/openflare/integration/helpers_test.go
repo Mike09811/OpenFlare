@@ -10,7 +10,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Rain-kl/Wavelet/internal/apps/openflare/compat"
 	"github.com/Rain-kl/Wavelet/internal/common/response"
 	v1 "github.com/Rain-kl/Wavelet/internal/router/v1"
 	ofrouter "github.com/Rain-kl/Wavelet/internal/router/v1/openflare"
@@ -34,25 +33,12 @@ func requireAPIOK(t *testing.T, rec *httptest.ResponseRecorder) response.Any {
 	return resp
 }
 
-func decodeEnvelope(t *testing.T, rec *httptest.ResponseRecorder) compat.Envelope {
-	t.Helper()
-
-	var envelope compat.Envelope
-	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &envelope))
-	return envelope
-}
-
 func unmarshalAPIData(t *testing.T, data any, target any) {
 	t.Helper()
 
 	payload, err := json.Marshal(data)
 	require.NoError(t, err)
 	require.NoError(t, json.Unmarshal(payload, target))
-}
-
-func unmarshalEnvelopeData(t *testing.T, data any, target any) {
-	t.Helper()
-	unmarshalAPIData(t, data, target)
 }
 
 func unmarshalAPIMap(t *testing.T, data any) map[string]any {
@@ -63,22 +49,12 @@ func unmarshalAPIMap(t *testing.T, data any) map[string]any {
 	return result
 }
 
-func unmarshalEnvelopeMap(t *testing.T, data any) map[string]any {
-	t.Helper()
-	return unmarshalAPIMap(t, data)
-}
-
 func unmarshalAPISlice(t *testing.T, data any) []any {
 	t.Helper()
 
 	var result []any
 	unmarshalAPIData(t, data, &result)
 	return result
-}
-
-func unmarshalEnvelopeSlice(t *testing.T, data any) []any {
-	t.Helper()
-	return unmarshalAPISlice(t, data)
 }
 
 func mountOpenFlareTestRoutes(engine *gin.Engine) {
@@ -118,17 +94,6 @@ func performJSONRequest(
 	rec := httptest.NewRecorder()
 	engine.ServeHTTP(rec, req)
 	return rec
-}
-
-func performLegacyRequest(
-	t *testing.T,
-	engine http.Handler,
-	method, path string,
-	body any,
-	headers map[string]string,
-) *httptest.ResponseRecorder {
-	t.Helper()
-	return performJSONRequest(t, engine, method, path, body, headers)
 }
 
 func adminAuthHeaders(token string) map[string]string {

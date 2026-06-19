@@ -73,6 +73,7 @@ sidebar: false
 ### 变更
 
 - Wavelet API 路径统一：管理端由 `/api/v1/openflare/*` 调整为 `/api/v1/d/*`；Agent/Relay/Tunnel 协议路由分别迁移至 `/api/v1/agent/*`、`/api/v1/relay/*`、`/api/v1/tunnel/*`（原 `/api/flared/*`）。同步更新 Wavelet 前端服务层与 `openflare-agent`、`openflare-relay`、`openflared` 客户端连接端点。
+- Agent/Relay/Tunnel 协议 API 响应格式对齐 Wavelet `{error_msg, data}`：服务端移除 `compat` 包，业务错误改为 HTTP 4xx + `error_msg`；同步更新 `openflare-agent`、`openflare-relay`、`openflared` HTTP 客户端解析逻辑。
 - OpenFlare 管理端权限模型对齐 Wavelet：取消旧系统 Admin/Root 三级角色区分，统一以 `user.IsAdmin` 为管理门槛；Access Token 访问敏感接口（Option、Update 等）须 `token_admin=true`；权限不足返回 HTTP 404 + `error_msg`，参数错误返回 HTTP 400 + `error_msg`（`apiutil.AdminMiddlewares` = `oauth.LoginRequired` + `admin.LoginAdminRequired`）。
 - 移除 Wavelet 顶栏 OpenFlare 服务端版本入口按钮；版本升级能力保留在 Admin 设置 OpenFlare 运维 Tab。
 - 将 Wavelet 默认上游仓库调整为 `Rain-kl/OpenFlare`，站点名称、邮件模板、前端默认标题与页脚品牌统一初始化为 OpenFlare；新增 goose 迁移回填既有环境的旧 Wavelet 默认值。
@@ -84,7 +85,7 @@ sidebar: false
 - 将 OpenFlare 路由注册包从 `internal/router/openflare/` 迁移至 `internal/router/v1/openflare/`，与 v1 路由分层目录结构对齐。
 - OpenFlare 管理端路由注册从 `RegisterCustomRoutes` 移至 `v1.RegisterV1Routes`，API 前缀由 `/api/v1/custom/openflare` 调整为 `/api/v1/openflare`。
 - OpenFlare 管理控制台 API 统一迁移至 `/api/v1/d/*`，响应格式对齐 Wavelet `{error_msg, data}` + `response.Abort*`。
-- 节点协议路由迁移至 `/api/v1/agent|relay|tunnel/*`（`flared` 更名为 `tunnel`）；协议层保留 legacy `{success, message, data}` 信封。
+- 节点协议路由迁移至 `/api/v1/agent|relay|tunnel/*`（`flared` 更名为 `tunnel`）；协议层响应格式统一为 Wavelet `{error_msg, data}` + `response.Abort*`，移除 `compat` 遗留信封。
 - 控制台鉴权改为 `apiutil.AdminMiddlewares()`（`oauth.LoginRequired` + `admin.LoginAdminRequired`；Session / Access Token）。
 - 前端 OpenFlare Service 层切换为 `OpenFlareBaseService`（`BaseService` + `/api/v1/d/*`）。
 - 为 OpenFlare 管理端 API 补充 Swagger 注解（约 99 个端点）。
