@@ -1,7 +1,7 @@
 # OpenFlare 后端迁移 — AI 接手文档
 
 > **状态**：进行中（阶段 5 收尾）  
-> **主线**：`openflare-server` 业务域已迁入 `Wavelet/internal/apps/openflare/`，阶段一通过 `/api/*` legacy 层联调旧前端  
+> **主线**：`openflare-server` 业务域已迁入 `Wavelet/internal/apps/openflare/`；管理控制台走 `/api/v1/d/*` + `Wavelet/frontend`；节点协议走 `/api/v1/agent|relay|tunnel/*`  
 > **关联计划**：[实现计划](./20260618-openflare-wavelet-backend-migration.md)
 
 ---
@@ -10,34 +10,36 @@
 
 ### 主线任务
 
-将 OpenFlare 控制面后端从 `openflare-server` 迁移至 Wavelet 框架，保留旧前端 API 路径，复用 Wavelet 用户/OAuth/Cap 等平台能力，并完成 Agent/Relay/Flared 协议兼容。
+将 OpenFlare 控制面后端从 `openflare-server` 迁移至 Wavelet 框架，复用 Wavelet 用户/OAuth/Cap 等平台能力，并完成 Agent/Relay/Tunnel 协议兼容。
+
+**架构现状（2026-06-19）**：原计划「阶段一 `/api/*` legacy 层 + 旧前端联调」已在 v1 路径切换时撤销。`internal/apps/openflare/legacy/`、`compat/auth.go` 已删除；`openflare-server/web` 不再能对接当前 Wavelet 后端。
 
 ### 开发分支
 
-- 分支：`dev`（相对 `origin/dev` 领先若干提交）
-- 工作区：迁移计划文档 `docs/plan/20260618-openflare-wavelet-backend-migration.md` 可能仍有未提交修改
+- 分支：`dev`
+- 参考对照：旧后端 `openflare-server/`（待 ETL 验证后归档）
 
 ### 已完成（✅）
 
-- [x] **Batch 0 基建**：`compat/`、`legacy/register*.go`、`router.go` 挂载 `/api/*`
-- [x] **T-AUTH ~ T-MISC** 全部 14 个业务任务队列项（见下表）
-- [x] **goose 迁移** `202606190001` ~ `202606190012`（PostgreSQL + SQLite 双份）
-- [x] **可观测性 v1 单表**：无 `_00`~`_09` 分片；heartbeat 持久化、访问日志查询、Relay/Flared 观测
-- [x] **定时任务包** `internal/apps/openflare/tasks/`（主进程 cron，非 Asynq）
+- [x] **业务模块 T-OPTION ~ T-MISC**：14 个 OpenFlare 业务包 + `internal/router/v1/openflare/register_*.go`
+- [x] **goose 迁移** `202606190001` ~ `202606190014`（PostgreSQL + SQLite 双份）
+- [x] **可观测性 v1 单表**：无 `_00`~`_09` 分片；heartbeat 持久化、访问日志查询、Relay/Tunnel 观测
+- [x] **后台任务**：已迁入 Wavelet Asynq（`async_tasks.go` + `202606190013` 种子）
 - [x] **TLS ACME** 申请/续期（lego DNS-01）
 - [x] **集成测试** 4 个场景包全部通过（23 用例）
 - [x] **配置默认值**：DB 名 `openflare`、监听 `:3000`、`application_name=openflare-server`、Redis 前缀 `openflare:`
+- [x] **API 路径统一**：控制台 `/api/v1/d/*`；协议 `/api/v1/agent|relay|tunnel/*`；Swagger 约 99 端点
 
 ### 进行中（阶段 5）
 
 - [/] **B5-3** 旧环境数据迁移脚本 `support-files/migration/`（用户 + 业务表 ETL，含 10 分片观测数据合并）
 - [/] **B5-4** `make swagger` + `make code-check` 全绿
-- [/] **B5-5** 全量 API 回归（120+ 端点对照表）
+- [/] **B5-5** 全量 API 回归（对照实现计划 §12 端点表）
 
 ### 待处理
 
 - [ ] 生产环境：创建并**激活** config version，消除节点列表「异常」（`openresty_status=unhealthy` + `当前没有激活版本`）
-- [ ] 旧前端静态托管与 Wavelet 嵌入前端的联调路径文档化（阶段二切 `Wavelet/frontend`）
+- [ ] 归档 `openflare-server/` 整包（ETL 与回归通过后）
 
 ---
 
@@ -45,29 +47,30 @@
 
 | ID | 板块 | 状态 | 负责目录 |
 |---|---|---|---|
-| T-AUTH | 认证/用户/OAuth/Cap | ✅ | `legacy/register_auth.go`, `openflare/auth/`, `compat/auth.go` |
-| T-OPTION | 状态/公告/Option | ✅ | `legacy/register_option.go`, `openflare/option/` |
-| T-ORIGIN | 源站 | ✅ | `legacy/register_origin.go`, `openflare/origin/` |
-| T-APPLYLOG | 应用日志 | ✅ | `legacy/register_apply_log.go`, `openflare/apply_log/` |
-| T-PROXY | 代理规则 | ✅ | `legacy/register_proxy_route.go`, `openflare/proxy_route/` |
-| T-NODE | 节点管理 | ✅ | `legacy/register_node.go`, `openflare/node/` |
-| T-WAF | WAF | ✅ | `legacy/register_waf.go`, `openflare/waf/` |
-| T-TLS | TLS/证书/域名/DNS | ✅ | `legacy/register_tls.go`, `openflare/tls/` |
-| T-CFGVER | 配置版本 | ✅ | `legacy/register_config_version.go`, `openflare/config_version/` |
-| T-AGENT | Agent API + WS | ✅ | `legacy/register_agent.go`, `openflare/agent/`, `openflare/websocket/` |
-| T-PAGES | Pages 托管 | ✅ | `legacy/register_pages.go`, `openflare/pages/` |
-| T-RELAY | Relay + Flared | ✅ | `legacy/register_relay_flared.go`, `openflare/relay/`, `openflare/flared/` |
-| T-OBS | 仪表盘 + 可观测 | ✅ | `legacy/register_dashboard_obs.go`, `openflare/dashboard/`, `openflare/observability/` |
-| T-MISC | 升级/GeoIP/UptimeKuma | ✅ | `legacy/register_misc.go`, `openflare/update/`, `openflare/geoip/`, `openflare/uptimekuma/` |
+| T-AUTH | 认证/用户/OAuth/Cap | ✅ | Wavelet `apps/user`、`apps/oauth`、`apps/cap`、`apps/admin`（无独立 legacy 包） |
+| T-OPTION | 状态/公告/Option | ✅ | `openflare/option/`，`register_option.go` |
+| T-ORIGIN | 源站 | ✅ | `openflare/origin/`，`register_origin.go` |
+| T-APPLYLOG | 应用日志 | ✅ | `openflare/apply_log/`，`register_apply_log.go` |
+| T-PROXY | 代理规则 | ✅ | `openflare/proxy_route/`，`register_proxy_route.go` |
+| T-NODE | 节点管理 | ✅ | `openflare/node/`，`register_node.go` |
+| T-WAF | WAF | ✅ | `openflare/waf/`，`register_waf.go` |
+| T-TLS | TLS/证书/域名/DNS | ✅ | `openflare/tls/`，`register_tls.go` |
+| T-CFGVER | 配置版本 | ✅ | `openflare/config_version/`，`register_config_version.go` |
+| T-AGENT | Agent API + WS | ✅ | `openflare/agent/`，`register_agent.go` |
+| T-PAGES | Pages 托管 | ✅ | `openflare/pages/`，`register_pages.go` |
+| T-RELAY | Relay + Tunnel | ✅ | `openflare/relay/`、`openflare/flared/`，`register_relay_flared.go` |
+| T-OBS | 仪表盘 + 可观测 | ✅ | `openflare/dashboard/`、`openflare/observability/`，`register_dashboard.go`、`register_observability.go` |
+| T-MISC | 升级/GeoIP/UptimeKuma | ✅ | `openflare/update/`、`openflare/geoip/`、`openflare/uptimekuma/`，`register_update.go`、`register_option.go` |
 
 ### 任务隔离规则
 
 | 规则 | 说明 |
 |---|---|
-| 文件所有权 | 每个任务 **仅修改** 自己的 `internal/apps/openflare/<module>/`、对应 `legacy/register_<module>.go`、`internal/model/openflare_<module>.go`、goose SQL |
+| 文件所有权 | 每个任务 **仅修改** 自己的 `internal/apps/openflare/<module>/`、对应 `router/v1/openflare/register_<module>.go`、`internal/model/openflare_<module>.go`、goose SQL |
 | 禁止修改 | `v1/user.go`、`v1/admin.go`、`model/users.go`、其他任务的 `register_*.go` |
-| 响应格式 | 旧前端兼容 API 使用 `compat.OK/Fail/Unauthorized`（`{success,message,data}`） |
-| 鉴权 | 管理端 `compat.AdminAuth()` / `compat.RootAuth()`；用户 `compat.UserAuth()`；全局 `OpenFlare-Token` 桥接见 `legacy/register.go` |
+| 控制台响应格式 | `{error_msg, data}` + `response.Abort*`（Wavelet 标准） |
+| 协议响应格式 | `compat.OK/Fail`（`{success, message, data}`），供 Agent/Relay/Tunnel 二进制使用 |
+| 控制台鉴权 | `apiutil.AdminRequired()`（Session / `X-Access-Token`，`user.IsAdmin` + `token_admin`） |
 | Logic 层 | `logics.go` 使用 `context.Context`，不依赖 `*gin.Context` |
 | 数据源 | `db.DB(ctx)` 获取 GORM |
 | 质量门禁 | 完成后 `go build ./...` 并通过本模块测试 |
@@ -76,27 +79,29 @@
 
 ## 3. 核心文件与上下文
 
-### 路由与兼容层
+### 路由注册
 
 | 路径 | 职责 |
 |---|---|
-| `Wavelet/internal/router/router.go` | 在 `apiGroup` 下调用 `oflegacy.RegisterRoutes` |
-| `Wavelet/internal/apps/openflare/legacy/register.go` | 汇总各 `register_*.go`；`OpenFlare-Token` 全局桥接 |
-| `Wavelet/internal/apps/openflare/compat/auth.go` | JWT ↔ Session/AccessToken、角色 `of_role` 解析 |
-| `Wavelet/internal/apps/openflare/compat/response.go` | Wavelet 信封 → 旧 `{success,message,data}` |
+| `Wavelet/internal/router/router.go` | `apiGroup` → `v1.RegisterV1Routes` |
+| `Wavelet/internal/router/v1/v1.go` | 汇总 User/Admin/OpenFlare 路由 |
+| `Wavelet/internal/router/v1/openflare/v1.go` | `RegisterV1Routes` → `/api/v1/d/*` 控制台 |
+| `Wavelet/internal/router/v1/openflare/openflare.go` | `RegisterRoutes` → `/api/v1/agent|relay|tunnel/*` 协议 |
+| `Wavelet/internal/router/v1/openflare/register_*.go` | 各资源路由挂载 |
+| `Wavelet/internal/apps/openflare/*/routers.go` | Handler + Swagger 注解 |
+| `Wavelet/internal/apps/openflare/compat/response.go` | 协议层 legacy 信封（**仅** Agent/Relay/Tunnel） |
+| `Wavelet/internal/apps/openflare/apiutil/` | 控制台 BindJSON、AdminRequired、RegisterCollection |
 
-### 定时任务（OpenFlare cron）
+### 后台任务（Asynq）
 
-| 文件 | Job 名 | Cron | 说明 |
-|---|---|---|---|
-| `tasks/database_cleanup.go` | `database_auto_cleanup` | `0 3 * * *` | 可观测数据自动清理（受 Option 开关控制） |
-| `tasks/waf_ip_group_sync.go` | `waf_ip_group_sync` | `@every 5m` | WAF IP 组周期同步 |
-| `tasks/uptimekuma_sync.go` | `uptime_kuma_sync` | `* * * * *` | 按 Option 间隔触发 UptimeKuma 同步 |
-| `tasks/ssl_renew.go` | `ssl_renew` | `0 0 * * *` | ACME 证书自动续期 |
-| `waf/register_tasks.go` | — | — | 通过 `RegisterCronJob` 注册，避免 import cycle |
+| 任务名 | 说明 |
+|---|---|
+| `openflare:database_auto_cleanup` | 可观测数据自动清理（受 Option 开关控制） |
+| `openflare:waf_ip_group_sync` | WAF IP 组周期同步 |
+| `openflare:uptime_kuma_sync` | UptimeKuma 同步 |
+| `openflare:ssl_renew` | ACME 证书自动续期 |
 
-**启动链路**：`wavelet api` / `wavelet all` → `bootstrap.RegisterAPI()` → `bootstrap.Init(ctx, {API:true})` → `oftasks.Start(ctx)`。  
-**注意**：OpenFlare cron **仅在 API 进程**运行；`wavelet worker` / `wavelet scheduler` 负责 Wavelet 框架 Asynq 任务，与 OpenFlare cron 解耦。
+**启动链路**：`wavelet api` / `wavelet all` → `bootstrap.Init` → Asynq worker/scheduler 执行；任务定义见 `async_tasks.go`，调度种子见 `202606190013`。
 
 ### 数据库迁移
 
@@ -111,23 +116,24 @@
 | `202606190007` | `of_tls_*` |
 | `202606190008` | `of_config_versions` |
 | `202606190009` | `of_pages_*` |
-| `202606190010` | 可观测性单表（profiles/metrics/reports/health/openresty/frps/access_logs） |
-| `202606190011` | `of_node_access_logs` 复合索引 `(node_id, logged_at)` |
+| `202606190010` | 可观测性单表 |
+| `202606190011` | `of_node_access_logs` 复合索引 |
 | `202606190012` | `of_node_obs_frpc` |
+| `202606190013` | OpenFlare Asynq 调度种子 |
+| `202606190014` | Pages `upload_id` 字段 |
 
 路径：`Wavelet/internal/db/migrator/goose/postgres/` 与 `sqlite/` 各一份。
 
 ### 近期修复要点（2026-06-19）
 
-| 问题 | 根因 | 修复位置 |
+| 问题 | 根因 | 修复/处理 |
 |---|---|---|
-| Agent 已连接但节点显示「异常」 | 无激活 config version → `openresty_status=unhealthy` | 运维：发布并激活配置版本 |
+| Agent 已连接但节点显示「异常」 | 无激活 config version | 运维：发布并激活配置版本 |
 | 节点详情无错误日志 | 可观测性表未迁移 | `202606190010` + `agent/observability.go` |
 | WAF IP 组未下发 | Agent sync 未实装 | `agent/waf_ip_group.go`、`waf/ip_group_sync.go` |
 | Pages 包下载 404 | Agent 路由缺失 | `pages/logics.go`、`agent/routers.go` |
-| 旧前端 Token 部分路由 401 | 未全局桥接 | `legacy/register.go` |
 | 访问日志查询空 | 单表查询层缺失 | `model/openflare_access_log.go`、`202606190011` |
-| Relay/Flared 观测缺失 | heartbeat 未持久化 | `relay/observability.go`、`flared/observability.go`、`202606190012` |
+| Relay/Tunnel 观测缺失 | heartbeat 未持久化 | `relay/observability.go`、`flared/observability.go`、`202606190012` |
 
 ### 依赖修复
 
@@ -139,10 +145,10 @@
 
 | 测试包 | 场景 | 结果 |
 |---|---|---|
-| `integration/auth_option_test.go` | 登录/self/option 权限/热重载 | ✅ 5/5 |
+| `integration/auth_option_test.go` | Access Token 鉴权、option 权限、热重载 | ✅ 5/5 |
 | `integration/core_chain_test.go` | 源站→规则→发布→节点→apply-log | ✅ 6/6 |
 | `integration/security_test.go` | WAF/TLS/域名/DNS | ✅ 7/7 |
-| `integration/agent_protocol_test.go` | Agent/Relay/Flared 协议 | ✅ 5/5 |
+| `integration/agent_protocol_test.go` | Agent/Relay/Tunnel 协议 | ✅ 5/5 |
 
 ```bash
 cd Wavelet
@@ -170,26 +176,21 @@ redis:
   key_prefix: "openflare:"
 ```
 
-或使用 `.env` / 环境变量：`DB_ENABLED=true`、`DB_NAME=openflare`、`POSTGRES_DB=openflare`。
-
 ### 启动命令
 
 ```bash
 cd Wavelet
-# 开发：API + Worker + Scheduler 合一
-go run . all
-
-# 生产：分进程（OpenFlare cron 仅需 api 进程）
-go run . api
+go run . all    # 开发：API + Worker + Scheduler
+go run . api    # 生产：API 进程
 go run . worker
 go run . scheduler
 ```
 
-### 阶段一旧前端联调
+### 当前联调方式
 
-- **API**：指向 Wavelet `:3000` 的 `/api/*`（legacy 兼容层）
-- **静态页面**：阶段一仍使用 `openflare-server/web/build`（由旧 Server 托管或独立静态服务）；Wavelet 默认嵌入的是 `Wavelet/frontend`，非旧 OpenFlare UI
-- **鉴权**：旧前端使用 `OpenFlare-Token` Header；登录 `POST /api/user/login` 由 legacy 层签发 JWT
+- **管理控制台**：`Wavelet/frontend`（`pnpm dev` 或 embed 构建产物），Session 鉴权，API 前缀 `/api/v1/d/*`
+- **节点二进制**：连接 `/api/v1/agent/*`、`/api/v1/relay/*`、`/api/v1/tunnel/*`（legacy `{success,message,data}` 信封）
+- **旧前端 `openflare-server/web`**：已无法对接当前后端（无 `/api/*` 控制台路由、无 `OpenFlare-Token` 桥接）
 
 ---
 
@@ -198,8 +199,8 @@ go run . scheduler
 | 项 | 说明 | 当前处理 |
 |---|---|---|
 | 观测数据 10 分片 → 单表 | 旧生产环境有 `node_*_XX` 分片表 | v1 单表；B5-3 ETL 脚本待建 |
-| 微信登录 | Wavelet 无内置 | legacy 快捷路由已补；长期评估废弃或独立维护 |
-| OpenFlare cron vs Asynq | 两套任务体系并存 | 阶段一 cron 在 API 进程；后续可迁入统一框架 |
+| 微信登录 | Wavelet 无内置 | 旧 `/api/oauth/wechat*` 未保留；评估废弃或补 v1 适配 |
+| 三级角色 Root(100) | 旧 `RootAuth` | 简化为 `is_admin` + Access Token `token_admin` |
 | 节点「异常」展示 | 连接正常但无激活版本 | 属预期行为；需运维发布配置 |
 | `make code-check` | 全仓库静态检查 | 阶段 5 待跑通 |
 
@@ -207,13 +208,11 @@ go run . scheduler
 
 ## 7. 下一步行动指南
 
-新接手 AI 建议按以下顺序执行：
-
 1. **确认环境**：`cd Wavelet && go build ./... && go test ./internal/apps/openflare/... -count=1`
-2. **跑质量门禁**：`make code-check`（修复 swagger/静态检查问题）
-3. **实现 B5-3**：在 `Wavelet/support-files/migration/` 编写 `users` → `w_users` 与业务表 ETL（含分片观测合并）
-4. **API 回归**：对照实现计划 §12 端点表，用 curl/集成测试逐项验证
-5. **联调验证**：旧前端登录 → 创建规则 → 发布并**激活** config version → Agent 心跳 → 检查节点状态与 apply-log
+2. **跑质量门禁**：`make code-check`
+3. **实现 B5-3**：`Wavelet/support-files/migration/` ETL 脚本
+4. **API 回归**：对照实现计划 §12 端点表逐项验证
+5. **联调验证**：`Wavelet/frontend` 登录 → 创建规则 → 发布并**激活** config version → Agent 心跳 → 检查节点状态
 
 ---
 
@@ -221,9 +220,9 @@ go run . scheduler
 
 | 文档 | 用途 |
 |---|---|
-| [实现计划](./20260618-openflare-wavelet-backend-migration.md) | 完整模块清单、端点对照、分阶段验收 |
-| [前端迁移计划](./20260618-openflare-wavelet-frontend-migration.md) | 阶段二 UI 迁移 |
-| [`Wavelet/AGENTS.md`](../../Wavelet/AGENTS.md) | 框架 Guardrails 与 Skills |
+| [实现计划](./20260618-openflare-wavelet-backend-migration.md) | 模块清单、§12 端点对照 |
+| [前端迁移计划](./20260618-openflare-wavelet-frontend-migration.md) | UI 迁移与验收 |
+| [`Wavelet/AGENTS.md`](../../Wavelet/AGENTS.md) | 框架 Guardrails |
 | [`docs/guideline/Constraints.md`](../guideline/Constraints.md) | 开发约束 |
-| 旧后端源码 | `openflare-server/internal/controller/`、`service/`、`model/` |
+| 旧后端源码（对照用） | `openflare-server/internal/` |
 | Changelog | [`docs/changelog/index.md`](../changelog/index.md) `[Unreleased]` |

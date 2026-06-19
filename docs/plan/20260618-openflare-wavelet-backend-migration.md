@@ -2,7 +2,7 @@
 
 > **文档类型**：实现计划（Implementation Plan）  
 > **创建日期**：2026-06-18  
-> **状态**：实施中（阶段一旧前端联调，核心 API 与后台任务已落地）
+> **状态**：实施中（阶段 5 收尾；控制台 `/api/v1/d/*` + 新前端已落地，legacy 兼容层已撤销）
 > **前置阅读**：[`Wavelet/AGENTS.md`](../../Wavelet/AGENTS.md)、[`docs/guideline/Constraints.md`](../guideline/Constraints.md)、[`docs/design/architecture.md`](../design/architecture.md)
 
 ---
@@ -635,153 +635,178 @@ curl http://127.0.0.1:3000/api/agent/config-versions/active \
 
 ---
 
-## 12. API 端点完整对照表（旧 → 新实现位置）
+## 12. API 端点完整对照表（openflare-server → Wavelet 当前实现）
 
-> 路径阶段一保持不变；实现位置为 Wavelet 代码落点。
+> **2026-06-19 更新**：阶段一 `internal/apps/openflare/legacy/` 已撤销。下表「当前路径」列反映 Wavelet 实码；路由注册见 `internal/router/v1/openflare/register_*.go`，Handler 见 `internal/apps/openflare/*/routers.go`。
 
-| 方法 | 路径 | 新实现包 | 阶段 |
+### 12.1 路径前缀对照
+
+| 类别 | 旧路径前缀（openflare-server） | 当前路径前缀（Wavelet） | 响应格式 |
 |---|---|---|---|
-| GET | `/api/status` | `openflare/legacy/status.go` | 1 |
-| GET | `/api/notice` | `openflare/legacy/status.go` | 1 |
-| GET | `/api/about` | `openflare/legacy/status.go` | 1 |
-| GET | `/api/verification` | `openflare/legacy/auth_user.go` | 1 |
-| GET | `/api/reset_password` | `openflare/legacy/password_reset.go` | 1 |
-| POST | `/api/user/reset` | `openflare/legacy/password_reset.go` | 1 |
-| POST | `/api/user/register` | `openflare/legacy/auth_user.go` | 1 |
-| POST | `/api/user/login` | `openflare/legacy/auth_user.go` | 1 |
-| GET | `/api/user/logout` | `openflare/legacy/auth_user.go` | 1 |
-| GET | `/api/user/self` | `openflare/legacy/auth_user.go` | 1 |
-| POST | `/api/user/self/update` | `openflare/legacy/auth_user.go` | 1 |
-| POST | `/api/user/self/delete` | `openflare/legacy/auth_user.go` | 1 |
-| GET | `/api/user/token` | `openflare/legacy/auth_user.go` | 1 |
-| GET | `/api/user/` | `openflare/legacy/auth_admin.go` | 1 |
-| GET | `/api/user/search` | `openflare/legacy/auth_admin.go` | 1 |
-| GET | `/api/user/:id` | `openflare/legacy/auth_admin.go` | 1 |
-| POST | `/api/user/` | `openflare/legacy/auth_admin.go` | 1 |
-| POST | `/api/user/manage` | `openflare/legacy/auth_admin.go` | 1 |
-| POST | `/api/user/update` | `openflare/legacy/auth_admin.go` | 1 |
-| POST | `/api/user/:id/delete` | `openflare/legacy/auth_admin.go` | 1 |
-| GET | `/api/oauth/:source/authorize` | `openflare/legacy/auth_oauth.go` | 1 |
-| GET | `/api/oauth/:source/callback` | `openflare/legacy/auth_oauth.go` | 1 |
-| POST | `/api/oauth/link-existing` | `openflare/legacy/auth_oauth.go` | 1 |
-| GET | `/api/oauth/external-accounts` | `openflare/legacy/auth_oauth.go` | 1 |
-| POST | `/api/oauth/external-accounts/:id/delete` | `openflare/legacy/auth_oauth.go` | 1 |
-| POST | `/api/cap/:scope/challenge` | `openflare/legacy/cap.go` | 1 |
-| POST | `/api/cap/:scope/redeem` | `openflare/legacy/cap.go` | 1 |
-| GET | `/api/option/` | `openflare/option/routers.go` | 2 |
-| POST | `/api/option/update` | `openflare/option/routers.go` | 2 |
-| POST | `/api/option/update-batch` | `openflare/option/routers.go` | 2 |
-| POST | `/api/option/geoip/lookup` | `openflare/geoip/routers.go` | 4 |
-| POST | `/api/option/database/cleanup` | `openflare/observability/routers.go` | 4 |
-| GET | `/api/auth-sources/` | `openflare/legacy/auth_admin.go` | 1 |
-| POST | `/api/auth-sources/` | `openflare/legacy/auth_admin.go` | 1 |
-| POST | `/api/auth-sources/:id/update` | `openflare/legacy/auth_admin.go` | 1 |
-| POST | `/api/auth-sources/:id/delete` | `openflare/legacy/auth_admin.go` | 1 |
-| POST | `/api/auth-sources/:id/toggle` | `openflare/legacy/auth_admin.go` | 1 |
-| GET | `/api/proxy-routes/` | `openflare/proxy_route/routers.go` | 2 |
-| GET | `/api/proxy-routes/:id` | `openflare/proxy_route/routers.go` | 2 |
-| POST | `/api/proxy-routes/` | `openflare/proxy_route/routers.go` | 2 |
-| POST | `/api/proxy-routes/:id/update` | `openflare/proxy_route/routers.go` | 2 |
-| POST | `/api/proxy-routes/:id/delete` | `openflare/proxy_route/routers.go` | 2 |
-| GET | `/api/origins/` | `openflare/origin/routers.go` | 2 |
-| GET | `/api/origins/:id` | `openflare/origin/routers.go` | 2 |
-| POST | `/api/origins/` | `openflare/origin/routers.go` | 2 |
-| POST | `/api/origins/:id/update` | `openflare/origin/routers.go` | 2 |
-| POST | `/api/origins/:id/delete` | `openflare/origin/routers.go` | 2 |
-| GET | `/api/config-versions/` | `openflare/config_version/routers.go` | 2 |
-| GET | `/api/config-versions/active` | `openflare/config_version/routers.go` | 2 |
-| GET | `/api/config-versions/preview` | `openflare/config_version/routers.go` | 2 |
-| GET | `/api/config-versions/diff` | `openflare/config_version/routers.go` | 2 |
-| GET | `/api/config-versions/:id` | `openflare/config_version/routers.go` | 2 |
-| POST | `/api/config-versions/publish` | `openflare/config_version/routers.go` | 2 |
-| POST | `/api/config-versions/:id/activate` | `openflare/config_version/routers.go` | 2 |
-| POST | `/api/config-versions/cleanup` | `openflare/config_version/routers.go` | 2 |
-| GET | `/api/nodes/` | `openflare/node/routers.go` | 2 |
-| POST | `/api/nodes/` | `openflare/node/routers.go` | 2 |
-| GET | `/api/nodes/bootstrap-token` | `openflare/node/routers.go` | 2 |
-| POST | `/api/nodes/bootstrap-token/rotate` | `openflare/node/routers.go` | 2 |
-| GET | `/api/nodes/:id/agent-release` | `openflare/node/routers.go` | 2 |
-| POST | `/api/nodes/:id/update` | `openflare/node/routers.go` | 2 |
-| POST | `/api/nodes/:id/delete` | `openflare/node/routers.go` | 2 |
-| POST | `/api/nodes/:id/agent-update` | `openflare/node/routers.go` | 2 |
-| POST | `/api/nodes/:id/openresty-restart` | `openflare/node/routers.go` | 2 |
-| POST | `/api/nodes/:id/force-sync` | `openflare/node/routers.go` | 2 |
-| GET | `/api/nodes/:id/observability` | `openflare/observability/routers.go` | 4 |
-| POST | `/api/nodes/:id/observability/cleanup` | `openflare/observability/routers.go` | 4 |
-| POST | `/api/agent/nodes/register` | `openflare/agent/routers.go` | 2 |
-| GET | `/api/agent/ws` | `openflare/websocket/agent.go` | 2 |
-| POST | `/api/agent/nodes/heartbeat` | `openflare/agent/routers.go` | 2 |
-| GET | `/api/agent/config-versions/active` | `openflare/agent/routers.go` | 2 |
-| GET | `/api/agent/pages/deployments/:id/package` | `openflare/pages/agent.go` | 4 |
-| POST | `/api/agent/waf/ip-groups/sync` | `openflare/waf/agent.go` | 3 |
-| POST | `/api/agent/apply-logs` | `openflare/apply_log/routers.go` | 2 |
-| POST | `/api/relay/heartbeat` | `openflare/relay/routers.go` | 4 |
-| GET | `/api/relay/ws` | `openflare/websocket/relay.go` | 4 |
-| POST | `/api/flared/heartbeat` | `openflare/flared/routers.go` | 4 |
-| GET | `/api/flared/config/active` | `openflare/flared/routers.go` | 4 |
-| POST | `/api/flared/apply-log` | `openflare/flared/routers.go` | 4 |
-| GET | `/api/flared/ws` | `openflare/websocket/flared.go` | 4 |
-| GET | `/api/waf/ip-groups` | `openflare/waf/routers.go` | 3 |
-| GET | `/api/waf/ip-groups/:id` | `openflare/waf/routers.go` | 3 |
-| POST | `/api/waf/ip-groups` | `openflare/waf/routers.go` | 3 |
-| POST | `/api/waf/ip-groups/test` | `openflare/waf/routers.go` | 3 |
-| POST | `/api/waf/ip-groups/:id/update` | `openflare/waf/routers.go` | 3 |
-| POST | `/api/waf/ip-groups/:id/delete` | `openflare/waf/routers.go` | 3 |
-| POST | `/api/waf/ip-groups/:id/sync` | `openflare/waf/routers.go` | 3 |
-| GET | `/api/waf/rule-groups` | `openflare/waf/routers.go` | 3 |
-| GET | `/api/waf/rule-groups/:id` | `openflare/waf/routers.go` | 3 |
-| POST | `/api/waf/rule-groups` | `openflare/waf/routers.go` | 3 |
-| POST | `/api/waf/rule-groups/:id/update` | `openflare/waf/routers.go` | 3 |
-| POST | `/api/waf/rule-groups/:id/delete` | `openflare/waf/routers.go` | 3 |
-| POST | `/api/waf/rule-groups/:id/sites` | `openflare/waf/routers.go` | 3 |
-| GET | `/api/waf/sites/:route_id/rule-groups` | `openflare/waf/routers.go` | 3 |
-| POST | `/api/waf/sites/:route_id/rule-groups` | `openflare/waf/routers.go` | 3 |
-| GET | `/api/managed-domains/` | `openflare/managed_domain/routers.go` | 3 |
-| GET | `/api/managed-domains/match` | `openflare/managed_domain/routers.go` | 3 |
-| POST | `/api/managed-domains/` | `openflare/managed_domain/routers.go` | 3 |
-| POST | `/api/managed-domains/:id/update` | `openflare/managed_domain/routers.go` | 3 |
-| POST | `/api/managed-domains/:id/delete` | `openflare/managed_domain/routers.go` | 3 |
-| GET | `/api/tls-certificates/` | `openflare/tls/routers.go` | 3 |
-| GET | `/api/tls-certificates/:id` | `openflare/tls/routers.go` | 3 |
-| GET | `/api/tls-certificates/:id/content` | `openflare/tls/routers.go` | 3 |
-| POST | `/api/tls-certificates/` | `openflare/tls/routers.go` | 3 |
-| POST | `/api/tls-certificates/:id/update` | `openflare/tls/routers.go` | 3 |
-| POST | `/api/tls-certificates/:id/update-acme` | `openflare/tls/routers.go` | 3 |
-| POST | `/api/tls-certificates/:id/convert-acme` | `openflare/tls/routers.go` | 3 |
-| POST | `/api/tls-certificates/import-file` | `openflare/tls/routers.go` | 3 |
-| POST | `/api/tls-certificates/:id/delete` | `openflare/tls/routers.go` | 3 |
-| POST | `/api/tls-certificates/apply` | `openflare/tls/routers.go` | 3 |
-| POST | `/api/tls-certificates/:id/renew` | `openflare/tls/routers.go` | 3 |
-| GET | `/api/acme-accounts/default` | `openflare/tls/routers.go` | 3 |
-| GET | `/api/dns-accounts/` | `openflare/tls/routers.go` | 3 |
-| POST | `/api/dns-accounts/` | `openflare/tls/routers.go` | 3 |
-| POST | `/api/dns-accounts/:id/update` | `openflare/tls/routers.go` | 3 |
-| POST | `/api/dns-accounts/:id/delete` | `openflare/tls/routers.go` | 3 |
-| GET | `/api/pages/` | `openflare/pages/routers.go` | 4 |
-| GET | `/api/pages/:id` | `openflare/pages/routers.go` | 4 |
-| POST | `/api/pages/` | `openflare/pages/routers.go` | 4 |
-| POST | `/api/pages/:id/update` | `openflare/pages/routers.go` | 4 |
-| POST | `/api/pages/:id/delete` | `openflare/pages/routers.go` | 4 |
-| GET | `/api/pages/:id/deployments` | `openflare/pages/routers.go` | 4 |
-| POST | `/api/pages/:id/deployments/upload` | `openflare/pages/routers.go` | 4 |
-| POST | `/api/pages/:id/deployments/:did/activate` | `openflare/pages/routers.go` | 4 |
-| POST | `/api/pages/:id/deployments/:did/delete` | `openflare/pages/routers.go` | 4 |
-| GET | `/api/pages/deployments/:did/files` | `openflare/pages/routers.go` | 4 |
-| GET | `/api/dashboard/overview` | `openflare/dashboard/routers.go` | 4 |
-| GET | `/api/apply-logs/` | `openflare/apply_log/routers.go` | 2 |
-| POST | `/api/apply-logs/cleanup` | `openflare/apply_log/routers.go` | 2 |
-| GET | `/api/access-logs/` | `openflare/observability/routers.go` | 4 |
-| GET | `/api/access-logs/folds` | `openflare/observability/routers.go` | 4 |
-| GET | `/api/access-logs/folds/ip-summary` | `openflare/observability/routers.go` | 4 |
-| GET | `/api/access-logs/ip-summary` | `openflare/observability/routers.go` | 4 |
-| GET | `/api/access-logs/ip-summary/trend` | `openflare/observability/routers.go` | 4 |
-| POST | `/api/access-logs/cleanup` | `openflare/observability/routers.go` | 4 |
-| POST | `/api/uptimekuma/sync` | `openflare/uptimekuma/routers.go` | 4 |
-| GET | `/api/update/latest-release` | `openflare/legacy/update.go` | 5 |
-| GET | `/api/update/logs/ws` | `openflare/websocket/update.go` | 5 |
-| POST | `/api/update/manual-upload` | `openflare/legacy/update.go` | 5 |
-| POST | `/api/update/manual-upgrade` | `openflare/legacy/update.go` | 5 |
-| POST | `/api/update/upgrade` | `openflare/legacy/update.go` | 5 |
+| 管理控制台 | `/api/<resource>` | `/api/v1/d/<resource>` | `{error_msg, data}` |
+| Agent 协议 | `/api/agent/*` | `/api/v1/agent/*` | `{success, message, data}` |
+| Relay 协议 | `/api/relay/*` | `/api/v1/relay/*` | 同上 |
+| Tunnel 协议 | `/api/flared/*` | `/api/v1/tunnel/*` | 同上（`flared` 更名为 `tunnel`） |
+| 用户/OAuth/Cap | `/api/user/*`、`/api/oauth/*`、`/api/cap/*` | `/api/v1/user/*`、`/api/v1/oauth/*`、`/api/cap/*` | Wavelet 标准 |
+| 认证源/用户管理 | `/api/auth-sources/*`、`/api/user/*`（Admin） | `/api/v1/admin/*` | Wavelet 标准 |
+
+列表端点通过 `apiutil.RegisterCollection` 同时注册无尾斜杠与有尾斜杠路径。
+
+### 12.2 平台层端点（复用 Wavelet，无旧 `/api/*` 兼容）
+
+| 方法 | 旧路径 | 当前路径 | 实现位置 | 备注 |
+|---|---|---|---|---|
+| GET | `/api/verification` | `POST /api/v1/user/send-email-code` | `apps/user` | 方法变更 |
+| GET | `/api/reset_password` | `—` | `apps/user` | 未映射旧路径 |
+| POST | `/api/user/reset` | `—` | `apps/user` | 未映射旧路径 |
+| POST | `/api/user/register` | `POST /api/v1/user/register` | `apps/user` | |
+| POST | `/api/user/login` | `POST /api/v1/user/login` | `apps/user` | |
+| GET | `/api/user/logout` | `POST /api/v1/user/logout` | `apps/user` | 方法变更 |
+| GET | `/api/user/self` | `GET /api/v1/user/profile` | `apps/user` | 路径变更 |
+| POST | `/api/user/self/update` | `PUT /api/v1/user/profile` | `apps/user` | 方法变更 |
+| POST | `/api/user/self/delete` | `—` | `apps/user` | 未实现 |
+| GET | `/api/user/token` | `GET /api/v1/user/access-tokens` | `apps/user` | |
+| GET | `/api/user/` | `GET /api/v1/admin/users` | `apps/admin/user` | |
+| GET | `/api/user/search` | `—` | `apps/admin/user` | 未实现 |
+| GET | `/api/user/:id` | `GET /api/v1/admin/users/:id` | `apps/admin/user` | |
+| POST | `/api/user/` | `POST /api/v1/admin/users` | `apps/admin/user` | |
+| POST | `/api/user/manage` | `—` | `apps/admin/user` | 未实现 |
+| POST | `/api/user/update` | `PUT /api/v1/admin/users/:id` | `apps/admin/user` | 方法变更 |
+| POST | `/api/user/:id/delete` | `DELETE /api/v1/admin/users/:id` | `apps/admin/user` | 方法变更 |
+| GET | `/api/oauth/:source/authorize` | `GET /api/v1/oauth/:source/authorize` | `apps/oauth` | |
+| GET | `/api/oauth/:source/callback` | `GET /api/v1/oauth/:source/callback` | `apps/oauth` | |
+| POST | `/api/oauth/link-existing` | `POST /api/v1/oauth/link-existing` | `apps/oauth` | |
+| GET | `/api/oauth/external-accounts` | `GET /api/v1/oauth/external-accounts` | `apps/oauth` | |
+| POST | `/api/oauth/external-accounts/:id/delete` | `DELETE /api/v1/oauth/external-accounts/:id` | `apps/oauth` | 方法变更 |
+| POST | `/api/cap/:scope/challenge` | `POST /api/cap/challenge` | `apps/cap` | scope 改 body |
+| POST | `/api/cap/:scope/redeem` | `POST /api/cap/redeem` | `apps/cap` | scope 改 body |
+| GET | `/api/auth-sources/` | `GET /api/v1/admin/auth-sources` | `apps/admin/auth_source` | |
+| POST | `/api/auth-sources/` | `POST /api/v1/admin/auth-sources` | `apps/admin/auth_source` | |
+| POST | `/api/auth-sources/:id/update` | `PUT /api/v1/admin/auth-sources/:id` | `apps/admin/auth_source` | 方法变更 |
+| POST | `/api/auth-sources/:id/delete` | `DELETE /api/v1/admin/auth-sources/:id` | `apps/admin/auth_source` | 方法变更 |
+| POST | `/api/auth-sources/:id/toggle` | `POST /api/v1/admin/auth-sources/:id/toggle` | `apps/admin/auth_source` | |
+
+### 12.3 管理控制台端点（`/api/v1/d/*`）
+
+| 方法 | 旧路径 | 当前路径 | 实现位置 | 备注 |
+|---|---|---|---|---|
+| GET | `/api/status` | `/api/v1/d/status` | `openflare/option/routers.go` | |
+| GET | `/api/notice` | `/api/v1/d/notice` | `openflare/option/routers.go` | |
+| GET | `/api/about` | `/api/v1/d/about` | `openflare/option/routers.go` | |
+| GET | `/api/option/` | `/api/v1/d/option/` | `openflare/option/routers.go` | |
+| POST | `/api/option/update` | `/api/v1/d/option/update` | `openflare/option/routers.go` | |
+| POST | `/api/option/update-batch` | `/api/v1/d/option/update-batch` | `openflare/option/routers.go` | |
+| POST | `/api/option/geoip/lookup` | `/api/v1/d/option/geoip/lookup` | `openflare/option/routers.go` | |
+| POST | `/api/option/database/cleanup` | `/api/v1/d/option/database/cleanup` | `openflare/option/routers.go` | |
+| GET | `/api/proxy-routes/` | `/api/v1/d/proxy-routes/` | `openflare/proxy_route/routers.go` | |
+| GET | `/api/proxy-routes/:id` | `/api/v1/d/proxy-routes/:id` | `openflare/proxy_route/routers.go` | |
+| POST | `/api/proxy-routes/` | `/api/v1/d/proxy-routes/` | `openflare/proxy_route/routers.go` | |
+| POST | `/api/proxy-routes/:id/update` | `/api/v1/d/proxy-routes/:id/update` | `openflare/proxy_route/routers.go` | |
+| POST | `/api/proxy-routes/:id/delete` | `/api/v1/d/proxy-routes/:id/delete` | `openflare/proxy_route/routers.go` | |
+| GET | `/api/origins/` | `/api/v1/d/origins/` | `openflare/origin/routers.go` | |
+| GET | `/api/origins/:id` | `/api/v1/d/origins/:id` | `openflare/origin/routers.go` | |
+| POST | `/api/origins/` | `/api/v1/d/origins/` | `openflare/origin/routers.go` | |
+| POST | `/api/origins/:id/update` | `/api/v1/d/origins/:id/update` | `openflare/origin/routers.go` | |
+| POST | `/api/origins/:id/delete` | `/api/v1/d/origins/:id/delete` | `openflare/origin/routers.go` | |
+| GET | `/api/config-versions/` | `/api/v1/d/config-versions/` | `openflare/config_version/routers.go` | |
+| GET | `/api/config-versions/active` | `/api/v1/d/config-versions/active` | `openflare/config_version/routers.go` | |
+| GET | `/api/config-versions/preview` | `/api/v1/d/config-versions/preview` | `openflare/config_version/routers.go` | |
+| GET | `/api/config-versions/diff` | `/api/v1/d/config-versions/diff` | `openflare/config_version/routers.go` | |
+| GET | `/api/config-versions/:id` | `/api/v1/d/config-versions/:id` | `openflare/config_version/routers.go` | |
+| POST | `/api/config-versions/publish` | `/api/v1/d/config-versions/publish` | `openflare/config_version/routers.go` | |
+| POST | `/api/config-versions/:id/activate` | `/api/v1/d/config-versions/:id/activate` | `openflare/config_version/routers.go` | |
+| POST | `/api/config-versions/cleanup` | `/api/v1/d/config-versions/cleanup` | `openflare/config_version/routers.go` | |
+| GET | `/api/nodes/` | `/api/v1/d/nodes/` | `openflare/node/routers.go` | |
+| POST | `/api/nodes/` | `/api/v1/d/nodes/` | `openflare/node/routers.go` | |
+| GET | `/api/nodes/bootstrap-token` | `/api/v1/d/nodes/bootstrap-token` | `openflare/node/routers.go` | |
+| POST | `/api/nodes/bootstrap-token/rotate` | `/api/v1/d/nodes/bootstrap-token/rotate` | `openflare/node/routers.go` | |
+| GET | `/api/nodes/:id/agent-release` | `/api/v1/d/nodes/:id/agent-release` | `openflare/node/routers.go` | |
+| POST | `/api/nodes/:id/update` | `/api/v1/d/nodes/:id/update` | `openflare/node/routers.go` | |
+| POST | `/api/nodes/:id/delete` | `/api/v1/d/nodes/:id/delete` | `openflare/node/routers.go` | |
+| POST | `/api/nodes/:id/agent-update` | `/api/v1/d/nodes/:id/agent-update` | `openflare/node/routers.go` | |
+| POST | `/api/nodes/:id/openresty-restart` | `/api/v1/d/nodes/:id/openresty-restart` | `openflare/node/routers.go` | |
+| POST | `/api/nodes/:id/force-sync` | `/api/v1/d/nodes/:id/force-sync` | `openflare/node/routers.go` | |
+| GET | `/api/nodes/:id/observability` | `/api/v1/d/nodes/:id/observability` | `openflare/observability/routers.go` | |
+| POST | `/api/nodes/:id/observability/cleanup` | `/api/v1/d/nodes/:id/observability/cleanup` | `openflare/observability/routers.go` | |
+| GET | `/api/waf/ip-groups` | `/api/v1/d/waf/ip-groups` | `openflare/waf/routers.go` | |
+| GET | `/api/waf/ip-groups/:id` | `/api/v1/d/waf/ip-groups/:id` | `openflare/waf/routers.go` | |
+| POST | `/api/waf/ip-groups` | `/api/v1/d/waf/ip-groups` | `openflare/waf/routers.go` | |
+| POST | `/api/waf/ip-groups/test` | `/api/v1/d/waf/ip-groups/test` | `openflare/waf/routers.go` | |
+| POST | `/api/waf/ip-groups/:id/update` | `/api/v1/d/waf/ip-groups/:id/update` | `openflare/waf/routers.go` | |
+| POST | `/api/waf/ip-groups/:id/delete` | `/api/v1/d/waf/ip-groups/:id/delete` | `openflare/waf/routers.go` | |
+| POST | `/api/waf/ip-groups/:id/sync` | `/api/v1/d/waf/ip-groups/:id/sync` | `openflare/waf/routers.go` | |
+| GET | `/api/waf/rule-groups` | `/api/v1/d/waf/rule-groups` | `openflare/waf/routers.go` | |
+| GET | `/api/waf/rule-groups/:id` | `/api/v1/d/waf/rule-groups/:id` | `openflare/waf/routers.go` | |
+| POST | `/api/waf/rule-groups` | `/api/v1/d/waf/rule-groups` | `openflare/waf/routers.go` | |
+| POST | `/api/waf/rule-groups/:id/update` | `/api/v1/d/waf/rule-groups/:id/update` | `openflare/waf/routers.go` | |
+| POST | `/api/waf/rule-groups/:id/delete` | `/api/v1/d/waf/rule-groups/:id/delete` | `openflare/waf/routers.go` | |
+| POST | `/api/waf/rule-groups/:id/sites` | `/api/v1/d/waf/rule-groups/:id/sites` | `openflare/waf/routers.go` | |
+| GET | `/api/waf/sites/:route_id/rule-groups` | `/api/v1/d/waf/sites/:route_id/rule-groups` | `openflare/waf/routers.go` | |
+| POST | `/api/waf/sites/:route_id/rule-groups` | `/api/v1/d/waf/sites/:route_id/rule-groups` | `openflare/waf/routers.go` | |
+| GET | `/api/managed-domains/` | `/api/v1/d/managed-domains/` | `openflare/tls/routers.go` | |
+| GET | `/api/managed-domains/match` | `/api/v1/d/managed-domains/match` | `openflare/tls/routers.go` | |
+| POST | `/api/managed-domains/` | `/api/v1/d/managed-domains/` | `openflare/tls/routers.go` | |
+| POST | `/api/managed-domains/:id/update` | `/api/v1/d/managed-domains/:id/update` | `openflare/tls/routers.go` | |
+| POST | `/api/managed-domains/:id/delete` | `/api/v1/d/managed-domains/:id/delete` | `openflare/tls/routers.go` | |
+| GET | `/api/tls-certificates/` | `/api/v1/d/tls-certificates/` | `openflare/tls/routers.go` | |
+| GET | `/api/tls-certificates/:id` | `/api/v1/d/tls-certificates/:id` | `openflare/tls/routers.go` | |
+| GET | `/api/tls-certificates/:id/content` | `/api/v1/d/tls-certificates/:id/content` | `openflare/tls/routers.go` | |
+| POST | `/api/tls-certificates/` | `/api/v1/d/tls-certificates/` | `openflare/tls/routers.go` | |
+| POST | `/api/tls-certificates/:id/update` | `/api/v1/d/tls-certificates/:id/update` | `openflare/tls/routers.go` | |
+| POST | `/api/tls-certificates/:id/update-acme` | `/api/v1/d/tls-certificates/:id/update-acme` | `openflare/tls/routers.go` | |
+| POST | `/api/tls-certificates/:id/convert-acme` | `/api/v1/d/tls-certificates/:id/convert-acme` | `openflare/tls/routers.go` | |
+| POST | `/api/tls-certificates/import-file` | `/api/v1/d/tls-certificates/import-file` | `openflare/tls/routers.go` | |
+| POST | `/api/tls-certificates/:id/delete` | `/api/v1/d/tls-certificates/:id/delete` | `openflare/tls/routers.go` | |
+| POST | `/api/tls-certificates/apply` | `/api/v1/d/tls-certificates/apply` | `openflare/tls/routers.go` | |
+| POST | `/api/tls-certificates/:id/renew` | `/api/v1/d/tls-certificates/:id/renew` | `openflare/tls/routers.go` | |
+| GET | `/api/acme-accounts/default` | `/api/v1/d/acme-accounts/default` | `openflare/tls/routers.go` | |
+| GET | `/api/dns-accounts/` | `/api/v1/d/dns-accounts/` | `openflare/tls/routers.go` | |
+| POST | `/api/dns-accounts/` | `/api/v1/d/dns-accounts/` | `openflare/tls/routers.go` | |
+| POST | `/api/dns-accounts/:id/update` | `/api/v1/d/dns-accounts/:id/update` | `openflare/tls/routers.go` | |
+| POST | `/api/dns-accounts/:id/delete` | `/api/v1/d/dns-accounts/:id/delete` | `openflare/tls/routers.go` | |
+| GET | `/api/pages/` | `/api/v1/d/pages/` | `openflare/pages/routers.go` | |
+| GET | `/api/pages/:id` | `/api/v1/d/pages/:id` | `openflare/pages/routers.go` | |
+| POST | `/api/pages/` | `/api/v1/d/pages/` | `openflare/pages/routers.go` | |
+| POST | `/api/pages/:id/update` | `/api/v1/d/pages/:id/update` | `openflare/pages/routers.go` | |
+| POST | `/api/pages/:id/delete` | `/api/v1/d/pages/:id/delete` | `openflare/pages/routers.go` | |
+| GET | `/api/pages/:id/deployments` | `/api/v1/d/pages/:id/deployments` | `openflare/pages/routers.go` | |
+| POST | `/api/pages/:id/deployments/upload` | `/api/v1/d/pages/:id/deployments/upload` | `openflare/pages/routers.go` | |
+| POST | `/api/pages/:id/deployments/:did/activate` | `/api/v1/d/pages/:id/deployments/:did/activate` | `openflare/pages/routers.go` | |
+| POST | `/api/pages/:id/deployments/:did/delete` | `/api/v1/d/pages/:id/deployments/:did/delete` | `openflare/pages/routers.go` | |
+| GET | `/api/pages/deployments/:did/files` | `/api/v1/d/pages/deployments/:did/files` | `openflare/pages/routers.go` | |
+| GET | `/api/dashboard/overview` | `/api/v1/d/dashboard/overview` | `openflare/dashboard/routers.go` | |
+| GET | `/api/apply-logs/` | `/api/v1/d/apply-logs/` | `openflare/apply_log/routers.go` | |
+| POST | `/api/apply-logs/cleanup` | `/api/v1/d/apply-logs/cleanup` | `openflare/apply_log/routers.go` | |
+| GET | `/api/access-logs/` | `/api/v1/d/access-logs/` | `openflare/observability/routers.go` | |
+| GET | `/api/access-logs/folds` | `/api/v1/d/access-logs/folds` | `openflare/observability/routers.go` | |
+| GET | `/api/access-logs/folds/ip-summary` | `/api/v1/d/access-logs/folds/ip-summary` | `openflare/observability/routers.go` | |
+| GET | `/api/access-logs/ip-summary` | `/api/v1/d/access-logs/ip-summary` | `openflare/observability/routers.go` | |
+| GET | `/api/access-logs/ip-summary/trend` | `/api/v1/d/access-logs/ip-summary/trend` | `openflare/observability/routers.go` | |
+| POST | `/api/access-logs/cleanup` | `/api/v1/d/access-logs/cleanup` | `openflare/observability/routers.go` | |
+| POST | `/api/uptimekuma/sync` | `/api/v1/d/uptimekuma/sync` | `openflare/option/routers.go` | |
+| GET | `/api/update/latest-release` | `/api/v1/d/update/latest-release` | `openflare/update/routers.go` | |
+| GET | `/api/update/logs/ws` | `/api/v1/d/update/logs/ws` | `openflare/update/routers.go` | |
+| POST | `/api/update/manual-upload` | `/api/v1/d/update/manual-upload` | `openflare/update/routers.go` | |
+| POST | `/api/update/manual-upgrade` | `/api/v1/d/update/manual-upgrade` | `openflare/update/routers.go` | |
+| POST | `/api/update/upgrade` | `/api/v1/d/update/upgrade` | `openflare/update/routers.go` | |
+
+### 12.4 节点协议端点（`/api/v1/agent|relay|tunnel/*`）
+
+| 方法 | 旧路径 | 当前路径 | 实现位置 | 备注 |
+|---|---|---|---|---|
+| POST | `/api/agent/nodes/register` | `/api/v1/agent/nodes/register` | `openflare/agent/routers.go` | |
+| GET | `/api/agent/ws` | `/api/v1/agent/ws` | `openflare/agent/routers.go` | |
+| POST | `/api/agent/nodes/heartbeat` | `/api/v1/agent/nodes/heartbeat` | `openflare/agent/routers.go` | compat 信封 |
+| GET | `/api/agent/config-versions/active` | `/api/v1/agent/config-versions/active` | `openflare/agent/routers.go` | |
+| GET | `/api/agent/pages/deployments/:id/package` | `/api/v1/agent/pages/deployments/:deployment_id/package` | `openflare/agent/routers.go` | 参数名变更 |
+| POST | `/api/agent/waf/ip-groups/sync` | `/api/v1/agent/waf/ip-groups/sync` | `openflare/agent/routers.go` | |
+| POST | `/api/agent/apply-logs` | `/api/v1/agent/apply-logs` | `openflare/agent/routers.go` | |
+| POST | `/api/relay/heartbeat` | `/api/v1/relay/heartbeat` | `openflare/relay/routers.go` | compat 信封 |
+| GET | `/api/relay/ws` | `/api/v1/relay/ws` | `openflare/relay/routers.go` | |
+| POST | `/api/flared/heartbeat` | `/api/v1/tunnel/heartbeat` | `openflare/flared/routers.go` | 路径更名 tunnel |
+| GET | `/api/flared/config/active` | `/api/v1/tunnel/config/active` | `openflare/flared/routers.go` | 路径更名 tunnel |
+| POST | `/api/flared/apply-log` | `/api/v1/tunnel/apply-log` | `openflare/flared/routers.go` | 路径更名 tunnel |
+| GET | `/api/flared/ws` | `/api/v1/tunnel/ws` | `openflare/flared/routers.go` | 路径更名 tunnel |
 
 ---
 

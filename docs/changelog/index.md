@@ -19,6 +19,7 @@ sidebar: false
 ### 移除
 
 - 移除 Wavelet 中从旧系统迁移但未实装的全局 API / Web / 敏感接口限流选项（`GlobalApiRateLimit*`、`GlobalWebRateLimit*`、`CriticalRateLimit*`）及相关校验与数据库种子。
+- 移除 `internal/apps/openflare/legacy/` 控制台兼容层、`compat/auth.go`（`OpenFlare-Token` JWT 桥接）及前端 `legacy-base.service.ts`；`openflare-server/web` 不再能对接当前 Wavelet 后端管理 API。
 
 ### 新增
 
@@ -31,7 +32,7 @@ sidebar: false
 - Wavelet WAF / 代理规则认证实装完整 PoW 配置面板：支持难度、算法、TTL 与路径/IP/UA 黑白名单编辑。
 - Wavelet WAF 新建/编辑规则组改用右侧 Sheet 抽屉，替代居中弹窗，与站点绑定等操作保持一致的 shadcn 侧栏交互。
 
-- 将 `openflare-server` 后端业务域迁移至 `Wavelet/internal/apps/openflare/`，通过 `/api/*` legacy 兼容层保持旧前端 API 路径不变。
+- 将 `openflare-server` 后端业务域迁移至 `Wavelet/internal/apps/openflare/`；管理控制台 API 挂载于 `/api/v1/d/*`，节点协议挂载于 `/api/v1/agent|relay|tunnel/*`。
 - 新增 OpenFlare 业务表 goose 迁移（`of_options`、`of_origins`、`of_proxy_routes`、`of_nodes`、`of_waf_*`、`of_tls_*`、`of_config_versions`、`of_pages_*`、`of_apply_logs` 等）。
 - 重叠职能复用 Wavelet 内置用户/OAuth/Cap/认证源能力；新增 `integration` 包覆盖认证、核心链路、安全、Agent 协议集成测试。
 - 修复 Wavelet 引入 `openflare` 模块后 `gomodule/redigo v2.0.0+incompatible` 导致 `redistore` 编译失败的问题。
@@ -40,19 +41,19 @@ sidebar: false
 - Agent heartbeat 恢复可观测性数据持久化（系统画像、指标快照、流量报表、健康事件等）。
 - Wavelet 默认数据库名由 `wavelet` 调整为 `openflare`（PostgreSQL、ClickHouse、SQLite 后备路径同步更新）。
 - Wavelet 默认 PostgreSQL `application_name` 由 `wavelet-server` 调整为 `openflare-server`，Redis 键前缀由 `wavelet:` 调整为 `openflare:`。
-- 实装 Agent WAF IP 组同步（heartbeat `waf_ip_groups` 增量下发与 `/api/agent/waf/ip-groups/sync`）。
-- 实装 Pages Agent 部署包下载（`/api/agent/pages/deployments/:deployment_id/package` 二进制响应）。
-- 全局 `OpenFlare-Token` 桥接至 legacy `/api/*` 管理端路由。
+- 实装 Agent WAF IP 组同步（heartbeat `waf_ip_groups` 增量下发与 `/api/v1/agent/waf/ip-groups/sync`）。
+- 实装 Pages Agent 部署包下载（`/api/v1/agent/pages/deployments/:deployment_id/package` 二进制响应）。
+
 - 实装访问日志单表查询层（列表、折叠、IP 汇总/趋势、地域统计）及 `(node_id, logged_at)` 复合索引。
-- 扩展 Relay/Flared heartbeat 载荷与可观测性持久化（frps 观测、健康事件）；新增 `of_node_obs_frpc` 单表。
+- 扩展 Relay/Tunnel heartbeat 载荷与可观测性持久化（frps 观测、健康事件）；新增 `of_node_obs_frpc` 单表。
 - Agent heartbeat 恢复 Geo 自动更新、访问日志地域解析与 90 天保留清理；对齐 config `support_files` 过滤规则。
-- 补全 OAuth 快捷路由（`/api/oauth/github`、`/api/oauth/wechat`、`/api/oauth/wechat/bind`、`/api/oauth/email/bind`）。
+- OAuth 登录/绑定统一由 Wavelet `/api/v1/oauth/:source/*` 提供；旧 `/api/oauth/*` 快捷路径未保留。
 - 新增 `internal/apps/openflare/tasks/` 集中承载 OpenFlare 定时/后台任务业务逻辑；调度已迁入 Wavelet Asynq 异步任务框架（`async_tasks.go` + `w_schedules` 种子迁移），含数据库可观测性自动清理、WAF IP 组周期同步、UptimeKuma 同步、ACME 证书自动续期。
 - Pages 部署包上传改为通过 Wavelet `upload.Ingest` 写入本地文件存储框架，部署记录关联 `upload_id`；Agent 下载改为从存储后端流式读取。
 - 实装数据库可观测性手动/自动清理、WAF IP 组订阅/自动同步与测试接口、UptimeKuma 监控同步、TLS ACME 申请/续期（lego DNS-01）。
 - 修复 Wavelet Agent WebSocket 未处理 `status` 消息导致 WS 模式下 `last_seen_at` 停止更新、节点超时显示离线的问题；列表「最近心跳」恢复显示「WS 已连接」。
 - 修复节点「强制同步」仍为 stub 导致始终返回「节点不在线或通过 WebSocket 发送同步指令失败」的问题。
-- 将 OpenFlare 管理控制台从 `openflare-server/web` 迁移至 `Wavelet/frontend/app/(main)/openflare/`，复用 Wavelet shadcn 组件与 Session 鉴权；新增 `LegacyOpenFlareBaseService` 对接 `/api/*` 业务 API。
+- 将 OpenFlare 管理控制台从 `openflare-server/web` 迁移至 `Wavelet/frontend/`，复用 Wavelet shadcn 组件与 Session 鉴权；Service 层对接 `/api/v1/d/*`（`OpenFlareBaseService`）。
 - 实装节点、代理规则（6 Section）、配置发布、WAF、网站/证书/DNS、Pages、源站、访问/应用日志、仪表盘、性能调优等业务页面；Admin 设置新增 OpenFlare 运维扩展 Tab。
 - 修复静态导出构建中 `useSearchParams` 未包裹 Suspense 的问题；`pnpm build:embed` 全量 46 页通过。
 - 补全前端迁移收尾：新增 `/openflare/about` 关于页与 `AboutService`；补全 `UpdateService` 升级流程（在线升级、手动上传、WebSocket 日志流）及顶栏版本升级入口。
@@ -79,11 +80,12 @@ sidebar: false
 - OpenFlare 路由注册统一收敛至 `internal/router/v1/openflare/`（`register_*.go` + `RegisterV1Routes`）；`internal/apps/openflare/*/routers.go` 仅保留 Handler 与业务逻辑。
 - 将 OpenFlare 路由注册包从 `internal/router/openflare/` 迁移至 `internal/router/v1/openflare/`，与 v1 路由分层目录结构对齐。
 - OpenFlare 管理端路由注册从 `RegisterCustomRoutes` 移至 `v1.RegisterV1Routes`，API 前缀由 `/api/v1/custom/openflare` 调整为 `/api/v1/openflare`。
-- OpenFlare 管理控制台 API 统一迁移至 `/api/v1/openflare/*`，响应格式对齐 Wavelet `{error_msg, data}` + `response.Abort*`。
-- `/api/*` 仅保留 Agent/Relay/Flared 节点协议路由（legacy `{success, message, data}` 信封）；控制台鉴权改为 `apiutil.AdminRequired()`。
-- 前端 OpenFlare Service 层由 `LegacyOpenFlareBaseService` 切换为 `OpenFlareBaseService`（`BaseService` + v1 路径）。
-- 为 OpenFlare v1 管理端 API 补充 Swagger 注解（`/api/v1/openflare/*`，约 99 个端点）。
-- 移除已无引用的 `internal/apps/openflare/auth/`、`compat/auth.go`、`compat/routes.go` 及前端 `legacy-base.service.ts`。
+- OpenFlare 管理控制台 API 统一迁移至 `/api/v1/d/*`，响应格式对齐 Wavelet `{error_msg, data}` + `response.Abort*`。
+- 节点协议路由迁移至 `/api/v1/agent|relay|tunnel/*`（`flared` 更名为 `tunnel`）；协议层保留 legacy `{success, message, data}` 信封。
+- 控制台鉴权改为 `apiutil.AdminRequired()`（Session / Access Token）。
+- 前端 OpenFlare Service 层切换为 `OpenFlareBaseService`（`BaseService` + `/api/v1/d/*`）。
+- 为 OpenFlare 管理端 API 补充 Swagger 注解（约 99 个端点）。
+- 移除已无引用的 `internal/apps/openflare/auth/`、`compat/routes.go`。
 
 ## [v2.3.4] - 2026-06-17
 
