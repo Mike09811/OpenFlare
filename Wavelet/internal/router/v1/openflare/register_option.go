@@ -15,7 +15,7 @@ func registerOptionRoutes(apiGroup *gin.RouterGroup) {
 	apiGroup.GET("/about", option.GetAboutHandler)
 
 	optionRoute := apiGroup.Group("/option")
-	optionRoute.Use(apiutil.AdminRequired())
+	optionRoute.Use(apiutil.AdminMiddlewares()...)
 	{
 		apiutil.RegisterCollection(optionRoute, "GET", option.ListOptionsHandler)
 		optionRoute.POST("/update", option.UpdateOptionHandler)
@@ -25,7 +25,7 @@ func registerOptionRoutes(apiGroup *gin.RouterGroup) {
 	}
 
 	uptimeKumaRoute := apiGroup.Group("/uptimekuma")
-	uptimeKumaRoute.Use(apiutil.AdminRequired())
+	uptimeKumaRoute.Use(apiutil.AdminMiddlewares()...)
 	{
 		uptimeKumaRoute.POST("/sync", option.SyncUptimeKumaHandler)
 	}

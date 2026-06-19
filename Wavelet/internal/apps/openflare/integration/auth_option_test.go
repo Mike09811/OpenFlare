@@ -4,8 +4,10 @@
 package integration
 
 import (
+	"bytes"
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/Rain-kl/Wavelet/internal/apps/admin"
@@ -120,10 +122,10 @@ func TestGETStatusReturnsSuccessEnvelope(t *testing.T) {
 	assert.NotEmpty(t, status.SystemName)
 }
 
-func TestGETOptionRequiresRootAuth(t *testing.T) {
+func TestGETOptionRequiresAdminAuth(t *testing.T) {
 	dbConn, r := setupAuthOptionIntegration(t)
 	commonToken := seedUserWithAccessToken(t, dbConn, "commonuser", "password123", false)
-	rootToken := seedUserWithAccessToken(t, dbConn, "rootuser", "password123", true)
+	adminToken := seedUserWithAccessToken(t, dbConn, "adminuser", "password123", true)
 
 	t.Run("unauthenticated", func(t *testing.T) {
 		w := performJSONRequest(t, r, http.MethodGet, apiPath("/option/"), nil, nil)
@@ -132,26 +134,42 @@ func TestGETOptionRequiresRootAuth(t *testing.T) {
 		assert.NotEmpty(t, resp.ErrorMsg)
 	})
 
-	t.Run("common user forbidden", func(t *testing.T) {
+	t.Run("non-admin user forbidden", func(t *testing.T) {
 		w := performJSONRequest(t, r, http.MethodGet, apiPath("/option/"), nil, adminAuthHeaders(commonToken))
 		assert.Equal(t, http.StatusNotFound, w.Code)
 		resp := decodeAPIResponse(t, w)
 		assert.Equal(t, admin.TokenAdminRequired, resp.ErrorMsg)
 	})
 
-	t.Run("root user allowed", func(t *testing.T) {
-		w := performJSONRequest(t, r, http.MethodGet, apiPath("/option/"), nil, adminAuthHeaders(rootToken))
+	t.Run("admin user allowed", func(t *testing.T) {
+		w := performJSONRequest(t, r, http.MethodGet, apiPath("/option/"), nil, adminAuthHeaders(adminToken))
 		assert.Equal(t, http.StatusOK, w.Code)
 		requireAPIOK(t, w)
 	})
 }
 
+func TestPOSTOptionUpdateRejectsInvalidParams(t *testing.T) {
+	dbConn, r := setupAuthOptionIntegration(t)
+	adminToken := seedUserWithAccessToken(t, dbConn, "adminuser", "password123", true)
+
+	req := httptest.NewRequest(http.MethodPost, apiPath("/option/update"), bytes.NewReader([]byte("{invalid")))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Access-Token", adminToken)
+
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	resp := decodeAPIResponse(t, w)
+	assert.NotEmpty(t, resp.ErrorMsg)
+}
+
 func TestGETNodesWithAccessToken(t *testing.T) {
 	dbConn, r := setupAuthOptionIntegration(t)
 	require.NoError(t, dbConn.AutoMigrate(&model.OpenFlareNode{}))
-	rootToken := seedUserWithAccessToken(t, dbConn, "admin", "password123", true)
+	adminToken := seedUserWithAccessToken(t, dbConn, "admin", "password123", true)
 
-	w := performJSONRequest(t, r, http.MethodGet, apiPath("/nodes/"), nil, adminAuthHeaders(rootToken))
+	w := performJSONRequest(t, r, http.MethodGet, apiPath("/nodes/"), nil, adminAuthHeaders(adminToken))
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	requireAPIOK(t, w)
@@ -159,7 +177,7 @@ func TestGETNodesWithAccessToken(t *testing.T) {
 
 func TestOptionHotReloadAfterUpdate(t *testing.T) {
 	dbConn, r := setupAuthOptionIntegration(t)
-	rootToken := seedUserWithAccessToken(t, dbConn, "admin", "password123", true)
+	adminToken := seedUserWithAccessToken(t, dbConn, "admin", "password123", true)
 
 	statusBefore := getStatusSystemName(t, r, nil)
 	assert.NotEmpty(t, statusBefore)
@@ -167,7 +185,7 @@ func TestOptionHotReloadAfterUpdate(t *testing.T) {
 	updateResp := performJSONRequest(t, r, http.MethodPost, apiPath("/option/update"), map[string]string{
 		"key":   "SystemName",
 		"value": "HotReloadIntegration",
-	}, adminAuthHeaders(rootToken))
+	}, adminAuthHeaders(adminToken))
 	assert.Equal(t, http.StatusOK, updateResp.Code)
 	requireAPIOK(t, updateResp)
 

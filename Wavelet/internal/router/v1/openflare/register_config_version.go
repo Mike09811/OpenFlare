@@ -11,7 +11,7 @@ import (
 
 func registerConfigVersionRoutes(apiGroup *gin.RouterGroup) {
 	configVersionGroup := apiGroup.Group("/config-versions")
-	configVersionGroup.Use(apiutil.AdminRequired())
+	configVersionGroup.Use(apiutil.AdminMiddlewares()...)
 	{
 		apiutil.RegisterCollection(configVersionGroup, "GET", config_version.ListConfigVersionsHandler)
 		configVersionGroup.GET("/active", config_version.GetActiveConfigVersionHandler)

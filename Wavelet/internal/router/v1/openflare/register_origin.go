@@ -11,7 +11,7 @@ import (
 
 func registerOriginRoutes(apiGroup *gin.RouterGroup) {
 	originRoute := apiGroup.Group("/origins")
-	originRoute.Use(apiutil.AdminRequired())
+	originRoute.Use(apiutil.AdminMiddlewares()...)
 	{
 		apiutil.RegisterCollection(originRoute, "GET", origin.GetOrigins)
 		originRoute.GET("/:id", origin.GetOrigin)

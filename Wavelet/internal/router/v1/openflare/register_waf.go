@@ -11,7 +11,7 @@ import (
 
 func registerWAFRoutes(apiGroup *gin.RouterGroup) {
 	wafRoute := apiGroup.Group("/waf")
-	wafRoute.Use(apiutil.AdminRequired())
+	wafRoute.Use(apiutil.AdminMiddlewares()...)
 	{
 		wafRoute.GET("/ip-groups", waf.ListIPGroupsHandler)
 		wafRoute.GET("/ip-groups/:id", waf.GetIPGroupHandler)

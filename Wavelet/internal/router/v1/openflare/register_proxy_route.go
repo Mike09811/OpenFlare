@@ -11,7 +11,7 @@ import (
 
 func registerProxyRouteRoutes(apiGroup *gin.RouterGroup) {
 	proxyRouteGroup := apiGroup.Group("/proxy-routes")
-	proxyRouteGroup.Use(apiutil.AdminRequired())
+	proxyRouteGroup.Use(apiutil.AdminMiddlewares()...)
 	{
 		apiutil.RegisterCollection(proxyRouteGroup, "GET", proxy_route.GetProxyRoutes)
 		proxyRouteGroup.GET("/:id", proxy_route.GetProxyRouteHandler)
