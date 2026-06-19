@@ -24,6 +24,7 @@ sidebar: false
 
 ### 新增
 
+- 新增 `internal/db/batchwriter` 通用批量写入框架，支持各业务域独立队列实例、按条数/时间 flush、非阻塞入队与优雅停机；业务层尚未接入。
 
 ### 变更
 
