@@ -40,7 +40,6 @@ import {
   ProxyRouteService,
   StatusService,
   TlsCertificateService,
-  UpdateService,
   UptimeKumaService,
   WafService,
   WebsiteService,
@@ -77,7 +76,6 @@ const services = {
   openflareAccessLog: AccessLogService,
   openflareOption: OptionService,
   openflareUptimeKuma: UptimeKumaService,
-  openflareUpdate: UpdateService,
   openflareStatus: StatusService,
 } as const;
 
@@ -199,7 +197,6 @@ export {
   AccessLogService,
   OptionService,
   StatusService,
-  UpdateService,
   UptimeKumaService,
 } from './openflare';
 
@@ -227,6 +224,5 @@ export type {
   OptionItem,
   GeoIPLookupResult,
   DatabaseCleanupResult,
-  LatestReleaseInfo,
   OpenFlarePublicStatus,
 } from './openflare';

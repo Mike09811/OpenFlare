@@ -15,7 +15,6 @@ export { OriginService } from './origin.service';
 export { AccessLogService } from './access-log.service';
 export { OptionService } from './option.service';
 export { UptimeKumaService } from './uptimekuma.service';
-export { UpdateService } from './update.service';
 export { StatusService } from './status.service';
 
 export type {
@@ -93,11 +92,7 @@ export type {
   DatabaseCleanupPayload,
   DatabaseCleanupResult,
   DatabaseCleanupTarget,
-  LatestReleaseInfo,
   OpenFlarePublicStatus,
-  UpgradeLogItem,
-  UpgradeStreamSnapshot,
-  UploadedServerBinaryInfo,
   OriginDetail,
   OriginItem,
   OriginMutationPayload,
@@ -128,7 +123,6 @@ import {DnsAccountService} from './dns-account.service';
 import {NodeService} from './node.service';
 import {OptionService} from './option.service';
 import {StatusService} from './status.service';
-import {UpdateService} from './update.service';
 import {UptimeKumaService} from './uptimekuma.service';
 import {OriginService} from './origin.service';
 import {PagesService} from './pages.service';
@@ -153,6 +147,5 @@ export const openflareServices = {
   accessLog: AccessLogService,
   option: OptionService,
   uptimeKuma: UptimeKumaService,
-  update: UpdateService,
   status: StatusService,
 } as const;

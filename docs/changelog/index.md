@@ -19,6 +19,7 @@ sidebar: false
 ### 移除
 
 - 移除 Wavelet 中从旧系统迁移但未实装的全局 API / Web / 敏感接口限流选项（`GlobalApiRateLimit*`、`GlobalWebRateLimit*`、`CriticalRateLimit*`）及相关校验与数据库种子。
+- 移除旧 OpenFlare 服务升级兼容层（`/api/v1/openflare/update/*`）；统一使用 Wavelet 框架 `admin/updater`（`/api/v1/admin/update`）。
 
 ### 新增
 
