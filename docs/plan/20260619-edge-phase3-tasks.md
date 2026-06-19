@@ -1,6 +1,6 @@
 # 边缘运行时 Phase 3 — 任务拆解
 
-> **状态**：Batch 1 + Batch 2 已完成（2026-06-19）
+> **状态**：Batch 3 已完成（2026-06-19）
 > **前置**：[边缘运行时重构设计](../design/edge-runtime-refactor.md) Phase 0–2 已完成
 
 ---
@@ -45,9 +45,31 @@ Batch 2（串行，依赖 Batch 1 或需独立评审）
 
 ---
 
-## 验收标准（Batch 1）
+## Batch 3 — 并行任务（已完成）
+
+| ID | 任务 | 修改范围 | 状态 |
+| --- | --- | --- | --- |
+| **T6** | Server 侧协议统一 | `pkg/protocol/` + `internal/apps/openflare/{agent,relay,flared}/` | ✅ 子代理 F |
+| **T7** | `wsclient` 收敛 | `edge/wsclient/` + 三组件 `wsclient/` 薄包装 | ✅ 子代理 G |
+
+### T6 要点
+
+- `openflare/agent` 的 `NodePayload`、观测类型、WAF 类型改为 `pkg/protocol` 别名
+- 保留 Server 专有响应：`RegistrationResponse`（`access_token`）、`HeartbeatResponse`（含 `*model.OpenFlareNode`）
+- `openflare/relay`、`openflare/flared` 心跳/配置载荷改为 `pkg/protocol` 别名
+
+### T7 要点
+
+- 新增 `internal/apps/edge/wsclient/`，配置表驱动（HeaderKey + WSPath）
+- Agent 保留 `SendStatus` + `protocol.WebSocketConnection` 适配
+- relay/flared/agent 的 `wsclient/` 仅保留 `New()` 工厂
+
+---
+
+## 验收标准
 
 ```bash
 go build ./cmd/agent ./cmd/relay ./cmd/flared
-go test ./internal/apps/edge/... ./internal/apps/agent/... ./internal/apps/relay/... ./internal/apps/flared/... -count=1
+go test ./internal/apps/edge/... ./internal/apps/agent/... ./internal/apps/relay/... ./internal/apps/flared/... ./internal/apps/openflare/... ./pkg/protocol/... -count=1
+make code-check
 ```

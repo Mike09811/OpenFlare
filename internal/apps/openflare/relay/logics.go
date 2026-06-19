@@ -16,59 +16,6 @@ import (
 
 const nodeStatusOnline = "online"
 
-// ProxyStat describes a single frps proxy reported by the relay.
-type ProxyStat struct {
-	Name          string `json:"name"`
-	Type          string `json:"type"`
-	Status        string `json:"status"`
-	ClientVersion string `json:"client_version"`
-	LastStartTime string `json:"last_start_time"`
-	LastCloseTime string `json:"last_close_time"`
-	ClientAddr    string `json:"client_addr"`
-}
-
-// HeartbeatPayload is sent by OpenFlareRelay on each heartbeat.
-type HeartbeatPayload struct {
-	Version         string                    `json:"version"`
-	ExtVersion      string                    `json:"frp_version"`
-	RelayStatus     string                    `json:"relay_status"`
-	FrpsConnCount   int                       `json:"frps_connections"`
-	FrpsProxyCount  int                       `json:"frps_proxy_count"`
-	FrpsClientCount int                       `json:"frps_client_count"`
-	FrpsProxies     []ProxyStat               `json:"frps_proxies,omitempty"`
-	Name            string                    `json:"name"`
-	IP              string                    `json:"ip"`
-	Profile         *agent.NodeSystemProfile  `json:"profile,omitempty"`
-	Snapshot        *agent.NodeMetricSnapshot `json:"snapshot,omitempty"`
-	HealthEvents    []agent.NodeHealthEvent   `json:"health_events,omitempty"`
-}
-
-// Config is the frps configuration sent to the relay.
-type Config struct {
-	BindPort         int    `json:"bind_port"`
-	VhostHTTPPort    int    `json:"vhost_http_port"`
-	AuthToken        string `json:"auth_token"`
-	LogLevel         string `json:"log_level"`
-	WebServerEnabled bool   `json:"web_server_enabled"`
-}
-
-// Settings contains runtime settings for relay and flared clients.
-type Settings struct {
-	HeartbeatInterval       int    `json:"heartbeat_interval"`
-	WebsocketUpgradeEnabled bool   `json:"websocket_upgrade_enabled"`
-	AutoUpdate              bool   `json:"auto_update"`
-	UpdateRepo              string `json:"update_repo"`
-	UpdateNow               bool   `json:"update_now"`
-	UpdateChannel           string `json:"update_channel"`
-	UpdateTag               string `json:"update_tag"`
-}
-
-// HeartbeatResponse is returned from a relay heartbeat.
-type HeartbeatResponse struct {
-	RelayConfig   *Config   `json:"relay_config"`
-	RelaySettings *Settings `json:"relay_settings"`
-}
-
 // Heartbeat processes a relay heartbeat, updates node status, and returns config.
 func Heartbeat(ctx context.Context, node *model.OpenFlareNode, payload HeartbeatPayload) (*HeartbeatResponse, error) {
 	if node == nil {

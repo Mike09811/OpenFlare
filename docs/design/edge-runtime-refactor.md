@@ -34,6 +34,7 @@ internal/apps/edge/
 ├── logging/          # Setup、ParseLevel
 ├── nodeip/           # Detect、DetectLocal（可注入 LookupOutboundIP）
 ├── httpclient/       # 基础 HTTP 客户端（鉴权头可配置）
+├── wsclient/         # 基础 WebSocket 客户端（组件 Preset 驱动 HeaderKey + WSPath）
 ├── updater/          # GitHub Release 自更新 + 二进制替换重启
 ├── heartbeat/        # TryAutoUpdate 统一入口
 └── runner/           # WS 重连循环、SleepContext
@@ -49,7 +50,7 @@ internal/apps/edge/
 | Relay | `frps/`、`observability/` |
 | Flared | `frpc/`、`sync/`（tunnel） |
 
-各组件 `updater/`、`httpclient/` 变为类型别名 + `New()` 工厂函数。
+各组件 `updater/`、`httpclient/`、`wsclient/` 变为类型别名 + `New()` 工厂函数。
 
 ---
 
@@ -70,6 +71,14 @@ edgeupdater.New(edgeupdater.Config{
 ```go
 edgehttp.New(baseURL, token, timeout, "X-Agent-Token")   // Agent/Relay
 edgehttp.New(baseURL, token, timeout, "X-Tunnel-Token")  // Flared
+```
+
+### WebSocket 客户端
+
+```go
+edgews.New(edgews.PresetAgent, baseURL, token, timeout)   // HeaderKey=X-Agent-Token,  /api/v1/agent/ws
+edgews.New(edgews.PresetRelay, baseURL, token, timeout)   // HeaderKey=X-Agent-Token,  /api/v1/relay/ws
+edgews.New(edgews.PresetFlared, baseURL, token, timeout)  // HeaderKey=X-Tunnel-Token, /api/v1/tunnel/ws
 ```
 
 ### 节点 IP 探测
@@ -104,12 +113,15 @@ nodeip.Detect() // outbound → local 回退
 - [x] `heartbeat/cycle.go` — Agent HTTP 心跳周期从 runner 下沉（payload 构建、同步、自动更新）
 - [x] `pkg/protocol/agent.go` — Agent 客户端协议类型迁入公共包，`internal/apps/agent/protocol` 保留别名 re-export
 
+## 已完成（Phase 3 Batch 3）
+
+- [x] `edge/wsclient` — Agent/Relay/Flared WebSocket 传输层收敛（Preset 配置表 + `AgentConnection` 适配 `protocol.WebSocketConnection`）
+- [x] Server 侧协议统一 — `internal/apps/openflare/{agent,relay,flared}` 心跳/观测类型改为 `pkg/protocol` 别名
+
 ## 可选后续
 
 | 项 | 说明 |
 | --- | --- |
-| Server 侧协议统一 | 评估 `internal/apps/openflare/agent` 与 `pkg/protocol` 类型去重 |
-| `wsclient` 薄包装收敛 | relay/flared/agent wsclient 配置表化 |
 
 ---
 

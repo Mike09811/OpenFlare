@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/agent"
-	"github.com/Rain-kl/Wavelet/internal/apps/openflare/relay"
 	"github.com/Rain-kl/Wavelet/internal/db"
 	"github.com/Rain-kl/Wavelet/internal/model"
 	"gorm.io/gorm"
@@ -23,73 +22,6 @@ const (
 	applyResultWarn  = "warning"
 	applyResultFail  = "failed"
 )
-
-// HeartbeatPayload is sent by OpenFlared on each heartbeat.
-type HeartbeatPayload struct {
-	ClientVersion   string           `json:"client_version"`
-	FrpVersion      string           `json:"frp_version"`
-	IP              string           `json:"ip"`
-	TunnelStatus    string           `json:"tunnel_status"`
-	ConnectedRelays []ConnectedRelay `json:"connected_relays"`
-	CurrentVersion  string           `json:"current_version"`
-	CurrentChecksum string           `json:"current_checksum"`
-}
-
-// ConnectedRelay describes relay connection status from the client.
-type ConnectedRelay struct {
-	RelayNodeID string `json:"relay_node_id"`
-	Status      string `json:"status"`
-	ProxyCount  int    `json:"proxy_count"`
-}
-
-// ActiveConfigMeta summarizes the active config version.
-type ActiveConfigMeta struct {
-	Version  string `json:"version"`
-	Checksum string `json:"checksum"`
-}
-
-// HeartbeatResponse is returned to the OpenFlared client.
-type HeartbeatResponse struct {
-	ActiveConfig   *ActiveConfigMeta `json:"active_config"`
-	TunnelSettings *relay.Settings   `json:"tunnel_settings"`
-}
-
-// TunnelConfigResponse is the full tunnel routing config sent to the client.
-type TunnelConfigResponse struct {
-	Version  string       `json:"version"`
-	Checksum string       `json:"checksum"`
-	Relays   []RelayInfo  `json:"relays"`
-	Proxies  []ProxyEntry `json:"proxies"`
-}
-
-// RelayInfo describes a relay the client should connect to.
-type RelayInfo struct {
-	RelayNodeID string `json:"relay_node_id"`
-	Address     string `json:"address"`
-	AuthToken   string `json:"auth_token"`
-	ProxyURL    string `json:"proxy_url"`
-}
-
-// ProxyEntry describes one frpc proxy definition.
-type ProxyEntry struct {
-	Name          string   `json:"name"`
-	Type          string   `json:"type"`
-	LocalAddr     string   `json:"local_addr"`
-	LocalPort     int      `json:"local_port"`
-	CustomDomains []string `json:"custom_domains"`
-}
-
-// ApplyLogPayload is the apply result reported by OpenFlared.
-type ApplyLogPayload struct {
-	NodeID              string `json:"node_id"`
-	Version             string `json:"version"`
-	Result              string `json:"result"`
-	Message             string `json:"message"`
-	Checksum            string `json:"checksum"`
-	MainConfigChecksum  string `json:"main_config_checksum"`
-	RouteConfigChecksum string `json:"route_config_checksum"`
-	SupportFileCount    int    `json:"support_file_count"`
-}
 
 // Heartbeat processes an OpenFlared heartbeat and returns runtime settings.
 func Heartbeat(ctx context.Context, node *model.OpenFlareNode, payload HeartbeatPayload) (*HeartbeatResponse, error) {
