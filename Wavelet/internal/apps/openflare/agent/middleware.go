@@ -6,7 +6,7 @@ package agent
 import (
 	"strings"
 
-	"github.com/Rain-kl/Wavelet/internal/apps/openflare/compat"
+	"github.com/Rain-kl/Wavelet/internal/common/response"
 	"github.com/Rain-kl/Wavelet/internal/model"
 	"github.com/gin-gonic/gin"
 )
@@ -22,8 +22,7 @@ func AgentAuth() gin.HandlerFunc {
 		token := strings.TrimSpace(c.GetHeader(agentTokenHeader))
 		node, err := AuthenticateAccessToken(c.Request.Context(), token)
 		if err != nil {
-			compat.Unauthorized(c, errInvalidAgentToken)
-			c.Abort()
+			response.AbortUnauthorized(c, errInvalidAgentToken)
 			return
 		}
 		c.Set(agentNodeContextKey, node)
@@ -41,8 +40,7 @@ func AgentRegisterAuth() gin.HandlerFunc {
 			return
 		}
 		if err := ValidateDiscoveryToken(c.Request.Context(), token); err != nil {
-			compat.Unauthorized(c, errInvalidDiscoveryToken)
-			c.Abort()
+			response.AbortUnauthorized(c, errInvalidDiscoveryToken)
 			return
 		}
 		c.Set("discovery_enabled", true)

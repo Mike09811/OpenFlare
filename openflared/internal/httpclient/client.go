@@ -15,9 +15,8 @@ import (
 )
 
 type APIResponse[T any] struct {
-	Success bool   `json:"success"`
-	Message string `json:"message"`
-	Data    T      `json:"data"`
+	ErrorMsg string `json:"error_msg"`
+	Data     T      `json:"data"`
 }
 
 type Client struct {
@@ -41,8 +40,8 @@ func (c *Client) Heartbeat(ctx context.Context, payload service.FlaredHeartbeatP
 	if err := c.postJSON(ctx, "/api/v1/tunnel/heartbeat", payload, &resp); err != nil {
 		return nil, err
 	}
-	if !resp.Success {
-		return nil, errors.New(resp.Message)
+	if err := apiError(resp.ErrorMsg); err != nil {
+		return nil, err
 	}
 	return &resp.Data, nil
 }
@@ -52,8 +51,8 @@ func (c *Client) GetActiveConfig(ctx context.Context) (*service.FlaredTunnelConf
 	if err := c.getJSON(ctx, "/api/v1/tunnel/config/active", &resp); err != nil {
 		return nil, err
 	}
-	if !resp.Success {
-		return nil, errors.New(resp.Message)
+	if err := apiError(resp.ErrorMsg); err != nil {
+		return nil, err
 	}
 	return &resp.Data, nil
 }
@@ -63,10 +62,7 @@ func (c *Client) ReportApplyLog(ctx context.Context, payload service.ApplyLogPay
 	if err := c.postJSON(ctx, "/api/v1/tunnel/apply-log", payload, &resp); err != nil {
 		return err
 	}
-	if !resp.Success {
-		return errors.New(resp.Message)
-	}
-	return nil
+	return apiError(resp.ErrorMsg)
 }
 
 func (c *Client) SetToken(token string) {
@@ -109,25 +105,39 @@ func (c *Client) do(req *http.Request, target any) error {
 			slog.Error("failed to close response body", "error", err)
 		}
 	}(res.Body)
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		slog.Error("http response read failed", "method", req.Method, "path", req.URL.Path, "error", err)
+		return err
+	}
 	if res.StatusCode != http.StatusOK {
 		slog.Warn("http request returned non-200", "method", req.Method, "path", req.URL.Path, "status", res.Status)
-		return errors.New(res.Status)
+		return readBodyError(body, res.Status)
 	}
 	if target == nil {
-		var wrapper APIResponse[json.RawMessage]
-		if err = json.NewDecoder(res.Body).Decode(&wrapper); err != nil {
-			slog.Error("http response decode failed", "method", req.Method, "path", req.URL.Path, "error", err)
-			return err
-		}
-		if !wrapper.Success {
-			slog.Warn("http api response failed", "method", req.Method, "path", req.URL.Path, "message", wrapper.Message)
-			return errors.New(wrapper.Message)
-		}
 		return nil
 	}
-	if err = json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err = json.Unmarshal(body, target); err != nil {
 		slog.Error("http response decode failed", "method", req.Method, "path", req.URL.Path, "error", err)
 		return err
 	}
 	return nil
+}
+
+func apiError(msg string) error {
+	if strings.TrimSpace(msg) == "" {
+		return nil
+	}
+	return errors.New(msg)
+}
+
+func readBodyError(body []byte, fallback string) error {
+	var errBody struct {
+		ErrorMsg string `json:"error_msg"`
+	}
+	if err := json.Unmarshal(body, &errBody); err == nil && strings.TrimSpace(errBody.ErrorMsg) != "" {
+		return errors.New(errBody.ErrorMsg)
+	}
+	return errors.New(fallback)
 }

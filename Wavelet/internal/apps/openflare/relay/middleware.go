@@ -8,7 +8,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/Rain-kl/Wavelet/internal/apps/openflare/compat"
+	"github.com/Rain-kl/Wavelet/internal/common/response"
 	"github.com/Rain-kl/Wavelet/internal/model"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -22,13 +22,11 @@ func RelayAuth() gin.HandlerFunc {
 		token := strings.TrimSpace(c.GetHeader("X-Agent-Token"))
 		node, err := authenticateAccessToken(c.Request.Context(), token)
 		if err != nil {
-			compat.Unauthorized(c, errAgentTokenInvalid)
-			c.Abort()
+			response.AbortUnauthorized(c, errAgentTokenInvalid)
 			return
 		}
 		if node.NodeType != "tunnel_relay" {
-			compat.Forbidden(c, errRelayNodeTypeMismatch)
-			c.Abort()
+			response.AbortForbidden(c, errRelayNodeTypeMismatch)
 			return
 		}
 		c.Set(ctxRelayNodeKey, node)

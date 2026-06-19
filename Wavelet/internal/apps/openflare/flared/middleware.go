@@ -8,7 +8,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/Rain-kl/Wavelet/internal/apps/openflare/compat"
+	"github.com/Rain-kl/Wavelet/internal/common/response"
 	"github.com/Rain-kl/Wavelet/internal/model"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -22,13 +22,11 @@ func TunnelAuth() gin.HandlerFunc {
 		token := strings.TrimSpace(c.GetHeader("X-Tunnel-Token"))
 		node, err := authenticateAccessToken(c.Request.Context(), token)
 		if err != nil {
-			compat.Unauthorized(c, errTunnelTokenInvalid)
-			c.Abort()
+			response.AbortUnauthorized(c, errTunnelTokenInvalid)
 			return
 		}
 		if node.NodeType != "tunnel_client" {
-			compat.Forbidden(c, errTunnelNodeTypeMismatch)
-			c.Abort()
+			response.AbortForbidden(c, errTunnelNodeTypeMismatch)
 			return
 		}
 		c.Set(ctxFlaredNodeKey, node)

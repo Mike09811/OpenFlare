@@ -37,25 +37,25 @@ func (c *Client) RegisterNode(ctx context.Context, payload protocol.NodePayload)
 	if err := c.postJSON(ctx, "/api/v1/agent/nodes/register", payload, &resp); err != nil {
 		return nil, err
 	}
-	if !resp.Success {
-		return nil, errors.New(resp.Message)
+	if err := apiError(resp.ErrorMsg); err != nil {
+		return nil, err
 	}
 	slog.Debug("http register node response", "node_id", resp.Data.NodeID)
 	return &resp.Data, nil
 }
 
 func (c *Client) Heartbeat(ctx context.Context, payload protocol.NodePayload) (*protocol.HeartbeatResult, error) {
-	resp := protocol.HeartbeatAPIResponse{}
+	resp := protocol.APIResponse[protocol.HeartbeatData]{}
 	if err := c.postJSON(ctx, "/api/v1/agent/nodes/heartbeat", payload, &resp); err != nil {
 		return nil, err
 	}
-	if !resp.Success {
-		return nil, errors.New(resp.Message)
+	if err := apiError(resp.ErrorMsg); err != nil {
+		return nil, err
 	}
 	return &protocol.HeartbeatResult{
-		AgentSettings: resp.AgentSettings,
-		ActiveConfig:  resp.ActiveConfig,
-		WAFIPGroups:   resp.WAFIPGroups,
+		AgentSettings: resp.Data.AgentSettings,
+		ActiveConfig:  resp.Data.ActiveConfig,
+		WAFIPGroups:   resp.Data.WAFIPGroups,
 	}, nil
 }
 
@@ -64,8 +64,8 @@ func (c *Client) GetActiveConfig(ctx context.Context) (*protocol.ActiveConfigRes
 	if err := c.getJSON(ctx, "/api/v1/agent/config-versions/active", &resp); err != nil {
 		return nil, err
 	}
-	if !resp.Success {
-		return nil, errors.New(resp.Message)
+	if err := apiError(resp.ErrorMsg); err != nil {
+		return nil, err
 	}
 	slog.Debug("http get active config response", "version", resp.Data.Version, "checksum", resp.Data.Checksum, "support_files", len(resp.Data.SupportFiles))
 	return &resp.Data, nil
@@ -73,7 +73,11 @@ func (c *Client) GetActiveConfig(ctx context.Context) (*protocol.ActiveConfigRes
 
 func (c *Client) ReportApplyLog(ctx context.Context, payload protocol.ApplyLogPayload) error {
 	slog.Debug("http report apply log request", "node_id", payload.NodeID, "version", payload.Version, "result", payload.Result)
-	return c.postJSON(ctx, "/api/v1/agent/apply-logs", payload, nil)
+	resp := protocol.APIResponse[json.RawMessage]{}
+	if err := c.postJSON(ctx, "/api/v1/agent/apply-logs", payload, &resp); err != nil {
+		return err
+	}
+	return apiError(resp.ErrorMsg)
 }
 
 func (c *Client) SyncWAFIPGroups(ctx context.Context, payload protocol.WAFIPGroupSyncRequest) (*protocol.WAFIPGroupSyncResponse, error) {
@@ -81,8 +85,8 @@ func (c *Client) SyncWAFIPGroups(ctx context.Context, payload protocol.WAFIPGrou
 	if err := c.postJSON(ctx, "/api/v1/agent/waf/ip-groups/sync", payload, &resp); err != nil {
 		return nil, err
 	}
-	if !resp.Success {
-		return nil, errors.New(resp.Message)
+	if err := apiError(resp.ErrorMsg); err != nil {
+		return nil, err
 	}
 	return &resp.Data, nil
 }
@@ -99,7 +103,7 @@ func (c *Client) DownloadPagesDeploymentPackage(ctx context.Context, deploymentI
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		return nil, errors.New(res.Status)
+		return nil, readHTTPError(res)
 	}
 	return io.ReadAll(res.Body)
 }
@@ -144,25 +148,47 @@ func (c *Client) do(req *http.Request, target any) error {
 			slog.Error("failed to close response body", "error", err)
 		}
 	}(res.Body)
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		slog.Error("http response read failed", "method", req.Method, "path", req.URL.Path, "error", err)
+		return err
+	}
 	if res.StatusCode != http.StatusOK {
 		slog.Warn("http request returned non-200", "method", req.Method, "path", req.URL.Path, "status", res.Status)
-		return errors.New(res.Status)
+		return readBodyError(body, res.Status)
 	}
 	if target == nil {
-		var wrapper protocol.APIResponse[json.RawMessage]
-		if err = json.NewDecoder(res.Body).Decode(&wrapper); err != nil {
-			slog.Error("http response decode failed", "method", req.Method, "path", req.URL.Path, "error", err)
-			return err
-		}
-		if !wrapper.Success {
-			slog.Warn("http api response failed", "method", req.Method, "path", req.URL.Path, "message", wrapper.Message)
-			return errors.New(wrapper.Message)
-		}
 		return nil
 	}
-	if err = json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err = json.Unmarshal(body, target); err != nil {
 		slog.Error("http response decode failed", "method", req.Method, "path", req.URL.Path, "error", err)
 		return err
 	}
 	return nil
+}
+
+func apiError(msg string) error {
+	if strings.TrimSpace(msg) == "" {
+		return nil
+	}
+	return errors.New(msg)
+}
+
+func readHTTPError(res *http.Response) error {
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return errors.New(res.Status)
+	}
+	return readBodyError(body, res.Status)
+}
+
+func readBodyError(body []byte, fallback string) error {
+	var errBody struct {
+		ErrorMsg string `json:"error_msg"`
+	}
+	if err := json.Unmarshal(body, &errBody); err == nil && strings.TrimSpace(errBody.ErrorMsg) != "" {
+		return errors.New(errBody.ErrorMsg)
+	}
+	return errors.New(fallback)
 }

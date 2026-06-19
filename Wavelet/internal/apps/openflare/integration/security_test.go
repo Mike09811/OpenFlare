@@ -108,7 +108,7 @@ func TestSecurityWAFTLSMigrationFlow(t *testing.T) {
 	)
 
 	t.Run("WAF rule group create", func(t *testing.T) {
-		rec := performLegacyRequest(t, engine, http.MethodPost, apiPath("/waf/rule-groups"), map[string]any{
+		rec := performJSONRequest(t, engine, http.MethodPost, apiPath("/waf/rule-groups"), map[string]any{
 			"name":              "edge-security",
 			"enabled":           true,
 			"block_status_code": 403,
@@ -129,7 +129,7 @@ func TestSecurityWAFTLSMigrationFlow(t *testing.T) {
 	})
 
 	t.Run("WAF rule group list includes global and custom groups", func(t *testing.T) {
-		rec := performLegacyRequest(t, engine, http.MethodGet, apiPath("/waf/rule-groups"), nil, adminAuthHeaders(seed.Token))
+		rec := performJSONRequest(t, engine, http.MethodGet, apiPath("/waf/rule-groups"), nil, adminAuthHeaders(seed.Token))
 		require.Equal(t, http.StatusOK, rec.Code)
 
 		resp := requireAPIOK(t, rec)
@@ -154,7 +154,7 @@ func TestSecurityWAFTLSMigrationFlow(t *testing.T) {
 	})
 
 	t.Run("WAF rule group get detail", func(t *testing.T) {
-		rec := performLegacyRequest(
+		rec := performJSONRequest(
 			t,
 			engine,
 			http.MethodGet,
@@ -171,7 +171,7 @@ func TestSecurityWAFTLSMigrationFlow(t *testing.T) {
 	})
 
 	t.Run("WAF rule group update", func(t *testing.T) {
-		rec := performLegacyRequest(
+		rec := performJSONRequest(
 			t,
 			engine,
 			http.MethodPost,
@@ -193,7 +193,7 @@ func TestSecurityWAFTLSMigrationFlow(t *testing.T) {
 	})
 
 	t.Run("WAF IP group create", func(t *testing.T) {
-		rec := performLegacyRequest(t, engine, http.MethodPost, apiPath("/waf/ip-groups"), map[string]any{
+		rec := performJSONRequest(t, engine, http.MethodPost, apiPath("/waf/ip-groups"), map[string]any{
 			"name":    "blocked-ips",
 			"type":    "manual",
 			"enabled": true,
@@ -211,7 +211,7 @@ func TestSecurityWAFTLSMigrationFlow(t *testing.T) {
 	})
 
 	t.Run("create proxy route for WAF binding", func(t *testing.T) {
-		rec := performLegacyRequest(t, engine, http.MethodPost, apiPath("/proxy-routes/"), map[string]any{
+		rec := performJSONRequest(t, engine, http.MethodPost, apiPath("/proxy-routes/"), map[string]any{
 			"site_name":  "security-site",
 			"domain":     "security.example.com",
 			"origin_url": "http://origin.security.internal:8080",
@@ -227,7 +227,7 @@ func TestSecurityWAFTLSMigrationFlow(t *testing.T) {
 	})
 
 	t.Run("bind WAF rule group to proxy route", func(t *testing.T) {
-		rec := performLegacyRequest(
+		rec := performJSONRequest(
 			t,
 			engine,
 			http.MethodPost,
@@ -250,7 +250,7 @@ func TestSecurityWAFTLSMigrationFlow(t *testing.T) {
 	})
 
 	t.Run("verify site rule groups binding", func(t *testing.T) {
-		rec := performLegacyRequest(
+		rec := performJSONRequest(
 			t,
 			engine,
 			http.MethodGet,
@@ -275,7 +275,7 @@ func TestSecurityWAFTLSMigrationFlow(t *testing.T) {
 	t.Run("create TLS certificate with PEM", func(t *testing.T) {
 		certPEM, keyPEM := generateSelfSignedCertificatePair(t, []string{"security.example.com"})
 
-		rec := performLegacyRequest(t, engine, http.MethodPost, apiPath("/tls-certificates/"), map[string]any{
+		rec := performJSONRequest(t, engine, http.MethodPost, apiPath("/tls-certificates/"), map[string]any{
 			"name":     "security-cert",
 			"cert_pem": certPEM,
 			"key_pem":  keyPEM,
@@ -292,7 +292,7 @@ func TestSecurityWAFTLSMigrationFlow(t *testing.T) {
 	})
 
 	t.Run("create managed domain", func(t *testing.T) {
-		rec := performLegacyRequest(t, engine, http.MethodPost, apiPath("/managed-domains/"), map[string]any{
+		rec := performJSONRequest(t, engine, http.MethodPost, apiPath("/managed-domains/"), map[string]any{
 			"domain":  "security.example.com",
 			"cert_id": certID,
 			"enabled": true,
@@ -310,7 +310,7 @@ func TestSecurityWAFTLSMigrationFlow(t *testing.T) {
 	})
 
 	t.Run("create DNS account", func(t *testing.T) {
-		rec := performLegacyRequest(t, engine, http.MethodPost, apiPath("/dns-accounts/"), map[string]any{
+		rec := performJSONRequest(t, engine, http.MethodPost, apiPath("/dns-accounts/"), map[string]any{
 			"name":          "cloudflare-dns",
 			"type":          "cloudflare",
 			"authorization": "test-api-token-value",
@@ -330,7 +330,7 @@ func TestSecurityWAFTLSMigrationFlow(t *testing.T) {
 	})
 
 	t.Run("WAF rule group delete", func(t *testing.T) {
-		rec := performLegacyRequest(
+		rec := performJSONRequest(
 			t,
 			engine,
 			http.MethodPost,
@@ -341,7 +341,7 @@ func TestSecurityWAFTLSMigrationFlow(t *testing.T) {
 		require.Equal(t, http.StatusOK, rec.Code)
 		requireAPIOK(t, rec)
 
-		detailRec := performLegacyRequest(
+		detailRec := performJSONRequest(
 			t,
 			engine,
 			http.MethodGet,

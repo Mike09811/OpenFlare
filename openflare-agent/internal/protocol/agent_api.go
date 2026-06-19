@@ -3,17 +3,13 @@ package protocol
 import "encoding/json"
 
 type APIResponse[T any] struct {
-	Success bool   `json:"success"`
-	Message string `json:"message"`
-	Data    T      `json:"data"`
+	ErrorMsg string `json:"error_msg"`
+	Data     T      `json:"data"`
 }
 
-type HeartbeatAPIResponse struct {
-	Success       bool              `json:"success"`
-	Message       string            `json:"message"`
-	Data          any               `json:"data"`
-	AgentSettings *AgentSettings    `json:"agent_settings,omitempty"`
-	ActiveConfig  *ActiveConfigMeta `json:"active_config,omitempty"`
+type HeartbeatData struct {
+	AgentSettings *AgentSettings    `json:"agent_settings"`
+	ActiveConfig  *ActiveConfigMeta `json:"active_config"`
 	WAFIPGroups   []WAFIPGroup      `json:"waf_ip_groups,omitempty"`
 }
 
