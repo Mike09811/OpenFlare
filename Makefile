@@ -1,4 +1,4 @@
-.PHONY: swagger license license-check build-embedded build-test cross-build code-check
+.PHONY: swagger license license-check build-embedded build-test cross-build code-check build-backend build-frontend build-agent build-relay build-flared build-all
 
 VERSION ?= dev
 BUILD_DATE ?= $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
@@ -37,6 +37,29 @@ build-backend:
 		-ldflags "-s -w -X '$(MODULE)/internal/buildinfo.Version=$(VERSION)' -X '$(MODULE)/internal/buildinfo.BuildTime=$(BUILD_DATE)'" \
 		-o bin/wavelet \
 		main.go
+
+build-agent:
+	@echo "==> Building agent version=$(VERSION)..."
+	go build \
+		-ldflags "-s -w -X '$(MODULE)/internal/apps/agent/config.Version=$(VERSION)'" \
+		-o bin/openflare-agent \
+		cmd/agent/main.go
+
+build-relay:
+	@echo "==> Building relay version=$(VERSION)..."
+	go build \
+		-ldflags "-s -w -X '$(MODULE)/internal/apps/relay/config.Version=$(VERSION)'" \
+		-o bin/openflare-relay \
+		cmd/relay/main.go
+
+build-flared:
+	@echo "==> Building flared version=$(VERSION)..."
+	go build \
+		-ldflags "-s -w -X '$(MODULE)/internal/apps/flared/config.Version=$(VERSION)'" \
+		-o bin/flared \
+		cmd/flared/main.go
+
+build-all: build-backend build-agent build-relay build-flared
 
 build-frontend:
 	@echo "==> Building frontend version=$(VERSION) build_date=$(BUILD_DATE)..."
