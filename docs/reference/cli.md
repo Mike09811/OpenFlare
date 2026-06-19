@@ -1,28 +1,43 @@
 # 命令与脚本
 
-你会学到：OpenFlare Server、管理端前端、Agent、Swagger 和文档站的常用启动、构建、测试、安装与卸载命令。
+你会学到：OpenFlare Server、管理端前端、Agent、Relay、OpenFlared、Swagger 和文档站的常用启动、构建、测试、安装与卸载命令。
+
+> 所有命令均在**仓库根目录**执行，除非另有说明。
 
 ## Server
 
 源码启动：
 
 ```bash
-cd openflare-server
 cp config.example.yaml config.yaml
-go run . all
+go run main.go all
 ```
 
-指定监听端口与日志目录：
+分进程启动：
 
 ```bash
-go run . --port 3000 --log-dir ./logs
+go run main.go api          # 仅 HTTP API
+go run main.go worker       # 仅 Asynq Worker
+go run main.go scheduler    # 仅定时任务调度
+```
+
+编译二进制：
+
+```bash
+make build-server
+# 产物：bin/openflare-server
 ```
 
 测试：
 
 ```bash
-cd openflare-server
 GOCACHE=/tmp/openflare-go-cache go test ./...
+```
+
+质量门禁：
+
+```bash
+make code-check
 ```
 
 ## Frontend
@@ -30,25 +45,25 @@ GOCACHE=/tmp/openflare-go-cache go test ./...
 开发：
 
 ```bash
-cd openflare-server/frontend
+cd frontend
 pnpm install
 pnpm dev
 ```
 
-构建静态产物：
+构建嵌入产物（供 Go Server 托管）：
 
 ```bash
-cd openflare-server/frontend
+cd frontend
 pnpm build:embed
+# 或仓库根目录：make build-embedded
 ```
 
 检查：
 
 ```bash
-cd openflare-server/frontend
+cd frontend
 pnpm lint
 pnpm typecheck
-pnpm test
 ```
 
 ## Agent
@@ -56,56 +71,51 @@ pnpm test
 源码运行：
 
 ```bash
-cd openflare-agent
 go run ./cmd/agent -config /path/to/agent.json
 ```
 
 编译：
 
 ```bash
-cd openflare-agent
-go build -o openflare-agent ./cmd/agent
+make build-agent
+# 或：go build -o bin/openflare-agent ./cmd/agent
 ```
 
 测试：
 
 ```bash
-cd openflare-agent
-GOCACHE=/tmp/openflare-go-cache go test ./...
+GOCACHE=/tmp/openflare-go-cache go test ./internal/apps/agent/...
 ```
 
-## Relay (中继端)
+## Relay（中继端）
 
 源码运行：
 
 ```bash
-cd openflare-relay
-go run ./cmd -config /path/to/relay.json
+go run ./cmd/relay -config /path/to/relay.json
 ```
 
 编译：
 
 ```bash
-cd openflare-relay
-go build -o openflare-relay ./cmd
+make build-relay
+# 或：go build -o bin/openflare-relay ./cmd/relay
 ```
 
-## OpenFlared (Client 客户端)
+## OpenFlared（Tunnel 客户端）
 
 源码运行：
 
 ```bash
-cd openflared
-go run ./cmd -config /path/to/flared.json
+go run ./cmd/flared -config /path/to/flared.json
 ```
 
 编译：
 
 ```bash
-cd openflared
-go build -o openflared ./cmd
+make build-flared
+# 或：go build -o bin/flared ./cmd/flared
 ```
-
 
 ## 安装 Agent
 
@@ -126,10 +136,10 @@ curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/unin
 重新生成 Swagger 文档：
 
 ```bash
-go install github.com/swaggo/swag/cmd/swag@v1.16.4
-cd openflare-server
-swag init -g main.go -o docs
+make swagger
 ```
+
+访问：`http://localhost:3000/swagger/index.html`
 
 ## Docs
 

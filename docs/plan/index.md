@@ -18,6 +18,7 @@
 | [OpenFlare → Wavelet 前端迁移计划](./20260618-openflare-wavelet-frontend-migration.md) | 将 `openflare-server/web` 业务 UI 按 Wavelet 设计风格重写，复用框架组件与 Admin 基建 |
 | [OpenFlare 前端迁移 — AI 委派](./handover-openflare-frontend-migration.md) | 前端迁移任务队列与验收状态 |
 | [前端路由验证](./verify-frontend-routes.md) · [Service 验证](./verify-frontend-services.md) · [UI 验证](./verify-frontend-ui.md) · [构建验证](./verify-frontend-build.md) | 多角度迁移验收报告 |
+| [文档结构更新 — AI 接手](./handover-docs-restructure-update.md) | 重构后多智能体分析结论与文档批量更新记录 |
 
 ## 使用建议
 

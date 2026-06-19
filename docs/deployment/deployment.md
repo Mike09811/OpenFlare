@@ -2,7 +2,7 @@
 
 你会学到：OpenFlare 的推荐部署方式、Server 与 Agent 的运行要求、源码启动方式、联调步骤、升级与卸载入口。
 
-生产环境建议使用 PostgreSQL 作为 Server 数据库，并为 Server 显式配置 `JWT_SECRET`。Agent 部署方式推荐为 Docker 部署（即直接使用内置 OpenResty 的 Agent 镜像）；亦支持通过安装脚本或手动本地运行。
+生产环境建议使用 PostgreSQL 作为 Server 数据库，并通过 `config.yaml` 或环境变量配置 `APP_SESSION_SECRET` 等参数。完整 Docker Compose 部署还需 Redis 与 ClickHouse（见仓库根目录 `docker-compose.yaml`）。Agent 部署方式推荐为 Docker 部署（即直接使用内置 OpenResty 的 Agent 镜像）；亦支持通过安装脚本或手动本地运行。
 
 ## 部署拓扑
 
@@ -78,53 +78,14 @@ Agent：
 
 ## Docker Compose 部署 Server
 
-创建 `docker-compose.yml`：
-
-```yaml
-services:
-  postgres:
-    image: postgres:17-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: openflare
-      POSTGRES_USER: openflare
-      POSTGRES_PASSWORD: replace-with-strong-password
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U openflare -d openflare"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  openflare:
-    image: ghcr.io/rain-kl/openflare:latest
-    container_name: openflare
-    restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-    ports:
-      - "3000:3000"
-    environment:
-      JWT_SECRET: replace-with-a-long-random-string
-      DSN: postgres://openflare:replace-with-strong-password@postgres:5432/openflare?sslmode=disable
-      GIN_MODE: release
-      LOG_LEVEL: info
-    volumes:
-      - openflare-data:/data
-
-volumes:
-  postgres-data:
-  openflare-data:
-```
-
-启动：
+仓库根目录已提供完整 `docker-compose.yaml`（含 PostgreSQL、Redis、ClickHouse、Jaeger）。
 
 ```bash
+cp .env.example .env
+# 编辑 .env，至少修改 APP_SESSION_SECRET 与数据库密码
 docker compose up -d
 docker compose ps
-docker compose logs -f openflare
+docker compose logs -f wavelet
 ```
 
 首次访问 `http://localhost:3000`，默认账号为 `root` / `123456`。登录后请立即修改默认密码。
@@ -134,29 +95,23 @@ docker compose logs -f openflare
 先构建管理端前端：
 
 ```bash
-cd openflare-server/web
+cd frontend
 corepack enable
 pnpm install
-pnpm build
+pnpm build:embed
 ```
 
-再启动 Server：
+再启动 Server（仓库根目录）：
 
 ```bash
-cd openflare-server
-export JWT_SECRET='replace-with-a-long-random-string'
-export SQLITE_PATH='./openflare.db'
-export LOG_LEVEL='info'
-# 可选：设置后优先使用 PostgreSQL。
-# export DSN='postgres://openflare:secret@127.0.0.1:5432/openflare?sslmode=disable'
-go run .
+cp config.example.yaml config.yaml
+export APP_SESSION_SECRET='replace-with-a-long-random-string'
+# 可选：使用 PostgreSQL
+# export DB_HOST=127.0.0.1 DB_USERNAME=postgres DB_PASSWORD=postgres DB_NAME=openflare
+go run main.go all
 ```
 
-默认监听 `3000` 端口。也可以显式指定：
-
-```bash
-go run . --port 3000 --log-dir ./logs
-```
+默认监听 `:3000`（由 `config.yaml` 的 `app.addr` 或 `APP_ADDR` 控制）。
 
 ## Docker 运行 Agent（推荐）
 
@@ -230,7 +185,7 @@ journalctl -u openflare-agent -f
 源码运行：
 
 ```bash
-cd openflare-agent
+
 export LOG_LEVEL='info'
 go run ./cmd/agent -config /path/to/agent.json
 ```
@@ -238,7 +193,7 @@ go run ./cmd/agent -config /path/to/agent.json
 编译后二进制运行：
 
 ```bash
-cd openflare-agent
+
 go build -o openflare-agent ./cmd/agent
 export LOG_LEVEL='info'
 ./openflare-agent -config /path/to/agent.json

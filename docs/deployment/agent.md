@@ -149,7 +149,7 @@ journalctl -u openflare-agent -f
 源码运行：
 
 ```bash
-cd openflare-agent
+
 export LOG_LEVEL='info'
 go run ./cmd/agent -config /path/to/agent.json
 ```
@@ -157,7 +157,7 @@ go run ./cmd/agent -config /path/to/agent.json
 编译后二进制运行：
 
 ```bash
-cd openflare-agent
+
 go build -o openflare-agent ./cmd/agent
 export LOG_LEVEL='info'
 ./openflare-agent -config /path/to/agent.json

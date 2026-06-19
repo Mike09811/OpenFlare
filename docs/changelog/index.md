@@ -18,6 +18,12 @@ sidebar: false
 
 ### 变更
 
+- 合并并简化仓库结构：将 `openflare-server` 单体目录下的所有文件/目录提升至仓库根目录（去除了 `openflare-server` 嵌套层级），保留 `.github` 目录不变；统一配置 `docker-compose.yaml` 及所有 Dockerfile 的构建上下文为根目录。
+- 调整子项目结构与包路径：将 `agent`、`relay` 和 `flared` 子项目从 `internal/` 移动至 `internal/apps/`（分别为 `internal/apps/agent`、`internal/apps/relay` 和 `internal/apps/flared`），并递归更新了所有涉及的 Go 导入路径（如 `github.com/Rain-kl/Wavelet/internal/apps/agent` 等）。
+- 调整编译产物输出名称与 Makefile：
+  - 更新 `Makefile` 编译目标，在 `bin/` 目录下统一输出 `openflare-server`（而不是 `wavelet`）、`openflare-agent`、`openflare-relay` 及 `flared`。
+  - 新增 `build-all` 编译目标以一键按序编译所有服务端、客户端和网关组件。
+- 修复 `internal/apps/openflare/tasks/ssl_renew_test.go` 中在未模拟 ACME 证书续期调用时测试执行的并发/竞态问题。
 - `of_node_access_logs` 从 PostgreSQL/SQLite 迁移至 ClickHouse（数据库 `openflare`）；ClickHouse 表结构改由 goose 独立迁移管线管理（`goose_clickhouse_version`），启动时在 `migrator.MigrateClickHouse()` 中执行，移除 `clickhouse_schema.go` 手写 DDL。
 - ClickHouse 分析库接入 GORM（`db.ChDB`）与 `internal/repository/analytics/`：用户访问日志（`w_user_access_logs`）读写、风控批量写入与管理端日志统计 API 统一经 repository 访问；新增 `internal/model/analytics/` 分析表模型。
 - OpenFlare 节点访问日志（`of_node_access_logs`）ClickHouse 读写迁入 `internal/repository/analytics/`；`model` 层保留聚合编排与内存测试 store，生产路径经薄适配器调用 repository。

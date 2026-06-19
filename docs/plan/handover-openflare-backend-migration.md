@@ -223,6 +223,5 @@ go run . scheduler
 | [实现计划](./20260618-openflare-wavelet-backend-migration.md) | 模块清单、§12 端点对照 |
 | [前端迁移计划](./20260618-openflare-wavelet-frontend-migration.md) | UI 迁移与验收 |
 | [`Wavelet/AGENTS.md`](../../Wavelet/AGENTS.md) | 框架 Guardrails |
-| [`docs/guideline/Constraints.md`](../guideline/Constraints.md) | 开发约束 |
 | 旧后端源码（对照用） | `openflare-server/internal/` |
 | Changelog | [`docs/changelog/index.md`](../changelog/index.md) `[Unreleased]` |

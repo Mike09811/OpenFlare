@@ -68,8 +68,7 @@ docker run -d --name openflare-relay --restart unless-stopped \
 ### 1. 编译二进制
 
 ```bash
-cd openflare-relay
-go build -o openflare-relay ./cmd/relay
+go build -o bin/openflare-relay ./cmd/relay
 ```
 
 ### 2. 准备 `relay.json`

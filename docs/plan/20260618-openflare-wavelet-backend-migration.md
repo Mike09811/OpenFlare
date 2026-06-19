@@ -3,7 +3,6 @@
 > **文档类型**：实现计划（Implementation Plan）  
 > **创建日期**：2026-06-18  
 > **状态**：实施中（阶段 5 收尾；控制台 `/api/v1/d/*` + 新前端已落地，legacy 兼容层已撤销）
-> **前置阅读**：[`Wavelet/AGENTS.md`](../../Wavelet/AGENTS.md)、[`docs/guideline/Constraints.md`](../guideline/Constraints.md)、[`docs/design/architecture.md`](../design/architecture.md)
 
 ---
 
@@ -822,12 +821,3 @@ curl http://127.0.0.1:3000/api/agent/config-versions/active \
 | M6 生产就绪 | 第 12 周 | 迁移脚本 + 部署文档 + Handover |
 
 ---
-
-## 14. 参考文档
-
-- [`Wavelet/AGENTS.md`](../../Wavelet/AGENTS.md)
-- [`docs/design/architecture.md`](../design/architecture.md)
-- [`docs/design/agent-design.md`](../design/agent-design.md)
-- [`docs/guideline/Constraints.md`](../guideline/Constraints.md)
-- 旧后端源码：`openflare-server/internal/`
-- 子智能体分析报告：本计划编制依据（2026-06-18）

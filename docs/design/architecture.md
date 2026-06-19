@@ -70,19 +70,19 @@ OpenResty (Agent, TLS/WAF)
 | **OpenResty**   | 接收真实流量，执行 WAF 过滤、PoW 防护、Basic Auth 认证与静态/反代服务 | [WAF 设计](./waf-design.md) / [Pages 设计](./pages-design.md) |
 | **Relay**       | 部署于边缘节点，管理 `frps` 守护进程生命周期，接受心跳派发的穿透中继配置 | [内网穿透设计](./tunnel-design.md) |
 | **OpenFlared**  | 部署于内网，管理 `frpc` 进程组，向多个 Relay 建立反向隧道，上报连接状态 | [内网穿透设计](./tunnel-design.md) |
-| **Frontend**    | Next.js 管理界面，提供路由、WAF、证书、节点、穿透隧道和 Pages 项目的可视化管理 | [开发约束](../guideline/Constraints.md) |
 
 ---
 
 ## 组件架构与分工
 
 ### 1. Server (控制面)
-`openflare-server` 是 Go 编写的单体控制面：
-* 提供管理端 REST API，通过 `OPENFLARE_TOKEN` 请求头鉴权。
+仓库根目录的 Go 后端（模块 `github.com/Rain-kl/Wavelet`）是 OpenFlare 控制面，基于 Wavelet 全栈脚手架构建：
+* 提供管理端 REST API（`/api/v1/d/*`），通过 **Session Cookie** 鉴权，可选 `X-Access-Token` 访问令牌。
+* 边缘节点协议走 `/api/v1/agent|relay|tunnel/*`，分别使用 `X-Agent-Token` / `X-Tunnel-Token` 鉴权。
 * 包含配置编译器（Compiler），将数据库中的规则、证书与全局参数统一编译为不可变的配置快照及 OpenResty 物理配置文件文本。
 * 存储 Pages 部署 ZIP 包于本地 Artifacts 目录，并向 Agent 提供受控的下载接口。
 * 后台集成 Uptime Kuma 监控同步服务，自动为可用站点维护 HTTP 探测任务。
-* Go 物理结构采用 `cmd/server` 启动入口、`internal` 私有应用层与根级 `pkg` 共享能力包，跨组件协议类型统一放在 `pkg/protocol`。
+* 启动入口为根目录 `main.go` + `internal/cmd/`（`api` / `worker` / `scheduler` / `all`）；OpenFlare 业务在 `internal/apps/openflare/`，边缘协议处理在 `internal/apps/openflare/{agent,relay,flared}/`。
 * *详细设计请参阅：[Agent 与发布模型设计](./agent-design.md) 以及 [Uptime Kuma 监控同步设计](./kuma-design.md)*
 
 ### 2. Agent (配置落地端)
@@ -165,7 +165,6 @@ OpenResty (Agent, TLS/WAF)
 修改系统架构或开发新功能前，请按以下顺序阅读：
 
 1. **[产品边界](./index.md)**：了解 OpenFlare 核心定位与不允许逾越的设计边界。
-2. **[开发约束](../guideline/Constraints.md)**：掌握数据模型、API 约定、数据库迁移（Goose）与前端规范。
 3. **[Agent 与发布模型](./agent-design.md)**：理解版本快照同步及失败回滚的安全兜底逻辑。
 4. **细分领域设计**：
    * 穿透相关开发：阅读 [内网穿透隧道设计](./tunnel-design.md)。

@@ -58,8 +58,7 @@ docker run -d --name openflared --restart unless-stopped \
 ### 1. 编译二进制
 
 ```bash
-cd openflared
-go build -o flared ./cmd/flared
+go build -o bin/flared ./cmd/flared
 ```
 
 ### 2. 准备 `flared.json`
@@ -91,7 +90,7 @@ export LOG_LEVEL='info'
 ### 1. 自动同步逻辑
 
 启动成功后，OpenFlared 将执行以下工作流：
-- **心跳与配置获取**：周期性向 Server 的 `/api/flared/heartbeat` 和 `/api/flared/config` 接口发起同步，验证 Token 并检测配置版本。
+- **心跳与配置获取**：周期性向 Server 的 `/api/v1/tunnel/heartbeat` 和 `/api/v1/tunnel/config/active` 接口发起同步，验证 Token 并检测配置版本。
 - **文件渲染**：当检测到配置版本（或校验和 Checksum）变化时，会自动拉取该隧道的完整路由规则。如果绑定了多个中继 Relay，将为每个 Relay 分别在 `data_dir` 下渲染出 `frpc_{relayNodeID}.toml`。
 - **热重载或重启**：拉起对应的 `frpc` 子进程，或在配置文件发生改变时执行 `frpc reload` / 重启动作，以确保流量映射保持最新。
 - **异常自恢复**：如果本地 `frpc` 隧道进程异常退出，主控程序会在 5 秒的退避惩罚后自动尝试重新启动。
