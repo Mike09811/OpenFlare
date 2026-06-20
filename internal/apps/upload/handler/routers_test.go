@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -29,6 +30,7 @@ import (
 	"github.com/Rain-kl/Wavelet/internal/storage"
 	"github.com/Rain-kl/Wavelet/internal/testhelper"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type testResponse struct {
@@ -104,7 +106,9 @@ func createMultipartRequest(t *testing.T, fieldName, fileName string, fileConten
 func TestUploadFile(t *testing.T) {
 	dbConn, _, cleanup := testhelper.SetupTestEnvironment(t)
 	defer cleanup()
-	defer func() { _ = os.RemoveAll("uploads") }() // Clean up local files created during tests
+
+	tempDir := t.TempDir()
+	configureLocalStorageRoot(t, dbConn, tempDir)
 
 	authUser := &model.User{ID: 1001, Username: "test_user"}
 	router := setupTestRouter(authUser)
@@ -322,7 +326,7 @@ func TestUploadFile(t *testing.T) {
 		}
 
 		// Confirm file was actually written to local disk
-		fileContent, err := os.ReadFile(localRecord.FilePath)
+		fileContent, err := os.ReadFile(filepath.Join(tempDir, localRecord.FilePath))
 		if err != nil {
 			t.Fatalf("failed to read local file: %v", err)
 		}
@@ -336,7 +340,9 @@ func TestUploadFile(t *testing.T) {
 func TestDownloadFile(t *testing.T) {
 	dbConn, _, cleanup := testhelper.SetupTestEnvironment(t)
 	defer cleanup()
-	defer func() { _ = os.RemoveAll("uploads") }()
+
+	tempDir := t.TempDir()
+	configureLocalStorageRoot(t, dbConn, tempDir)
 
 	authUser := &model.User{ID: 1001, Username: "test_user"}
 	router := setupTestRouter(authUser)
@@ -346,7 +352,7 @@ func TestDownloadFile(t *testing.T) {
 		ID:        2001,
 		UserID:    1001,
 		FileName:  "中文文件名.txt",
-		FilePath:  "uploads/test_download.txt",
+		FilePath:  "test_download.txt",
 		FileSize:  12,
 		MimeType:  "text/plain",
 		Extension: "txt",
@@ -354,11 +360,7 @@ func TestDownloadFile(t *testing.T) {
 	}
 
 	// Create local file
-	err := os.MkdirAll("uploads", 0755)
-	if err != nil {
-		t.Fatalf("failed to create directory: %v", err)
-	}
-	err = os.WriteFile(localUpload.FilePath, []byte("hello download"), 0644)
+	err := os.WriteFile(filepath.Join(tempDir, "test_download.txt"), []byte("hello download"), 0644)
 	if err != nil {
 		t.Fatalf("failed to write file: %v", err)
 	}
@@ -405,6 +407,9 @@ func TestListFiles(t *testing.T) {
 	dbConn, _, cleanup := testhelper.SetupTestEnvironment(t)
 	defer cleanup()
 
+	tempDir := t.TempDir()
+	configureLocalStorageRoot(t, dbConn, tempDir)
+
 	authUser := &model.User{ID: 1001, Username: "test_user"}
 	router := setupTestRouter(authUser)
 
@@ -413,7 +418,7 @@ func TestListFiles(t *testing.T) {
 			ID:        2101,
 			UserID:    authUser.ID,
 			FileName:  "first-report.txt",
-			FilePath:  "uploads/first-report.txt",
+			FilePath:  "first-report.txt",
 			FileSize:  10,
 			MimeType:  "text/plain",
 			Extension: "txt",
@@ -423,7 +428,7 @@ func TestListFiles(t *testing.T) {
 			ID:        2102,
 			UserID:    authUser.ID,
 			FileName:  "Second-Photo.PNG",
-			FilePath:  "uploads/second-photo.png",
+			FilePath:  "second-photo.png",
 			FileSize:  20,
 			MimeType:  "image/png",
 			Extension: "png",
@@ -433,7 +438,7 @@ func TestListFiles(t *testing.T) {
 			ID:        2103,
 			UserID:    authUser.ID,
 			FileName:  "third-notes.md",
-			FilePath:  "uploads/third-notes.md",
+			FilePath:  "third-notes.md",
 			FileSize:  30,
 			MimeType:  "text/markdown",
 			Extension: "md",
@@ -443,7 +448,7 @@ func TestListFiles(t *testing.T) {
 			ID:        2104,
 			UserID:    2002,
 			FileName:  "other-user.txt",
-			FilePath:  "uploads/other-user.txt",
+			FilePath:  "other-user.txt",
 			FileSize:  40,
 			MimeType:  "text/plain",
 			Extension: "txt",
@@ -544,20 +549,22 @@ func TestListFiles(t *testing.T) {
 func TestBatchDownloadFiles(t *testing.T) {
 	dbConn, _, cleanup := testhelper.SetupTestEnvironment(t)
 	defer cleanup()
-	defer func() { _ = os.RemoveAll("uploads") }()
+
+	tempDir := t.TempDir()
+	configureLocalStorageRoot(t, dbConn, tempDir)
 
 	authUser := &model.User{ID: 1001, Username: "test_user"}
 	router := setupTestRouter(authUser)
 
-	// Create and write files locally
-	err := os.MkdirAll("uploads", 0755)
-	if err != nil {
-		t.Fatalf("failed to create local dir: %v", err)
+	if err := os.WriteFile(filepath.Join(tempDir, "f1.txt"), []byte("file1 content"), 0644); err != nil {
+		t.Fatalf("failed to write f1.txt: %v", err)
 	}
-
-	_ = os.WriteFile("uploads/f1.txt", []byte("file1 content"), 0644)
-	_ = os.WriteFile("uploads/f2.txt", []byte("file2 content"), 0644)
-	_ = os.WriteFile("uploads/f3.txt", []byte("duplicate name file content"), 0644)
+	if err := os.WriteFile(filepath.Join(tempDir, "f2.txt"), []byte("file2 content"), 0644); err != nil {
+		t.Fatalf("failed to write f2.txt: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(tempDir, "f3.txt"), []byte("duplicate name file content"), 0644); err != nil {
+		t.Fatalf("failed to write f3.txt: %v", err)
+	}
 
 	// Seed upload records. Note f2 and f3 have the same FileName "file_a.txt" to trigger name collision resolution.
 	uploads := []model.Upload{
@@ -565,7 +572,7 @@ func TestBatchDownloadFiles(t *testing.T) {
 			ID:        3001,
 			UserID:    1001,
 			FileName:  "file_a.txt",
-			FilePath:  "uploads/f1.txt",
+			FilePath:  "f1.txt",
 			FileSize:  13,
 			MimeType:  "text/plain",
 			Extension: "txt",
@@ -575,7 +582,7 @@ func TestBatchDownloadFiles(t *testing.T) {
 			ID:        3002,
 			UserID:    1001,
 			FileName:  "file_b.txt",
-			FilePath:  "uploads/f2.txt",
+			FilePath:  "f2.txt",
 			FileSize:  13,
 			MimeType:  "text/plain",
 			Extension: "txt",
@@ -585,7 +592,7 @@ func TestBatchDownloadFiles(t *testing.T) {
 			ID:        3003,
 			UserID:    1001,
 			FileName:  "file_a.txt", // COLLISION with 3001!
-			FilePath:  "uploads/f3.txt",
+			FilePath:  "f3.txt",
 			FileSize:  28,
 			MimeType:  "text/plain",
 			Extension: "txt",
@@ -656,7 +663,9 @@ func TestBatchDownloadFiles(t *testing.T) {
 func TestUploadAccessModeAccessControl(t *testing.T) {
 	dbConn, _, cleanup := testhelper.SetupTestEnvironment(t)
 	defer cleanup()
-	defer func() { _ = os.RemoveAll("uploads") }()
+
+	tempDir := t.TempDir()
+	configureLocalStorageRoot(t, dbConn, tempDir)
 
 	user1 := &model.User{ID: 1001, Username: "user1"}
 	user2 := &model.User{ID: 1002, Username: "user2"}
@@ -744,6 +753,9 @@ func TestGetFileStats(t *testing.T) {
 	dbConn, _, cleanup := testhelper.SetupTestEnvironment(t)
 	defer cleanup()
 
+	tempDir := t.TempDir()
+	configureLocalStorageRoot(t, dbConn, tempDir)
+
 	authUser := &model.User{ID: 1001, Username: "test_user"}
 	router := setupTestRouter(authUser)
 
@@ -753,7 +765,7 @@ func TestGetFileStats(t *testing.T) {
 			ID:        3101,
 			UserID:    authUser.ID,
 			FileName:  "photo.png",
-			FilePath:  "uploads/photo.png",
+			FilePath:  "photo.png",
 			FileSize:  100,
 			MimeType:  "image/png",
 			Extension: "png",
@@ -765,7 +777,7 @@ func TestGetFileStats(t *testing.T) {
 			ID:        3102,
 			UserID:    authUser.ID,
 			FileName:  "video.mp4",
-			FilePath:  "uploads/video.mp4",
+			FilePath:  "video.mp4",
 			FileSize:  500,
 			MimeType:  "video/mp4",
 			Extension: "mp4",
@@ -777,7 +789,7 @@ func TestGetFileStats(t *testing.T) {
 			ID:        3103,
 			UserID:    authUser.ID,
 			FileName:  "document.pdf",
-			FilePath:  "uploads/document.pdf",
+			FilePath:  "document.pdf",
 			FileSize:  200,
 			MimeType:  "application/pdf",
 			Extension: "pdf",
@@ -854,6 +866,9 @@ func TestUserUploadManagement(t *testing.T) {
 	dbConn, _, cleanup := testhelper.SetupTestEnvironment(t)
 	defer cleanup()
 
+	tempDir := t.TempDir()
+	configureLocalStorageRoot(t, dbConn, tempDir)
+
 	user1 := &model.User{ID: 1001, Username: "user1"}
 	user2 := &model.User{ID: 1002, Username: "user2"}
 
@@ -868,7 +883,7 @@ func TestUserUploadManagement(t *testing.T) {
 		ID:        4001,
 		UserID:    1001,
 		FileName:  "user1-file.txt",
-		FilePath:  "uploads/user1-file.txt",
+		FilePath:  "user1-file.txt",
 		FileSize:  100,
 		MimeType:  "text/plain",
 		Extension: "txt",
@@ -879,7 +894,7 @@ func TestUserUploadManagement(t *testing.T) {
 		ID:        4002,
 		UserID:    1002,
 		FileName:  "user2-file.png",
-		FilePath:  "uploads/user2-file.png",
+		FilePath:  "user2-file.png",
 		FileSize:  200,
 		MimeType:  "image/png",
 		Extension: "png",
@@ -976,4 +991,27 @@ func TestUserUploadManagement(t *testing.T) {
 			t.Errorf("expected status deleted, got %s", deleted.Status)
 		}
 	})
+}
+
+func configureLocalStorageRoot(t *testing.T, dbConn *gorm.DB, tempDir string) {
+	var sc model.SystemConfig
+	if err := dbConn.Where("key = ?", model.ConfigKeyStorageConfig).First(&sc).Error; err != nil {
+		t.Fatalf("failed to find storage config: %v", err)
+	}
+	var cfg storage.Config
+	if err := json.Unmarshal([]byte(sc.Value), &cfg); err != nil {
+		t.Fatalf("failed to unmarshal storage config: %v", err)
+	}
+	cfg.Local.Root = tempDir
+	newVal, err := json.Marshal(cfg)
+	if err != nil {
+		t.Fatalf("failed to marshal storage config: %v", err)
+	}
+	sc.Value = string(newVal)
+	if err := dbConn.Save(&sc).Error; err != nil {
+		t.Fatalf("failed to save storage config: %v", err)
+	}
+	_ = db.HSetJSON(context.Background(), repository.SystemConfigRedisHashKey, sc.Key, &sc)
+	repository.ResetSystemConfigRAMCacheForTest()
+	storage.ResetCache()
 }

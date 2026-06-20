@@ -14,22 +14,24 @@ const (
 	secondsPerMinute = 60
 )
 
-var sizeKB = 1024
-var sizeMB = sizeKB * 1024
-var sizeGB = sizeMB * 1024
+const (
+	sizeKB = 1024
+	sizeMB = sizeKB * 1024
+	sizeGB = sizeMB * 1024
+)
 
 // Bytes2Size converts a byte count to a human-readable string with unit (B, KB, MB, GB).
 func Bytes2Size(num int64) string {
 	numStr := ""
 	unit := "B"
 	switch {
-	case num/int64(sizeGB) > 1:
+	case num/int64(sizeGB) >= 1:
 		numStr = fmt.Sprintf("%.2f", float64(num)/float64(sizeGB))
 		unit = "GB"
-	case num/int64(sizeMB) > 1:
+	case num/int64(sizeMB) >= 1:
 		numStr = fmt.Sprintf("%d", int(float64(num)/float64(sizeMB)))
 		unit = "MB"
-	case num/int64(sizeKB) > 1:
+	case num/int64(sizeKB) >= 1:
 		numStr = fmt.Sprintf("%d", int(float64(num)/float64(sizeKB)))
 		unit = "KB"
 	default:

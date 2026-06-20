@@ -206,6 +206,9 @@ func isPublicNodeIP(raw string) bool {
 }
 
 func buildAgentSettings(node *model.OpenFlareNode, updateNow bool, updateChannel string, updateTag string, restartOpenrestyNow bool) *Settings {
+	model.OptionMapRWMutex.RLock()
+	defer model.OptionMapRWMutex.RUnlock()
+
 	autoUpdate := false
 	if node != nil {
 		autoUpdate = node.AutoUpdateEnabled

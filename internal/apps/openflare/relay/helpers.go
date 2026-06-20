@@ -98,6 +98,9 @@ func buildRelayConfig(node *model.OpenFlareNode) *Config {
 
 // BuildSettings returns runtime settings shared by relay and flared clients.
 func BuildSettings(node *model.OpenFlareNode, updateNow bool, updateChannel, updateTag string) *Settings {
+	model.OptionMapRWMutex.RLock()
+	defer model.OptionMapRWMutex.RUnlock()
+
 	autoUpdate := false
 	if node != nil {
 		autoUpdate = node.AutoUpdateEnabled

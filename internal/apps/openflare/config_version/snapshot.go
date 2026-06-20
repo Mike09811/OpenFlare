@@ -440,6 +440,8 @@ func convertPoWConfig(config *waf.PoWConfig) *openrestyrender.PoWConfig {
 }
 
 func buildOpenRestyConfigSnapshot() openRestyConfigSnapshot {
+	model.OptionMapRWMutex.RLock()
+	defer model.OptionMapRWMutex.RUnlock()
 	return openRestyConfigSnapshot{
 		DefaultServerReturnStatus: model.OpenRestyDefaultServerReturnStatus,
 		WorkerProcesses:           model.OpenRestyWorkerProcesses,

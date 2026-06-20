@@ -89,6 +89,16 @@ func Init(ctx context.Context, opts Options) {
 	})
 }
 
+// Stop stops all batch writers and background resources.
+func Stop(ctx context.Context) {
+	if err := risk_control.StopLogWriter(ctx); err != nil {
+		logger.ErrorF(ctx, "[Bootstrap] stop risk_control log writer failed: %v", err)
+	}
+	if err := chwriter.Stop(ctx); err != nil {
+		logger.ErrorF(ctx, "[Bootstrap] stop chwriter failed: %v", err)
+	}
+}
+
 // ResetInitRuntimeOnceForTest clears initRuntimeOnce so Init can run again in unit tests.
 func ResetInitRuntimeOnceForTest() {
 	initRuntimeOnce = sync.Once{}

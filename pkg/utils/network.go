@@ -3,7 +3,6 @@ package utils
 import (
 	"log/slog"
 	"net"
-	"strings"
 )
 
 // GetIP returns the first private IPv4 address found on the local network interfaces.
@@ -35,7 +34,9 @@ func privateIPv4FromAddr(addr net.Addr) (string, bool) {
 }
 
 func isPrivateIPv4(ip string) bool {
-	return strings.HasPrefix(ip, "10") ||
-		strings.HasPrefix(ip, "172") ||
-		strings.HasPrefix(ip, "192.168")
+	parsedIP := net.ParseIP(ip)
+	if parsedIP == nil {
+		return false
+	}
+	return parsedIP.IsPrivate()
 }

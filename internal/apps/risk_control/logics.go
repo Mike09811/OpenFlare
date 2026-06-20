@@ -62,6 +62,15 @@ func InitLogWriter(ctx context.Context) {
 	logWriter = writer
 }
 
+// StopLogWriter stops the ClickHouse access-log batch writer and drains pending logs.
+func StopLogWriter(ctx context.Context) error {
+	writer := currentLogWriter()
+	if writer == nil {
+		return nil
+	}
+	return writer.Stop(ctx)
+}
+
 // IsBufferFull reports whether the access-log queue has no remaining capacity.
 func IsBufferFull() bool {
 	writer := currentLogWriter()

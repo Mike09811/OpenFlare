@@ -27,7 +27,11 @@ sidebar: false
 
 ### 修复
 
+- 修复上传模块（`upload`）的 API 错误响应绕过：将 `c.AbortWithStatus` 和自定义 `c.JSON` 错误响应统一替换为标准的 `response.Abort*` 辅助函数，确保响应格式符合全局信封规范。
+- 修复通用工具包（`pkg/utils`）中的网络和格式化工具 Bug：优化 `isPrivateIPv4` 使其通过 `net.ParseIP` 解析并调用标准库 `ip.IsPrivate()` 检查；修复 `Bytes2Size` 的边界判定，将大小限制变量（`sizeKB`、`sizeMB`、`sizeGB`）改为只读常量以增强不变性。
 - 修复 CAP 模块路由错误响应：将 CAP 接口中的所有直接 JSON 错误响应改造为统一的 `response.Abort*` 抛出并挂载到中间件统一写出 JSON，保证全局 `{ "error_msg": "...", "data": null }` 信封规范。
+- 修复 ClickHouse 批量写入（`batchwriter` / `chwriter`）在服务退出时无法安全停机和刷出剩余日志的问题，统一在 Server 优雅停机流程中调用 `bootstrap.Stop()`。
+- 修复 OpenFlare 系统参数并发读取的数据竞争（data race）问题，在读取 OpenResty 配置快照、Agent 和 Relay 配置时引入 `OptionMapRWMutex` 读锁保护。
 
 ### 移除
 
