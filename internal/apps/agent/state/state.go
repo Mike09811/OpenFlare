@@ -15,22 +15,30 @@ const (
 	nodeIDRandomBytes = 8
 )
 
+// PagesDeployment records a Pages release referenced by the active config.
+type PagesDeployment struct {
+	DeploymentID uint   `json:"deployment_id"`
+	Hash         string `json:"hash"`
+	Checksum     string `json:"checksum,omitempty"`
+}
+
 // Snapshot represents the state of the agent at a given point in time.
 type Snapshot struct {
-	NodeID                 string `json:"node_id"`
-	CurrentVersion         string `json:"current_version"`
-	CurrentChecksum        string `json:"current_checksum"`
-	BlockedVersion         string `json:"blocked_version"`
-	BlockedChecksum        string `json:"blocked_checksum"`
-	BlockedReason          string `json:"blocked_reason"`
-	LastError              string `json:"last_error"`
-	OpenrestyStatus        string `json:"openresty_status"`
-	OpenrestyMessage       string `json:"openresty_message"`
-	LastProfileFingerprint string `json:"last_profile_fingerprint"`
-	LastCPUStatTotal       uint64 `json:"last_cpu_stat_total"`
-	LastCPUStatIdle        uint64 `json:"last_cpu_stat_idle"`
-	LastMetricAtUnix       int64  `json:"last_metric_at_unix"`
-	AccessLogOffset        int64  `json:"access_log_offset"`
+	NodeID                 string            `json:"node_id"`
+	CurrentVersion         string            `json:"current_version"`
+	CurrentChecksum        string            `json:"current_checksum"`
+	PagesDeployments       []PagesDeployment `json:"pages_deployments"`
+	BlockedVersion         string            `json:"blocked_version"`
+	BlockedChecksum        string            `json:"blocked_checksum"`
+	BlockedReason          string            `json:"blocked_reason"`
+	LastError              string            `json:"last_error"`
+	OpenrestyStatus        string            `json:"openresty_status"`
+	OpenrestyMessage       string            `json:"openresty_message"`
+	LastProfileFingerprint string            `json:"last_profile_fingerprint"`
+	LastCPUStatTotal       uint64            `json:"last_cpu_stat_total"`
+	LastCPUStatIdle        uint64            `json:"last_cpu_stat_idle"`
+	LastMetricAtUnix       int64             `json:"last_metric_at_unix"`
+	AccessLogOffset        int64             `json:"access_log_offset"`
 }
 
 // Store manages the storage and retrieval of the agent state snapshot.

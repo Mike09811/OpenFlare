@@ -29,6 +29,7 @@ const (
 // ConfigClient is the interface for communicating with the server control plane.
 type ConfigClient interface {
 	GetActiveConfig(ctx context.Context) (*protocol.ActiveConfigResponse, error)
+	GetPagesDeploymentHash(ctx context.Context, deploymentID uint) (string, error)
 	DownloadPagesDeploymentPackage(ctx context.Context, deploymentID uint) ([]byte, error)
 	ReportApplyLog(ctx context.Context, payload protocol.ApplyLogPayload) error
 	SyncWAFIPGroups(ctx context.Context, payload protocol.WAFIPGroupSyncRequest) (*protocol.WAFIPGroupSyncResponse, error)
@@ -152,6 +153,9 @@ func (s *Service) applyIfNeeded(ctx context.Context, mode string, startup bool, 
 		clearBlockedTarget(snapshot)
 	}
 	if snapshot.CurrentVersion == config.Version && snapshot.CurrentChecksum == config.Checksum && !startup {
+		if err := s.syncPagesDeployments(ctx, snapshot, config); err != nil {
+			return err
+		}
 		slog.Debug("skipping apply because state already records target version/checksum", "version", config.Version, "checksum", config.Checksum)
 		return s.stateStore.Save(snapshot)
 	}
@@ -163,7 +167,7 @@ func (s *Service) applyRenderedConfig(ctx context.Context, mode string, snapshot
 	if err != nil {
 		return err
 	}
-	if err := s.syncPagesDeployments(ctx, config); err != nil {
+	if err := s.syncPagesDeployments(ctx, snapshot, config); err != nil {
 		return err
 	}
 	mainConfigChecksum := checksumString(rendered.mainConfig)

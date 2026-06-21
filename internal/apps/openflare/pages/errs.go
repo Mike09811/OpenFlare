@@ -24,5 +24,6 @@ const (
 	errPagesPackagePathEmpty         = "pages 部署包路径为空"
 	errPagesPackageUploadMissing     = "pages 部署包上传记录不存在"
 	errPagesPackageNotInActiveConfig = "pages 部署尚未进入激活配置"
+	errPagesDeploymentHashMissing    = "pages 部署包哈希缺失"
 	errPagesInvalidSnapshotFormat    = "配置快照格式无效"
 )

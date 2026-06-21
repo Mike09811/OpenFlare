@@ -68,6 +68,20 @@ func (s *Service) syncMatchingChecksum(ctx context.Context, mode string, startup
 }
 
 func (s *Service) finishUpToDateSync(ctx context.Context, mode string, snapshot *state.Snapshot, target *protocol.ActiveConfigMeta) error {
+	if pagesReconcileNeeded(snapshot) {
+		if pagesDiscoveryNeeded(snapshot) {
+			config, err := s.client.GetActiveConfig(ctx)
+			if err != nil {
+				slog.Error("fetch active config failed", "mode", mode, "error", err)
+				return err
+			}
+			if err := s.syncPagesDeployments(ctx, snapshot, config); err != nil {
+				return err
+			}
+		} else if err := s.syncPagesDeployments(ctx, snapshot, nil); err != nil {
+			return err
+		}
+	}
 	slog.Debug("local openresty config already up to date", "mode", mode, "version", target.Version)
 	if shouldReportNoopApply(snapshot, target.Version, target.Checksum) {
 		if err := s.reportNoopApply(ctx, snapshot.NodeID, target.Version, target.Checksum, "", "", 0); err != nil {
@@ -97,6 +111,21 @@ func (s *Service) syncMismatchedChecksum(ctx context.Context, mode string, start
 		clearBlockedTarget(snapshot)
 	}
 	if snapshot.CurrentVersion == target.Version && snapshot.CurrentChecksum == target.Checksum && !startup {
+		if pagesReconcileNeeded(snapshot) {
+			if pagesDiscoveryNeeded(snapshot) {
+				config, fetchErr := s.client.GetActiveConfig(ctx)
+				if fetchErr != nil {
+					slog.Error("fetch active config failed", "mode", mode, "error", fetchErr)
+					return fetchErr
+				}
+				if err := s.syncPagesDeployments(ctx, snapshot, config); err != nil {
+					return err
+				}
+			} else if err := s.syncPagesDeployments(ctx, snapshot, nil); err != nil {
+				return err
+			}
+			return s.stateStore.Save(snapshot)
+		}
 		slog.Debug("skipping config fetch because state already records target version/checksum", "version", target.Version, "checksum", target.Checksum)
 		return s.stateStore.Save(snapshot)
 	}
@@ -110,6 +139,9 @@ func (s *Service) syncMismatchedChecksum(ctx context.Context, mode string, start
 }
 
 func (s *Service) handleUpToDateConfig(ctx context.Context, mode string, snapshot *state.Snapshot, config *protocol.ActiveConfigResponse) error {
+	if err := s.syncPagesDeployments(ctx, snapshot, config); err != nil {
+		return err
+	}
 	slog.Debug("local openresty config already up to date", "mode", mode, "version", config.Version)
 	if shouldReportNoopApply(snapshot, config.Version, config.Checksum) {
 		rendered, renderErr := renderActiveConfig(config)

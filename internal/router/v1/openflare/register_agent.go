@@ -23,6 +23,7 @@ func registerAgentRoutes(apiV1Router *gin.RouterGroup) {
 			authorizedRoute.GET("/ws", agent.WebSocketHandler)
 			authorizedRoute.POST("/nodes/heartbeat", agent.HeartbeatHandler)
 			authorizedRoute.GET("/config-versions/active", agent.GetActiveConfigHandler)
+			authorizedRoute.GET("/pages/deployments/:deployment_id/hash", agent.GetPagesDeploymentHashHandler)
 			authorizedRoute.GET("/pages/deployments/:deployment_id/package", agent.DownloadPagesPackageHandler)
 			authorizedRoute.POST("/waf/ip-groups/sync", agent.SyncWAFIPGroupsHandler)
 			authorizedRoute.POST("/apply-logs", agent.ReportApplyLogHandler)

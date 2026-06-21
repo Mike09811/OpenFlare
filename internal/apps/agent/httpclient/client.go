@@ -86,6 +86,18 @@ func (c *Client) SyncWAFIPGroups(ctx context.Context, payload protocol.WAFIPGrou
 	return &resp.Data, nil
 }
 
+// GetPagesDeploymentHash returns the upload SHA-256 hash for the given Pages deployment ID.
+func (c *Client) GetPagesDeploymentHash(ctx context.Context, deploymentID uint) (string, error) {
+	resp := protocol.APIResponse[protocol.PagesDeploymentHashResponse]{}
+	if err := c.base.GetJSON(ctx, fmt.Sprintf("/api/v1/agent/pages/deployments/%d/hash", deploymentID), &resp); err != nil {
+		return "", err
+	}
+	if err := edgehttp.APIError(resp.ErrorMsg); err != nil {
+		return "", err
+	}
+	return resp.Data.Hash, nil
+}
+
 // DownloadPagesDeploymentPackage downloads the deployment package for the given Pages deployment ID.
 func (c *Client) DownloadPagesDeploymentPackage(ctx context.Context, deploymentID uint) ([]byte, error) {
 	res, err := c.base.DoRaw(ctx, http.MethodGet, fmt.Sprintf("/api/v1/agent/pages/deployments/%d/package", deploymentID), nil)

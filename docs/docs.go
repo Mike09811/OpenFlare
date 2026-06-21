@@ -4316,6 +4316,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/agent/pages/deployments/{deployment_id}/hash": {
+            "get": {
+                "security": [
+                    {
+                        "AgentTokenAuth": []
+                    }
+                ],
+                "description": "返回 upload 框架记录的 SHA-256 哈希，供 Agent 对比本地缓存并按需拉取部署包",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-agent"
+                ],
+                "summary": "查询 Pages 部署包哈希",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "部署 ID",
+                        "name": "deployment_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/protocol.PagesDeploymentHashResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "Token 无效",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/agent/pages/deployments/{deployment_id}/package": {
             "get": {
                 "security": [
@@ -16630,6 +16688,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "relay_node_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "protocol.PagesDeploymentHashResponse": {
+            "type": "object",
+            "properties": {
+                "deployment_id": {
+                    "type": "integer"
+                },
+                "hash": {
                     "type": "string"
                 }
             }

@@ -16,10 +16,8 @@ import (
 	"time"
 
 	"github.com/Rain-kl/Wavelet/internal/apps/upload"
-	uploadstorage "github.com/Rain-kl/Wavelet/internal/apps/upload/storage"
 	"github.com/Rain-kl/Wavelet/internal/db"
 	"github.com/Rain-kl/Wavelet/internal/model"
-	"github.com/Rain-kl/Wavelet/internal/repository"
 	"github.com/Rain-kl/Wavelet/internal/storage"
 	"gorm.io/gorm"
 )
@@ -354,6 +352,45 @@ func ActivateDeployment(ctx context.Context, projectID uint, deploymentID uint) 
 	return GetProject(ctx, project.ID)
 }
 
+// GetDeploymentPackageHash returns the SHA-256 hash of the deployment package from upload storage.
+func GetDeploymentPackageHash(ctx context.Context, deploymentID uint) (string, error) {
+	deployment, err := model.GetPagesDeploymentByID(ctx, deploymentID)
+	if err != nil {
+		return "", err
+	}
+	if err = ensureDeploymentInActiveSnapshot(ctx, deployment.ID); err != nil {
+		return "", err
+	}
+	if deployment.UploadID == 0 {
+		if err := ensureDeploymentUploadRecord(ctx, deployment); err != nil {
+			return "", err
+		}
+		deployment, err = model.GetPagesDeploymentByID(ctx, deploymentID)
+		if err != nil {
+			return "", err
+		}
+	}
+	if deployment.UploadID == 0 {
+		hash := strings.TrimSpace(deployment.Checksum)
+		if hash == "" {
+			return "", errors.New(errPagesDeploymentHashMissing)
+		}
+		return hash, nil
+	}
+	uploadRecord, err := upload.GetActiveUpload(ctx, deployment.UploadID)
+	if err != nil {
+		return "", fmt.Errorf("pages 部署包不存在: %w", err)
+	}
+	hash := strings.TrimSpace(uploadRecord.Hash)
+	if hash == "" {
+		hash = strings.TrimSpace(deployment.Checksum)
+	}
+	if hash == "" {
+		return "", errors.New(errPagesDeploymentHashMissing)
+	}
+	return hash, nil
+}
+
 // OpenDeploymentPackage opens the deployment artifact from the upload storage framework.
 func OpenDeploymentPackage(ctx context.Context, deploymentID uint) (*storage.Object, string, error) {
 	deployment, err := model.GetPagesDeploymentByID(ctx, deploymentID)
@@ -373,15 +410,7 @@ func OpenDeploymentPackage(ctx context.Context, deploymentID uint) (*storage.Obj
 }
 
 func openDeploymentPackageFromUpload(ctx context.Context, deployment *model.PagesDeployment, fileName string) (*storage.Object, string, error) {
-	uploadRecord, err := repository.GetActiveUploadByID(ctx, deployment.UploadID)
-	if err != nil {
-		return nil, "", fmt.Errorf("pages 部署包不存在: %w", err)
-	}
-	return openDeploymentPackageFromUploadRecord(ctx, &uploadRecord, fileName)
-}
-
-func openDeploymentPackageFromUploadRecord(ctx context.Context, uploadRecord *model.Upload, fileName string) (*storage.Object, string, error) {
-	obj, err := uploadstorage.OpenStoredObject(ctx, uploadRecord)
+	obj, _, err := upload.OpenStoredUpload(ctx, deployment.UploadID)
 	if err != nil {
 		return nil, "", fmt.Errorf("pages 部署包不存在: %w", err)
 	}
@@ -423,7 +452,7 @@ func hydrateLegacyDeploymentUpload(
 		return nil, errors.New(errPagesPackagePathEmpty)
 	}
 	if deployment.UploadID > 0 {
-		uploadRecord, err := repository.GetActiveUploadByID(ctx, deployment.UploadID)
+		uploadRecord, err := upload.GetActiveUpload(ctx, deployment.UploadID)
 		if err == nil {
 			return &uploadRecord, nil
 		}

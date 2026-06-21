@@ -2588,6 +2588,13 @@ definitions:
       relay_node_id:
         type: string
     type: object
+  protocol.PagesDeploymentHashResponse:
+    properties:
+      deployment_id:
+        type: integer
+      hash:
+        type: string
+    type: object
   protocol.RelayConfig:
     properties:
       auth_token:
@@ -6500,6 +6507,40 @@ paths:
       security:
       - AgentTokenAuth: []
       summary: 注册或发现 Agent 节点
+      tags:
+      - openflare-agent
+  /api/v1/agent/pages/deployments/{deployment_id}/hash:
+    get:
+      description: 返回 upload 框架记录的 SHA-256 哈希，供 Agent 对比本地缓存并按需拉取部署包
+      parameters:
+      - description: 部署 ID
+        in: path
+        name: deployment_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/protocol.PagesDeploymentHashResponse'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/response.Any'
+        "401":
+          description: Token 无效
+          schema:
+            $ref: '#/definitions/response.Any'
+      security:
+      - AgentTokenAuth: []
+      summary: 查询 Pages 部署包哈希
       tags:
       - openflare-agent
   /api/v1/agent/pages/deployments/{deployment_id}/package:

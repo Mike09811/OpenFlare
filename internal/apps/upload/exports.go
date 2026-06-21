@@ -31,10 +31,13 @@ var (
 
 // Programmatic ingest API
 var (
-	Ingest      = ingest.Ingest
-	Remove      = ingest.Remove
-	RemoveOwned = ingest.RemoveOwned
-	FindByHash  = ingest.FindByHash
+	Ingest           = ingest.Ingest
+	Remove           = ingest.Remove
+	RemoveOwned      = ingest.RemoveOwned
+	FindByHash       = ingest.FindByHash
+	GetActiveUpload  = ingest.GetActive
+	OpenStoredUpload = ingest.OpenActive
+	ActiveUploadHash = ingest.ActiveHash
 )
 
 // Ingest policy constants

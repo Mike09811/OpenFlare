@@ -213,3 +213,9 @@ type SupportFile struct {
 	Path    string `json:"path"`
 	Content string `json:"content"`
 }
+
+// PagesDeploymentHashResponse is the upload SHA-256 hash for a Pages deployment package.
+type PagesDeploymentHashResponse struct {
+	DeploymentID uint   `json:"deployment_id"`
+	Hash         string `json:"hash"`
+}

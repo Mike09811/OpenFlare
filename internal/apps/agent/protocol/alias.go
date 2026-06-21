@@ -72,6 +72,9 @@ type WAFIPGroupSyncResponse = pkgprotocol.WAFIPGroupSyncResponse
 // SupportFile is an alias for pkgprotocol.SupportFile.
 type SupportFile = pkgprotocol.SupportFile
 
+// PagesDeploymentHashResponse is an alias for pkgprotocol.PagesDeploymentHashResponse.
+type PagesDeploymentHashResponse = pkgprotocol.PagesDeploymentHashResponse
+
 const (
 	// WSMessageTypeStatus is an alias for pkgprotocol.WSMessageTypeStatus.
 	WSMessageTypeStatus = pkgprotocol.WSMessageTypeStatus

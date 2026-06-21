@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	"github.com/Rain-kl/Wavelet/internal/apps/agent/protocol"
+	"github.com/Rain-kl/Wavelet/internal/apps/agent/state"
 )
 
 const (
@@ -45,10 +46,85 @@ type pagesDeploymentMarker struct {
 	Checksum     string `json:"checksum"`
 }
 
-func (s *Service) syncPagesDeployments(ctx context.Context, config *protocol.ActiveConfigResponse) error {
-	deployments, err := referencedPagesDeployments(config)
-	if err != nil {
-		return err
+func pagesDeploymentStateHash(item state.PagesDeployment) string {
+	if hash := strings.TrimSpace(item.Hash); hash != "" {
+		return hash
+	}
+	return strings.TrimSpace(item.Checksum)
+}
+
+func snapshotPagesDeployments(snapshot *state.Snapshot) []pagesDeploymentSource {
+	if snapshot == nil || snapshot.PagesDeployments == nil {
+		return nil
+	}
+	result := make([]pagesDeploymentSource, 0, len(snapshot.PagesDeployments))
+	for _, item := range snapshot.PagesDeployments {
+		result = append(result, pagesDeploymentSource{
+			DeploymentID: item.DeploymentID,
+			Checksum:     pagesDeploymentStateHash(item),
+		})
+	}
+	return result
+}
+
+func setSnapshotPagesDeployments(snapshot *state.Snapshot, deployments []pagesDeploymentSource) {
+	if snapshot == nil {
+		return
+	}
+	if len(deployments) == 0 {
+		snapshot.PagesDeployments = []state.PagesDeployment{}
+		return
+	}
+	snapshot.PagesDeployments = make([]state.PagesDeployment, len(deployments))
+	for i, deployment := range deployments {
+		snapshot.PagesDeployments[i] = state.PagesDeployment{
+			DeploymentID: deployment.DeploymentID,
+			Hash:         strings.TrimSpace(deployment.Checksum),
+		}
+	}
+}
+
+func updateSnapshotPagesDeploymentHash(snapshot *state.Snapshot, deployment pagesDeploymentSource) {
+	if snapshot == nil || snapshot.PagesDeployments == nil {
+		return
+	}
+	hash := strings.TrimSpace(deployment.Checksum)
+	for i := range snapshot.PagesDeployments {
+		if snapshot.PagesDeployments[i].DeploymentID != deployment.DeploymentID {
+			continue
+		}
+		snapshot.PagesDeployments[i].Hash = hash
+		snapshot.PagesDeployments[i].Checksum = ""
+		return
+	}
+}
+
+func pagesDiscoveryNeeded(snapshot *state.Snapshot) bool {
+	return snapshot == nil || snapshot.PagesDeployments == nil
+}
+
+func pagesSyncNeeded(snapshot *state.Snapshot) bool {
+	return snapshot != nil && snapshot.PagesDeployments != nil && len(snapshot.PagesDeployments) > 0
+}
+
+func pagesReconcileNeeded(snapshot *state.Snapshot) bool {
+	if pagesDiscoveryNeeded(snapshot) {
+		return true
+	}
+	return pagesSyncNeeded(snapshot)
+}
+
+func (s *Service) syncPagesDeployments(ctx context.Context, snapshot *state.Snapshot, config *protocol.ActiveConfigResponse) error {
+	var deployments []pagesDeploymentSource
+	var err error
+	if config != nil {
+		deployments, err = referencedPagesDeployments(config)
+		if err != nil {
+			return err
+		}
+		setSnapshotPagesDeployments(snapshot, deployments)
+	} else {
+		deployments = snapshotPagesDeployments(snapshot)
 	}
 	if len(deployments) == 0 {
 		return nil
@@ -57,32 +133,60 @@ func (s *Service) syncPagesDeployments(ctx context.Context, config *protocol.Act
 		return errors.New("pages_dir is required when active config references Pages deployments")
 	}
 	for _, deployment := range deployments {
-		if err := s.ensurePagesDeployment(ctx, deployment); err != nil {
+		if err := s.ensurePagesDeployment(ctx, snapshot, deployment); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (s *Service) ensurePagesDeployment(ctx context.Context, deployment pagesDeploymentSource) error {
-	currentDir := pagesCurrentDir(s.pagesDir, deployment.DeploymentID)
-	if markerMatches(currentDir, deployment) {
-		return nil
-	}
-	packageBytes, err := s.client.DownloadPagesDeploymentPackage(ctx, deployment.DeploymentID)
+func (s *Service) ensurePagesDeployment(ctx context.Context, snapshot *state.Snapshot, deployment pagesDeploymentSource) error {
+	serverHash, err := s.client.GetPagesDeploymentHash(ctx, deployment.DeploymentID)
 	if err != nil {
-		return fmt.Errorf("download Pages deployment %d: %w", deployment.DeploymentID, err)
+		return fmt.Errorf("fetch Pages deployment %d hash: %w", deployment.DeploymentID, err)
 	}
-	if got := checksumBytes(packageBytes); got != deployment.Checksum {
-		return fmt.Errorf("pages deployment %d checksum mismatch: expected %s, got %s", deployment.DeploymentID, deployment.Checksum, got)
+	serverHash = strings.TrimSpace(serverHash)
+	if serverHash == "" {
+		return fmt.Errorf("pages deployment %d hash is empty", deployment.DeploymentID)
 	}
-	releaseDir := pagesReleaseDir(s.pagesDir, deployment.DeploymentID, deployment.Checksum)
-	if !markerMatches(releaseDir, deployment) {
-		if err := extractPagesPackage(packageBytes, releaseDir, deployment); err != nil {
-			return err
+	effective := pagesDeploymentSource{
+		DeploymentID: deployment.DeploymentID,
+		Checksum:     serverHash,
+	}
+	updateSnapshotPagesDeploymentHash(snapshot, effective)
+
+	releaseDir := pagesReleaseDir(s.pagesDir, effective.DeploymentID, effective.Checksum)
+	if pagesReleaseReady(releaseDir, effective) {
+		return switchPagesCurrentDir(s.pagesDir, effective.DeploymentID, releaseDir)
+	}
+	packageBytes, err := s.client.DownloadPagesDeploymentPackage(ctx, effective.DeploymentID)
+	if err != nil {
+		return fmt.Errorf("download Pages deployment %d: %w", effective.DeploymentID, err)
+	}
+	if got := checksumBytes(packageBytes); got != effective.Checksum {
+		return fmt.Errorf("pages deployment %d checksum mismatch: expected %s, got %s", effective.DeploymentID, effective.Checksum, got)
+	}
+	if err := extractPagesPackage(packageBytes, releaseDir, effective); err != nil {
+		return err
+	}
+	return switchPagesCurrentDir(s.pagesDir, effective.DeploymentID, releaseDir)
+}
+
+func pagesReleaseReady(dir string, deployment pagesDeploymentSource) bool {
+	if !markerMatches(dir, deployment) {
+		return false
+	}
+	entries, err := os.ReadDir(dir) //nolint:gosec // dir is managed PagesDir
+	if err != nil {
+		return false
+	}
+	for _, entry := range entries {
+		if entry.Name() == ".openflare-pages.json" {
+			continue
 		}
+		return true
 	}
-	return switchPagesCurrentDir(s.pagesDir, deployment.DeploymentID, releaseDir)
+	return false
 }
 
 func referencedPagesDeployments(config *protocol.ActiveConfigResponse) ([]pagesDeploymentSource, error) {

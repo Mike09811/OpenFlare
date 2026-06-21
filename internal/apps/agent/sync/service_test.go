@@ -31,7 +31,9 @@ type fakeClient struct {
 	config        protocol.ActiveConfigResponse
 	reports       []protocol.ApplyLogPayload
 	pagesPackages map[uint][]byte
+	pagesHashes   map[uint]string
 	fetchCalls    int
+	hashCalls     int
 }
 
 type fakeManager struct {
@@ -74,6 +76,21 @@ func (f *fakeExecutor) Restart(ctx context.Context) error {
 func (f *fakeClient) GetActiveConfig(ctx context.Context) (*protocol.ActiveConfigResponse, error) {
 	f.fetchCalls++
 	return &f.config, nil
+}
+
+func (f *fakeClient) GetPagesDeploymentHash(ctx context.Context, deploymentID uint) (string, error) {
+	f.hashCalls++
+	if f.pagesHashes != nil {
+		if hash, ok := f.pagesHashes[deploymentID]; ok {
+			return hash, nil
+		}
+	}
+	if f.pagesPackages != nil {
+		if packageBytes, ok := f.pagesPackages[deploymentID]; ok {
+			return testBytesChecksum(packageBytes), nil
+		}
+	}
+	return "", fmt.Errorf("missing Pages hash %d", deploymentID)
 }
 
 func (f *fakeClient) DownloadPagesDeploymentPackage(ctx context.Context, deploymentID uint) ([]byte, error) {
@@ -501,8 +518,8 @@ func TestSyncOnceReportsNoopWhenVersionChangesButChecksumMatches(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("SyncOnce failed: %v", err)
 	}
-	if client.fetchCalls != 0 {
-		t.Fatalf("expected checksum match to skip config fetch, got %d", client.fetchCalls)
+	if client.fetchCalls != 1 {
+		t.Fatalf("expected checksum match to fetch active config once for Pages reconciliation, got %d", client.fetchCalls)
 	}
 	if len(manager.applyMainContents) != 0 {
 		t.Fatal("expected checksum match to skip apply")
@@ -568,9 +585,10 @@ func TestSyncOnceDoesNotRepeatNoopReportWhenStateAlreadyMatches(t *testing.T) {
 		t.Fatalf("EnsureNodeID failed: %v", err)
 	}
 	if err = stateStore.Save(&state.Snapshot{
-		NodeID:          nodeID,
-		CurrentVersion:  "20260309-003",
-		CurrentChecksum: "checksum-3",
+		NodeID:           nodeID,
+		CurrentVersion:   "20260309-003",
+		CurrentChecksum:  "checksum-3",
+		PagesDeployments: []state.PagesDeployment{},
 	}); err != nil {
 		t.Fatalf("failed to seed state: %v", err)
 	}
@@ -582,6 +600,9 @@ func TestSyncOnceDoesNotRepeatNoopReportWhenStateAlreadyMatches(t *testing.T) {
 		Checksum: "checksum-3",
 	}); err != nil {
 		t.Fatalf("SyncOnce failed: %v", err)
+	}
+	if client.fetchCalls != 0 {
+		t.Fatalf("expected no active config fetch when Pages releases are already reconciled, got %d", client.fetchCalls)
 	}
 	if len(client.reports) != 0 {
 		t.Fatalf("expected matching state to skip duplicate noop report, got %+v", client.reports)
@@ -907,9 +928,10 @@ func TestSyncOnceSkipsFetchWhenHeartbeatChecksumMatches(t *testing.T) {
 		t.Fatalf("EnsureNodeID failed: %v", err)
 	}
 	if err = stateStore.Save(&state.Snapshot{
-		NodeID:          nodeID,
-		CurrentVersion:  client.config.Version,
-		CurrentChecksum: client.config.Checksum,
+		NodeID:           nodeID,
+		CurrentVersion:   client.config.Version,
+		CurrentChecksum:  client.config.Checksum,
+		PagesDeployments: []state.PagesDeployment{},
 	}); err != nil {
 		t.Fatalf("failed to seed state: %v", err)
 	}
@@ -923,10 +945,206 @@ func TestSyncOnceSkipsFetchWhenHeartbeatChecksumMatches(t *testing.T) {
 		t.Fatalf("SyncOnce failed: %v", err)
 	}
 	if client.fetchCalls != 0 {
-		t.Fatalf("expected no active config fetch when heartbeat checksum matches, got %d", client.fetchCalls)
+		t.Fatalf("expected no active config fetch when Pages releases are already reconciled, got %d", client.fetchCalls)
+	}
+	if len(manager.applyMainContents) != 0 {
+		t.Fatal("expected checksum match to skip apply")
 	}
 	if len(client.reports) != 0 {
 		t.Fatal("expected no apply log when no config change is needed")
+	}
+}
+
+func TestSyncOnceDownloadsPagesDeploymentWhenChecksumMatches(t *testing.T) {
+	packageBytes := testPagesPackage(t, map[string]string{"index.html": "hello"})
+	checksum := testBytesChecksum(packageBytes)
+	client := &fakeClient{
+		config: protocol.ActiveConfigResponse{
+			Version:          "20260309-101",
+			Checksum:         "pages-config-checksum",
+			SourceConfigJSON: testPagesSourceConfigJSON(7, checksum),
+			CreatedAt:        time.Now().Format(time.RFC3339),
+		},
+		pagesPackages: map[uint][]byte{7: packageBytes},
+	}
+	stateStore := state.NewStore(filepath.Join(t.TempDir(), "state.json"))
+	nodeID, err := stateStore.EnsureNodeID()
+	if err != nil {
+		t.Fatalf("EnsureNodeID failed: %v", err)
+	}
+	if err = stateStore.Save(&state.Snapshot{
+		NodeID:          nodeID,
+		CurrentVersion:  client.config.Version,
+		CurrentChecksum: client.config.Checksum,
+	}); err != nil {
+		t.Fatalf("save state failed: %v", err)
+	}
+	manager := &fakeManager{currentChecksum: client.config.Checksum}
+	service := New(client, manager, stateStore)
+	pagesDir := t.TempDir()
+	service.SetPagesDir(pagesDir)
+
+	if err = service.SyncOnce(context.Background(), &protocol.ActiveConfigMeta{
+		Version:  client.config.Version,
+		Checksum: client.config.Checksum,
+	}); err != nil {
+		t.Fatalf("SyncOnce failed: %v", err)
+	}
+	data, err := os.ReadFile(filepath.Join(pagesDir, "deployments", "7", "current", "index.html"))
+	if err != nil {
+		t.Fatalf("expected Pages file to be extracted when checksum already matches: %v", err)
+	}
+	if string(data) != "hello" {
+		t.Fatalf("unexpected Pages file content: %s", string(data))
+	}
+	if len(manager.applyMainContents) != 0 {
+		t.Fatal("expected checksum match to skip OpenResty apply")
+	}
+	if client.fetchCalls != 1 {
+		t.Fatalf("expected one active config fetch on first reconcile, got %d", client.fetchCalls)
+	}
+
+	client.fetchCalls = 0
+	if err = service.SyncOnce(context.Background(), &protocol.ActiveConfigMeta{
+		Version:  client.config.Version,
+		Checksum: client.config.Checksum,
+	}); err != nil {
+		t.Fatalf("second SyncOnce failed: %v", err)
+	}
+	if client.fetchCalls != 0 {
+		t.Fatalf("expected no active config fetch after Pages release is ready, got %d", client.fetchCalls)
+	}
+	snapshot, err := stateStore.Load()
+	if err != nil {
+		t.Fatalf("failed to load state: %v", err)
+	}
+	if len(snapshot.PagesDeployments) != 1 || snapshot.PagesDeployments[0].DeploymentID != 7 || snapshot.PagesDeployments[0].Hash != checksum {
+		t.Fatalf("expected Pages deployment refs to be cached in state, got %+v", snapshot.PagesDeployments)
+	}
+	if client.hashCalls == 0 {
+		t.Fatal("expected Pages hash check during reconcile")
+	}
+}
+
+func TestSyncOnceRedownloadsPagesDeploymentWhenServerHashChanges(t *testing.T) {
+	initialPackage := testPagesPackage(t, map[string]string{"index.html": "v1"})
+	updatedPackage := testPagesPackage(t, map[string]string{"index.html": "v2"})
+	initialHash := testBytesChecksum(initialPackage)
+	updatedHash := testBytesChecksum(updatedPackage)
+	deploymentID := uint(12)
+	client := &fakeClient{
+		config: protocol.ActiveConfigResponse{
+			Version:          "20260309-107",
+			Checksum:         "pages-config-checksum",
+			SourceConfigJSON: testPagesSourceConfigJSON(deploymentID, initialHash),
+			CreatedAt:        time.Now().Format(time.RFC3339),
+		},
+		pagesPackages: map[uint][]byte{deploymentID: initialPackage},
+		pagesHashes:   map[uint]string{deploymentID: initialHash},
+	}
+	stateStore := state.NewStore(filepath.Join(t.TempDir(), "state.json"))
+	nodeID, err := stateStore.EnsureNodeID()
+	if err != nil {
+		t.Fatalf("EnsureNodeID failed: %v", err)
+	}
+	if err = stateStore.Save(&state.Snapshot{
+		NodeID:          nodeID,
+		CurrentVersion:  client.config.Version,
+		CurrentChecksum: client.config.Checksum,
+		PagesDeployments: []state.PagesDeployment{{
+			DeploymentID: deploymentID,
+			Hash:         initialHash,
+		}},
+	}); err != nil {
+		t.Fatalf("save state failed: %v", err)
+	}
+	pagesDir := t.TempDir()
+	releaseDir := pagesReleaseDir(pagesDir, deploymentID, initialHash)
+	if err = extractPagesPackage(initialPackage, releaseDir, pagesDeploymentSource{
+		DeploymentID: deploymentID,
+		Checksum:     initialHash,
+	}); err != nil {
+		t.Fatalf("seed release failed: %v", err)
+	}
+	if err = switchPagesCurrentDir(pagesDir, deploymentID, releaseDir); err != nil {
+		t.Fatalf("seed current dir failed: %v", err)
+	}
+
+	client.pagesPackages[deploymentID] = updatedPackage
+	client.pagesHashes[deploymentID] = updatedHash
+	manager := &fakeManager{currentChecksum: client.config.Checksum}
+	service := New(client, manager, stateStore)
+	service.SetPagesDir(pagesDir)
+	if err = service.SyncOnce(context.Background(), &protocol.ActiveConfigMeta{
+		Version:  client.config.Version,
+		Checksum: client.config.Checksum,
+	}); err != nil {
+		t.Fatalf("SyncOnce failed: %v", err)
+	}
+	data, err := os.ReadFile(filepath.Join(pagesDir, "deployments", "12", "current", "index.html"))
+	if err != nil {
+		t.Fatalf("expected updated Pages file: %v", err)
+	}
+	if string(data) != "v2" {
+		t.Fatalf("unexpected Pages file content after hash change: %s", string(data))
+	}
+	if client.fetchCalls != 0 {
+		t.Fatalf("expected hash-only reconcile without active config fetch, got %d", client.fetchCalls)
+	}
+}
+
+func TestSyncOnceRedownloadsPagesDeploymentWhenReleaseDirOnlyHasMarker(t *testing.T) {
+	packageBytes := testPagesPackage(t, map[string]string{"index.html": "hello"})
+	checksum := testBytesChecksum(packageBytes)
+	deploymentID := uint(11)
+	client := &fakeClient{
+		config: protocol.ActiveConfigResponse{
+			Version:          "20260309-106",
+			Checksum:         "pages-config-checksum",
+			SourceConfigJSON: testPagesSourceConfigJSON(deploymentID, checksum),
+			CreatedAt:        time.Now().Format(time.RFC3339),
+		},
+		pagesPackages: map[uint][]byte{deploymentID: packageBytes},
+	}
+	stateStore := state.NewStore(filepath.Join(t.TempDir(), "state.json"))
+	nodeID, err := stateStore.EnsureNodeID()
+	if err != nil {
+		t.Fatalf("EnsureNodeID failed: %v", err)
+	}
+	if err = stateStore.Save(&state.Snapshot{
+		NodeID:          nodeID,
+		CurrentVersion:  client.config.Version,
+		CurrentChecksum: client.config.Checksum,
+	}); err != nil {
+		t.Fatalf("save state failed: %v", err)
+	}
+	pagesDir := t.TempDir()
+	releaseDir := pagesReleaseDir(pagesDir, deploymentID, checksum)
+	if err = os.MkdirAll(releaseDir, pagesDirPerm); err != nil {
+		t.Fatalf("mkdir release dir failed: %v", err)
+	}
+	if err = writePagesMarker(releaseDir, pagesDeploymentSource{DeploymentID: deploymentID, Checksum: checksum}); err != nil {
+		t.Fatalf("write marker failed: %v", err)
+	}
+	if pagesReleaseReady(releaseDir, pagesDeploymentSource{DeploymentID: deploymentID, Checksum: checksum}) {
+		t.Fatal("expected marker-only release dir to be treated as not ready")
+	}
+
+	manager := &fakeManager{currentChecksum: client.config.Checksum}
+	service := New(client, manager, stateStore)
+	service.SetPagesDir(pagesDir)
+	if err = service.SyncOnce(context.Background(), &protocol.ActiveConfigMeta{
+		Version:  client.config.Version,
+		Checksum: client.config.Checksum,
+	}); err != nil {
+		t.Fatalf("SyncOnce failed: %v", err)
+	}
+	data, err := os.ReadFile(filepath.Join(pagesDir, "deployments", "11", "current", "index.html"))
+	if err != nil {
+		t.Fatalf("expected Pages file to be extracted after marker-only release dir: %v", err)
+	}
+	if string(data) != "hello" {
+		t.Fatalf("unexpected Pages file content: %s", string(data))
 	}
 }
 

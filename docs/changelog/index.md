@@ -30,6 +30,10 @@ sidebar: false
 
 - 修复 Pages 上传或节点同步时报 `pages file size out of bounds`：允许 ZIP 包内的 0 字节文件，并兼容未声明解压大小的 ZIP 条目。
 
+- 修复 Agent 在 OpenResty 配置 checksum 已一致时跳过 Pages 部署包下载，导致 `deployments/{id}/releases` 为空、站点文件未落地：在 state 中缓存 Pages 部署引用；周期同步通过 `GET /api/v1/agent/pages/deployments/:id/hash` 对比 upload SHA-256，仅在哈希变化或本地 release 未就绪时下载 ZIP，避免重复拉取完整配置与部署包。
+
+- 收敛 Pages 部署包读取路径：`upload` 域新增 `GetActiveUpload` / `OpenStoredUpload` / `ActiveUploadHash` 门面，Pages 业务不再直接调用 `repository.GetActiveUploadByID` 或 `upload/storage.OpenStoredObject`。
+
 - 修复节点详情 OpenResty 连接数与吞吐显示为「—」：节点可观测 API 将 OpenResty 观测数据合并进 `metric_snapshots`；指标文案改为「请求/分钟」（近 60 秒窗口），连接数为 0 时正常显示 0。
 
 - 修复仪表盘「24 小时请求趋势」摘要误显示当前小时请求量/错误量：改为汇总近 24 小时总量。

@@ -11,6 +11,7 @@ import (
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/pages"
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/websocket"
 	"github.com/Rain-kl/Wavelet/internal/common/response"
+	"github.com/Rain-kl/Wavelet/pkg/protocol"
 	"github.com/gin-gonic/gin"
 )
 
@@ -151,6 +152,32 @@ func ReportApplyLogHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OK(log))
+}
+
+// GetPagesDeploymentHashHandler returns the upload SHA-256 hash for a Pages deployment package.
+// @Summary 查询 Pages 部署包哈希
+// @Description 返回 upload 框架记录的 SHA-256 哈希，供 Agent 对比本地缓存并按需拉取部署包
+// @Tags openflare-agent
+// @Produce json
+// @Security AgentTokenAuth
+// @Param deployment_id path int true "部署 ID"
+// @Success 200 {object} response.Any{data=protocol.PagesDeploymentHashResponse}
+// @Failure 400 {object} response.Any "参数错误"
+// @Failure 401 {object} response.Any "Token 无效"
+// @Router /api/v1/agent/pages/deployments/{deployment_id}/hash [get]
+func GetPagesDeploymentHashHandler(c *gin.Context) {
+	deploymentID, ok := pagesDeploymentIDParam(c)
+	if !ok {
+		return
+	}
+	hash, err := pages.GetDeploymentPackageHash(c.Request.Context(), deploymentID)
+	if apiutil.AbortBadRequestOnError(c, err) {
+		return
+	}
+	c.JSON(http.StatusOK, response.OK(protocol.PagesDeploymentHashResponse{
+		DeploymentID: deploymentID,
+		Hash:         hash,
+	}))
 }
 
 // DownloadPagesPackageHandler streams the Pages deployment artifact to an authenticated agent.
