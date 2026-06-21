@@ -22,6 +22,8 @@ sidebar: false
 
 ### 修复
 
+- 修复 OpenResty 响应泄露版本号：默认主配置模板与 safe fallback 模板补充 `server_tokens off;`，隐藏 `Server` 头与错误页中的 nginx/OpenResty 版本信息。
+
 - 修复 Agent 与 OpenResty worker 权限不一致导致 Pages/WAF 等静态资源 Permission denied：引入共享运行时用户 `openflare`（Agent 进程、OpenResty worker、文件属主统一）；Docker 入口脚本在启动前修正 volume 属主并降权；本地 systemd 服务以 `openflare` 运行并授予 `CAP_NET_BIND_SERVICE`；`data_dir` 与 `pages_dir` 等路径在同步/Apply 时统一 `chown` 与 `0755/0644` 规范化。
 
 - 修复 Pages 站点根路径 `/` 访问异常：OpenResty 渲染增加 `location = /` 精确匹配；未启用 SPA Fallback 时直接提供入口文件（`index` 指令在 `try_files ... =404` 场景下不生效）；启用 SPA Fallback 时避免 `try_files $uri $uri/ /index.html` 因 `$uri/` 命中站点根目录触发内部重定向循环而返回 500。

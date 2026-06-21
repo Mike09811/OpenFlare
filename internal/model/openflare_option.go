@@ -119,6 +119,7 @@ events {
 http {
     include       mime.types;
     default_type  application/octet-stream;
+    server_tokens off;
 {{OpenRestyConnectionUpgradeMap}}{{OpenRestyDefaultServerBlock}}    log_format openflare_json escape=json '{"ts":"$time_iso8601","host":"$host","path":"$request_uri","remote_addr":"$remote_addr","status":$status,"request_time":$request_time,"bytes_sent":$body_bytes_sent,"request_length":$request_length}';
     access_log {{OpenRestyAccessLogPath}} openflare_json;
     sendfile on;

@@ -198,6 +198,7 @@ events {
 
 http {
     default_type text/plain;
+    server_tokens off;
 
     server {
         listen 80 default_server;
