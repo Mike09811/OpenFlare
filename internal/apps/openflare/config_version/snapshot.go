@@ -495,7 +495,7 @@ func buildOpenRestyConfigSnapshot(ctx context.Context) openRestyConfigSnapshot {
 		return config.Value
 	}
 
-	return openRestyConfigSnapshot{
+	snapshot := openRestyConfigSnapshot{
 		DefaultServerReturnStatus: getIntConfig(model.ConfigKeyOpenRestyDefaultServerReturnStatus, defaultOpenRestyReturnStatus),
 		WorkerProcesses:           getStringConfig(model.ConfigKeyOpenRestyWorkerProcesses, "auto"),
 		WorkerConnections:         getIntConfig(model.ConfigKeyOpenRestyWorkerConnections, defaultOpenRestyWorkerConns),
@@ -534,6 +534,19 @@ func buildOpenRestyConfigSnapshot(ctx context.Context) openRestyConfigSnapshot {
 		CacheUseStale:             getStringConfig(model.ConfigKeyOpenRestyCacheUseStale, "error timeout updating http_500 http_502 http_503 http_504"),
 		MainConfigTemplate:        getStringConfig(model.ConfigKeyOpenRestyMainConfigTemplate, model.DefaultOpenRestyMainConfigTemplate),
 	}
+	snapshot.CachePath = normalizeProxyCachePathForSnapshot(snapshot.CacheEnabled, snapshot.CachePath)
+	return snapshot
+}
+
+func normalizeProxyCachePathForSnapshot(cacheEnabled bool, cachePath string) string {
+	if !cacheEnabled {
+		return strings.TrimSpace(cachePath)
+	}
+	trimmed := strings.TrimSpace(cachePath)
+	if trimmed == "" || strings.HasPrefix(trimmed, "/var/") {
+		return openrestyrender.ProxyCachePathPlaceholder
+	}
+	return trimmed
 }
 
 func buildCertificateSupportFiles(ctx context.Context, routes []snapshotRoute) ([]SupportFile, error) {

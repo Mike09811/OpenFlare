@@ -9,6 +9,7 @@ const (
 	ErrorLogPlaceholder            = "__OPENFLARE_ERROR_LOG__"
 	PIDPathPlaceholder             = "__OPENFLARE_PID_PATH__"
 	NginxCacheDirPlaceholder       = "__OPENFLARE_NGINX_CACHE_DIR__"
+	ProxyCachePathPlaceholder      = "__OPENFLARE_PROXY_CACHE_PATH__"
 	LuaDirPlaceholder              = "__OPENFLARE_LUA_DIR__"
 	ObservabilityListenPlaceholder = "__OPENFLARE_OBSERVABILITY_LISTEN__"
 	ObservabilityPortPlaceholder   = "__OPENFLARE_OBSERVABILITY_PORT__"

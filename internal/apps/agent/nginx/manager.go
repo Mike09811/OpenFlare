@@ -302,6 +302,9 @@ func (m *Manager) ensureOpenRestyWorkerReadAccess() error {
 	if pidPath := m.pidRuntimePath(); pidPath != "" {
 		targets = append(targets, filepath.Dir(pidPath))
 	}
+	if proxyCacheDir := m.proxyCacheRuntimeDir(); proxyCacheDir != "" {
+		targets = append(targets, proxyCacheDir)
+	}
 	seen := make(map[string]struct{}, len(targets))
 	for _, target := range targets {
 		cleaned := filepath.Clean(strings.TrimSpace(target))
@@ -1263,6 +1266,14 @@ func (m *Manager) renderMainConfig(content string) string {
 			}
 		}
 	}
+	if proxyCacheDir := m.proxyCacheRuntimeDir(); proxyCacheDir != "" {
+		slashProxyCache := filepath.ToSlash(proxyCacheDir)
+		rendered = strings.ReplaceAll(rendered, openrestyrender.ProxyCachePathPlaceholder, slashProxyCache)
+		rendered = strings.ReplaceAll(rendered, "/var/cache/openresty", slashProxyCache)
+		if err := os.MkdirAll(proxyCacheDir, nginxDirPerm); err != nil {
+			slog.Warn("ensure proxy cache directory failed", "path", proxyCacheDir, "error", err)
+		}
+	}
 	if luaDir := m.luaRuntimePath(); luaDir != "" {
 		rendered = strings.ReplaceAll(rendered, openrestyrender.LuaDirPlaceholder, luaDir)
 	}
@@ -1394,6 +1405,13 @@ func (m *Manager) pidRuntimePath() string {
 func (m *Manager) nginxCacheRuntimeDir() string {
 	if varRoot := m.varRuntimeDir(); varRoot != "" {
 		return filepath.ToSlash(filepath.Join(varRoot, "cache", "nginx"))
+	}
+	return ""
+}
+
+func (m *Manager) proxyCacheRuntimeDir() string {
+	if varRoot := m.varRuntimeDir(); varRoot != "" {
+		return filepath.Join(varRoot, "cache", "openflare_proxy")
 	}
 	return ""
 }

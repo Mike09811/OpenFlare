@@ -23,6 +23,7 @@ sidebar: false
 
 ### 修复
 
+- 修复配置版本发布到 Agent 后 `openresty -t` 因 `proxy_cache_path` 使用 `/var/cache/openresty` 导致非 root 用户 `mkdir` 失败的问题：发布快照与渲染将 `/var/` 下路径规范为 `__OPENFLARE_PROXY_CACHE_PATH__`，Agent 应用时落地为 `data_dir/var/cache/openflare_proxy` 并兼容重写已发布配置中的旧路径。
 - 修复配置版本发布到 Agent 后 `openresty -t` 因证书私钥无法解析而失败的问题。根因是发布快照生成 `certs/{id}.key` 时直接写入库内加密的 `KeyPEM`（`enc:v1:`），未解密为 PEM；现与证书详情接口一致，发布前通过 `OpenKeyPEM` 解密后再下发。
 - 修复 `/api/v1/d/option` 批量更新 OpenResty 等业务配置不生效的问题。根本原因是 option 模块在读写时做了 PascalCase 与 snake_case 的机械转换（如 `OpenRestyEventsUse` → `open_resty_events_use`），与 `w_system_configs` 中实际 key（`openresty_events_use`）不一致，更新写入了错误的幽灵配置行。现改为 API 直接使用与数据库一致的 snake_case key，并同步更新前端性能调优与运维设置页。
 - 修复 PostgreSQL 数据库执行迁移时报 `duplicate key value violates unique constraint "goose_db_version_pkey"` 导致迁移中断的问题。根本原因：`goose_db_version.id` 自增序列落后于表内 `MAX(id)`（常见于从 dump 恢复或历史迁移以显式 id 复制版本记录后），goose 记录新版本号时自增 id 与既有行冲突。修复方式：在 `goose.Up` 前对 PostgreSQL 执行 `setval` 重新对齐 `goose_db_version` 的 id 序列。

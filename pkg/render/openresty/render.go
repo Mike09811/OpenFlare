@@ -292,8 +292,12 @@ func renderOpenRestyCacheTemplateBlock(cfg ConfigSnapshot) string {
 		lines = append(lines, renderOpenRestyObservabilityTemplateBlock())
 		return strings.Join(lines, "")
 	}
+	cachePath := strings.TrimSpace(cfg.CachePath)
+	if cachePath == "" || strings.HasPrefix(cachePath, "/var/") {
+		cachePath = ProxyCachePathPlaceholder
+	}
 	lines = append(lines, strings.Join([]string{
-		fmt.Sprintf("    proxy_cache_path %s levels=%s keys_zone=openflare_cache:10m inactive=%s max_size=%s;", cfg.CachePath, cfg.CacheLevels, cfg.CacheInactive, cfg.CacheMaxSize),
+		fmt.Sprintf("    proxy_cache_path %s levels=%s keys_zone=openflare_cache:10m inactive=%s max_size=%s;", cachePath, cfg.CacheLevels, cfg.CacheInactive, cfg.CacheMaxSize),
 		fmt.Sprintf("    proxy_cache_key \"%s\";", cfg.CacheKeyTemplate),
 		fmt.Sprintf("    proxy_cache_lock %s;", onOff(cfg.CacheLockEnabled)),
 		fmt.Sprintf("    proxy_cache_lock_timeout %s;", cfg.CacheLockTimeout),
