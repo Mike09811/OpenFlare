@@ -23,11 +23,11 @@ import {LoadingStateWithBorder} from '@/components/layout/loading';
 import type {WAFIPGroup, WAFIPGroupAutoTestResult, WAFIPGroupPayload,} from '@/lib/services/openflare';
 import {WafService} from '@/lib/services/openflare';
 
-import {buildIPGroupPayloadFromGroup, getErrorMessage, parseAutomaticConfig} from '../components/helpers';
-import {IPGroupDialog} from '../components/ip-group-dialog';
-import {IPGroupTestDialog} from '../components/ip-group-test-dialog';
-import {IPGroupViewDialog} from '../components/ip-group-view-dialog';
-import {IPGroupsTable} from '../components/ip-groups-table';
+import {buildIPGroupPayloadFromGroup, getErrorMessage, parseAutomaticConfig} from '../waf/components/helpers';
+import {IPGroupDialog} from '../waf/components/ip-group-dialog';
+import {IPGroupTestDialog} from '../waf/components/ip-group-test-dialog';
+import {IPGroupViewDialog} from '../waf/components/ip-group-view-dialog';
+import {IPGroupsTable} from '../waf/components/ip-groups-table';
 
 const ipGroupsQueryKey = ['openflare', 'waf', 'ip-groups'];
 

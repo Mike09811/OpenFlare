@@ -41,7 +41,7 @@ export const openflareSecurityNavGroup: OpenFlareNavGroup = {
   icon: ShieldCheck,
   items: [
     {title: 'WAF', url: '/waf'},
-    {title: 'IP 组', url: '/waf/ip-groups'},
+    {title: 'IP 组', url: '/ip-groups'},
   ],
 };
 
@@ -51,8 +51,8 @@ export const openflareWebsiteNavGroup: OpenFlareNavGroup = {
   icon: Globe,
   items: [
     {title: '域名列表', url: '/websites', childUrls: ['/websites/detail']},
-    {title: 'TLS证书', url: '/websites/certificates'},
-    {title: 'DNS账号', url: '/websites/dns-accounts'},
+    {title: 'TLS证书', url: '/certificates'},
+    {title: 'DNS账号', url: '/dns-accounts'},
     {title: '源站地址', url: '/origins', childUrls: ['/origins/detail']},
   ],
 };
@@ -85,8 +85,8 @@ export const openflareNavItems: OpenFlareNavItem[] = openflareSidebarNav
 /** 网站模块页内二级导航 */
 export const openflareWebsiteSubNav = [
   {title: '网站列表', url: '/websites'},
-  {title: '证书', url: '/websites/certificates'},
-  {title: 'DNS 账号', url: '/websites/dns-accounts'},
+  {title: '证书', url: '/certificates'},
+  {title: 'DNS 账号', url: '/dns-accounts'},
 ] as const;
 
 const nonConsoleRoutePrefixes = ['/admin', '/settings', '/files', '/home', '/login', '/register', '/docs'];

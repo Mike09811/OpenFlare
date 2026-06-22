@@ -24,12 +24,12 @@ import type {TlsCertificateItem} from '@/lib/services/openflare';
 import {TlsCertificateService} from '@/lib/services/openflare';
 import {formatDateTime} from '@/lib/utils';
 
-import {CertificateApplyDialog} from '../components/certificate-apply-dialog';
-import {CertificateDetailDialog} from '../components/certificate-detail-dialog';
-import {CertificateEditorDialog} from '../components/certificate-editor-dialog';
-import {CertificateImportDialog} from '../components/certificate-import-dialog';
-import {WebsiteStatusBadge} from '../components/status-badge';
-import {getCertificateStatus, getErrorMessage} from '../components/website-utils';
+import {CertificateApplyDialog} from '../websites/components/certificate-apply-dialog';
+import {CertificateDetailDialog} from '../websites/components/certificate-detail-dialog';
+import {CertificateEditorDialog} from '../websites/components/certificate-editor-dialog';
+import {CertificateImportDialog} from '../websites/components/certificate-import-dialog';
+import {WebsiteStatusBadge} from '../websites/components/status-badge';
+import {getCertificateStatus, getErrorMessage} from '../websites/components/website-utils';
 
 const certificatesQueryKey = ['openflare', 'tls-certificates'];
 

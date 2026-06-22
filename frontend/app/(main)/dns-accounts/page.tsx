@@ -24,8 +24,8 @@ import type {DnsAccountItem} from '@/lib/services/openflare';
 import {DnsAccountService} from '@/lib/services/openflare';
 import {formatDateTime} from '@/lib/utils';
 
-import {DnsAccountCreateDialog} from '../components/dns-account-create-dialog';
-import {getErrorMessage} from '../components/website-utils';
+import {DnsAccountCreateDialog} from '../websites/components/dns-account-create-dialog';
+import {getErrorMessage} from '../websites/components/website-utils';
 
 const dnsAccountsQueryKey = ['openflare', 'dns-accounts'];
 

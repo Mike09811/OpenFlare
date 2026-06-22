@@ -22,6 +22,8 @@ sidebar: false
 
 ### 变更
 
+- 前端路由调整：将 TLS 证书和 DNS 账号的路由地址移出 `/websites`（分别变更为顶级路由 `/certificates` 和 `/dns-accounts`），将 WAF IP 组的路由地址移出 `/waf`（变更为顶级路由 `/ip-groups`）。
+
 - 前端页面鉴权改为默认私域：除 `/login`、`/register`、`/callback` 外，未登录访问任意页面（含数据看板 `/`）均重定向至登录页。
 
 ### 修复
