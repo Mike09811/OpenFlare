@@ -85,7 +85,7 @@ cp .env.example .env
 # 编辑 .env，至少修改 APP_SESSION_SECRET 与数据库密码
 docker compose up -d
 docker compose ps
-docker compose logs -f wavelet
+docker compose logs -f openflare
 ```
 
 首次访问 `http://localhost:3000`，默认账号为 `root` / `123456`。登录后请立即修改默认密码。
@@ -117,6 +117,9 @@ go run main.go all
 
 Docker 部署是 Agent 推荐的部署方式。Docker 部署时直接运行 Agent 镜像，该镜像基于 OpenResty 镜像制作，内置 Agent 控制器与 OpenResty 二进制。未显式配置 `node_ip` 时，Agent 会优先通过第三方 API 获取真实出口 IP，避免把 Docker 网桥地址登记为节点 IP。
 
+> [!NOTE]
+> Agent 镜像已完成非 Root 安全加固，统一以普通用户 `openflare` 权限运行，通过内核 capabilities 授权（`cap_net_bind_service`）监听 80/443 特权端口，并自动重定向临时文件和 PID 路径至挂载数据卷以防止写入冲突。
+
 挂载配置文件：
 
 ```bash
@@ -143,7 +146,7 @@ docker run -d --name openflare-agent --restart unless-stopped \
 
 ## Agent 接入（脚本安装）
 
-除了 Docker 部署外，也支持通过安装脚本将 Agent 部署在本地宿主机上。
+除了 Docker 部署外，也支持通过安装脚本将 Agent 部署在本地宿主机上。安装脚本会自动在本地 Linux 系统中注册低权限的 `openflare` 服务账号，并将 systemd 服务配置为以该用户身份运行，利用 Linux Capabilities 安全地监听 80/443 特权端口。
 
 使用 `discovery_token` 自动注册：
 

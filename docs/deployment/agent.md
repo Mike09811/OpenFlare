@@ -57,7 +57,7 @@ curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/inst
   --docker
 ```
 
-安装脚本在本地安装模式下会下载最新 Agent，默认写入 `/opt/openflare-agent`，生成 `agent.json`，并在 Linux + systemd 环境创建 `openflare-agent.service`。
+安装脚本在本地安装模式下会下载最新 Agent，默认写入 `/opt/openflare-agent`，生成 `agent.json`，自动检测并创建低权限系统账号 `openflare`（将整个安装目录赋权给该用户），并在 Linux + systemd 环境创建 `openflare-agent.service` 服务。该服务将以 `openflare` 普通用户运行，并通过 Linux Capabilities（`CAP_NET_BIND_SERVICE`）保障其监听特权端口（如 80、443）的能力。
 
 支持参数：
 
@@ -130,6 +130,12 @@ docker run -d --name openflare-agent --restart unless-stopped \
   -e OPENFLARE_AGENT_TOKEN=YOUR_AGENT_TOKEN \
   ghcr.io/rain-kl/openflare-agent:latest
 ```
+
+> [!NOTE]
+> **非 Root 安全加固运行**
+> Agent 容器内部已完成安全加固，在启动后会统一以低权限非 root 用户 `openflare` 运行。
+> 容器已内置了 `cap_net_bind_service` 内核能力，使得低权限进程依然能够正常监听宿主机的 `80` 和 `443` 特权端口。
+> 同时，OpenResty 运行时所需的各种临时路径（包括 PID 路径、各类临时缓存目录如 `client_body_temp_path`、`proxy_temp_path` 等）都由 Agent 控制器动态渲染并自动重定向至挂载的 `/data` 数据目录，彻底避免在非 root 权限运行时写入默认系统路径而导致的权限拒绝错误（Permission Denied）。
 
 ## 启动与验证
 
@@ -214,5 +220,5 @@ curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/unin
 | --- | --- |
 | `agent_token 和 discovery_token 不能同时为空` | 检查 `agent.json` 至少配置了一个 Token |
 | 节点一直离线 | 在 Agent 节点执行 `curl -I http://your-server:3000`，确认 Server 地址可达 |
-| OpenResty 没有启动 | 查看 `journalctl -u openflare-agent`，确认 `openresty_path` 可执行且 80/443 端口未被占用 |
+| OpenResty 没有启动 | 查看 `journalctl -u openflare-agent`，确认 `openresty_path` 可执行，80/443 端口未被占用，且运行用户（如 `openflare`）对数据目录具有读写权限 |
 | 发布后重复失败 | Agent 会阻断同一 `version + checksum` 的重复应用；需要修正配置后重新发布，或激活旧版本回滚 |

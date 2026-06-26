@@ -79,7 +79,7 @@ docker run -d \
   -e DB_ENABLED=false \
   -e SQLITE_PATH='/data/openflare.db' \
   -e LOG_LEVEL='info' \
-  ghcr.io/rain-kl/openflare:latest
+  ghcr.io/rain-kl/openflare-server:latest
 ```
 
 启动参数说明：
