@@ -18,7 +18,6 @@ import (
 	"unicode"
 
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/routeidentity"
-	"github.com/Rain-kl/Wavelet/internal/db"
 	"github.com/Rain-kl/Wavelet/internal/model"
 	"gorm.io/gorm"
 )
@@ -39,34 +38,6 @@ const (
 	maxOriginHostnameLength = 253
 	originURIPathQueryParts = 2
 )
-
-type tlsCertificateRow struct {
-	ID      uint   `gorm:"column:id;primaryKey"`
-	CertPEM string `gorm:"column:cert_pem"`
-}
-
-func (tlsCertificateRow) TableName() string {
-	return "of_tls_certificates"
-}
-
-type tunnelNodeRow struct {
-	ID       uint   `gorm:"column:id;primaryKey"`
-	NodeType string `gorm:"column:node_type"`
-}
-
-func (tunnelNodeRow) TableName() string {
-	return "of_nodes"
-}
-
-type pagesProjectRow struct {
-	ID                 uint  `gorm:"column:id;primaryKey"`
-	Enabled            bool  `gorm:"column:enabled"`
-	ActiveDeploymentID *uint `gorm:"column:active_deployment_id"`
-}
-
-func (pagesProjectRow) TableName() string {
-	return "of_pages_projects"
-}
 
 func uniqueStrings(items []string) []string {
 	if len(items) == 0 {
@@ -243,37 +214,16 @@ func getOrCreateOriginByAddress(ctx context.Context, address string) (*model.Ori
 	return origin, nil
 }
 
-func lookupTLSCertificateByID(ctx context.Context, id uint) (*tlsCertificateRow, error) {
-	if !db.DB(ctx).Migrator().HasTable(&tlsCertificateRow{}) {
-		return nil, gorm.ErrRecordNotFound
-	}
-	var certificate tlsCertificateRow
-	if err := db.DB(ctx).First(&certificate, id).Error; err != nil {
-		return nil, err
-	}
-	return &certificate, nil
+func lookupTLSCertificateByID(ctx context.Context, id uint) (*model.TLSCertificate, error) {
+	return model.GetTLSCertificateByID(ctx, id)
 }
 
-func lookupTunnelNodeByID(ctx context.Context, id uint) (*tunnelNodeRow, error) {
-	if !db.DB(ctx).Migrator().HasTable(&tunnelNodeRow{}) {
-		return nil, gorm.ErrRecordNotFound
-	}
-	var node tunnelNodeRow
-	if err := db.DB(ctx).First(&node, id).Error; err != nil {
-		return nil, err
-	}
-	return &node, nil
+func lookupTunnelNodeByID(ctx context.Context, id uint) (*model.OpenFlareNode, error) {
+	return model.GetOpenFlareNodeByID(ctx, id)
 }
 
-func lookupPagesProjectByID(ctx context.Context, id uint) (*pagesProjectRow, error) {
-	if !db.DB(ctx).Migrator().HasTable(&pagesProjectRow{}) {
-		return nil, gorm.ErrRecordNotFound
-	}
-	var project pagesProjectRow
-	if err := db.DB(ctx).First(&project, id).Error; err != nil {
-		return nil, err
-	}
-	return &project, nil
+func lookupPagesProjectByID(ctx context.Context, id uint) (*model.PagesProject, error) {
+	return model.GetPagesProjectByID(ctx, id)
 }
 
 func parseLeafCertificate(certPEM string) (*x509.Certificate, error) {
@@ -288,7 +238,7 @@ func parseLeafCertificate(certPEM string) (*x509.Certificate, error) {
 	return leaf, nil
 }
 
-func validateCertificateCoverage(certificate *tlsCertificateRow, domains []string) error {
+func validateCertificateCoverage(certificate *model.TLSCertificate, domains []string) error {
 	if certificate == nil {
 		return errors.New(errProxyRouteCertNotFound)
 	}
@@ -304,8 +254,8 @@ func validateCertificateCoverage(certificate *tlsCertificateRow, domains []strin
 	return nil
 }
 
-func loadTLSCertificates(ctx context.Context, certIDs []uint) ([]*tlsCertificateRow, error) {
-	certificates := make([]*tlsCertificateRow, 0, len(certIDs))
+func loadTLSCertificates(ctx context.Context, certIDs []uint) ([]*model.TLSCertificate, error) {
+	certificates := make([]*model.TLSCertificate, 0, len(certIDs))
 	for _, certID := range certIDs {
 		certificate, err := lookupTLSCertificateByID(ctx, certID)
 		if err != nil {
