@@ -164,28 +164,6 @@ docker run -d --name openflare-agent --restart unless-stopped \
 
 ![OpenFlare version release](./docs/assets/readme/proxy-route-detail.png)
 
-## 管理端与接口
-
-管理端当前覆盖：
-
-* 反代规则
-* 配置版本
-* 节点管理
-* 应用记录
-* TLS 证书
-* 域名管理
-* Pages 静态托管
-* WAF 规则组
-* 内网穿透（Tunnels）
-* Uptime Kuma 监控同步
-* SSO 登录配置
-* 用户管理
-* 设置
-* 版本更新
-* PoW 规则
-
-登录管理端后，可访问 Swagger UI：`/swagger/index.html`
-
 ## 开源协议
 
 本项目采用 [Apache License 2.0](./LICENSE) 开源。

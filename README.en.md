@@ -204,28 +204,6 @@ The version number format is fixed as `YYYYMMDD-NNN`. Historical versions are im
 
 ![OpenFlare version release](./docs/assets/readme/proxy-route-detail.png)
 
-## Management Panel & API
-
-The management panel includes:
-
-* Reverse Proxy Rules
-* Configuration Versions
-* Node Management
-* Application Records
-* TLS Certificates
-* Domain Management
-* Pages Static Hosting
-* WAF Rule Groups
-* Intranet Tunnels
-* Uptime Kuma Monitoring Sync
-* SSO Login Configuration
-* User Management
-* Settings
-* Version Updates
-* PoW Rules
-
-After logging in to the dashboard, access Swagger UI at: `/swagger/index.html`
-
 ## License
 
 This project is licensed under [Apache License 2.0](./LICENSE).
